@@ -1,0 +1,36 @@
+# =============================================================================
+# Domain: calendar
+# Entity: CalendarDepartment
+# Description: Calendar scope junction — department dimension. department_id is
+#              a cross-module logical FK to organization.Department.id.
+# =============================================================================
+
+models:
+  - name: CalendarDepartment
+    collection: calendar_departments
+    description: "Calendar scope junction: department."
+
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique id"
+
+      calendar_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(Calendar.id)"]
+        description: "# FK calendars.id (in-module)"
+
+      department_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "# logical FK organization.Department.id"
+
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    indexes:
+      - type: index
+        fields: [calendar_id]

@@ -1,0 +1,64 @@
+# =============================================================================
+# Domain: calendar
+# Entity: Calendar
+# Description: A holiday or working-day window scoped to org dimensions.
+#              Company-scoped (company_id logical FK organization.Company.id).
+#              Scope junctions (CalendarBranch/Religion/Department/Level/
+#              Position/EmployeeStatus/Employee) express "which employees this
+#              applies to".
+# =============================================================================
+
+models:
+  - name: Calendar
+    collection: calendars
+    description: "A holiday or working-day window scoped to org dimensions."
+
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique calendar id"
+
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Org owner # logical FK organization.Company.id"
+
+      name:
+        type: string
+        attributes: ["@required", "@length(max=120)"]
+        description: "Calendar name"
+
+      date_start:
+        type: date
+        attributes: ["@required"]
+        description: "Window start (inclusive)"
+
+      date_end:
+        type: date
+        attributes: ["@required"]
+        description: "Window end (inclusive)"
+
+      is_holiday:
+        type: boolean
+        attributes: ["@default(false)"]
+        description: "true = holiday (non-working); false = special working day"
+
+      can_everyone_view:
+        type: boolean
+        attributes: ["@default(true)"]
+        description: "Visibility flag"
+
+      note:
+        type: string?
+        attributes: ["@length(max=1000)"]
+        description: "Free-form note"
+
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    indexes:
+      - type: index
+        fields: [company_id, date_start]

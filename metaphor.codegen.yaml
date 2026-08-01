@@ -1,0 +1,35 @@
+# Codegen policy for calendar.
+#
+# `user_owned` globs are hand-written files that live inside generator-owned trees but are
+# NOT schema-derived. `metaphor schema generate [--force]` skips them wholesale (never reads,
+# merges, or deletes them). Everything else in src/ is regenerated from schema/models.
+#
+# Re-exports/declarations that must sit alongside generated code live inside
+# `// <<< CUSTOM ... // END CUSTOM` markers (service/mod.rs, presentation/http/mod.rs, lib.rs)
+# and are preserved by the marker mechanism, not listed here.
+#
+# Add your hand-authored services, handlers, tests, and docs below as you write them.
+
+user_owned:
+  # Own the hand-written Calendar SQL (the working-days read-port) that the query service
+  # delegates to. Declared here — not renamed with a `_custom` suffix — so the generator skips it
+  # wholesale; this declaration is what makes editing it legitimate (mirrors backbone-attendance's
+  # repo ownership).
+  - "src/infrastructure/persistence/calendar_repository.rs"
+  # The public query-service trait gains a hand-written port method (`working_days`); owning the
+  # file keeps that method across regen instead of living behind a CUSTOM marker outside the trait.
+  - "src/exports/services.rs"
+  # Hand-written `CalendarQueryService` impl (delegates standard lookups to GenericCrudService +
+  # `working_days` to the repo). User-owned so the impl survives regen.
+  - "src/application/service/calendar_query_service.rs"
+  # Hand-authored behavior (services + their HTTP surface). Examples:
+  # - "src/application/service/onboarding_service.rs"
+  # - "src/presentation/http/guarded_routes.rs"
+
+  # Behavior tests (the golden cases / oracle) + BDD features.
+  - "tests/features/**"
+  # - "tests/*_golden_cases.rs"
+  # - "tests/integrity_probes.rs"
+
+  # Hand-authored module documentation.
+  - "docs/**"

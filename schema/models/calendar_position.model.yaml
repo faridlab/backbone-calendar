@@ -1,0 +1,36 @@
+# =============================================================================
+# Domain: calendar
+# Entity: CalendarPosition
+# Description: Calendar scope junction — position dimension. position_id is a
+#              cross-module logical FK to organization.Position.id.
+# =============================================================================
+
+models:
+  - name: CalendarPosition
+    collection: calendar_positions
+    description: "Calendar scope junction: position."
+
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique id"
+
+      calendar_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(Calendar.id)"]
+        description: "# FK calendars.id (in-module)"
+
+      position_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "# logical FK organization.Position.id"
+
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    indexes:
+      - type: index
+        fields: [calendar_id]

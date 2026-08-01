@@ -1,0 +1,17 @@
+# Seed Execution Order Configuration
+# Seeds are executed in the order defined in this file.
+# This ensures foreign key dependencies are satisfied.
+
+# Format: seed_name_seed (without .sql extension)
+#
+# Note: You can manually edit this file to customize the order.
+# Seeds not listed here will be executed after in alphabetical order.
+
+- calendar_seed
+- calendar_branch_seed
+- calendar_department_seed
+- calendar_employee_seed
+- calendar_employee_status_seed
+- calendar_level_seed
+- calendar_position_seed
+- calendar_religion_seed

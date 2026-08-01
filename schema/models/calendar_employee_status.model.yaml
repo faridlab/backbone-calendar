@@ -1,0 +1,47 @@
+# =============================================================================
+# Domain: calendar
+# Entity: CalendarEmployeeStatus
+# Description: Calendar scope junction — employment-status dimension. Uses the
+#              EmploymentStatus enum (shared shape with backbone-employee;
+#              duplicated per current backbone convention for small enums).
+# =============================================================================
+
+models:
+  - name: CalendarEmployeeStatus
+    collection: calendar_employee_statuses
+    description: "Calendar scope junction: employment status."
+
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique id"
+
+      calendar_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(Calendar.id)"]
+        description: "# FK calendars.id (in-module)"
+
+      employment_status:
+        type: EmploymentStatus
+        attributes: ["@required", "@default(permanent)"]
+        description: "scope: permanent/contract/probation/associate"
+
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    indexes:
+      - type: index
+        fields: [calendar_id]
+
+enums:
+  - name: EmploymentStatus
+    description: "Employment relationship (scope dimension)"
+    variants:
+      - name: permanent
+        default: true
+      - name: contract
+      - name: probation
+      - name: associate
