@@ -12,6 +12,11 @@
 module: calendar
 version: 2
 schema: calendar
+
+# ADR-0014 company fence (Wave 1 P0 sweep, 2026-08-16): calendars and the branch overlay carry company_id; the org-unit / employee /
+# religion overlays carry none — they are scoped via their calendar_id and stay
+# intentionally unfenced under any declaration.
+company_fence: strict
 description: "org-scoped holiday / working-day reference"
 
 config:
