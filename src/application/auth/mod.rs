@@ -21,4 +21,18 @@ pub use calendar_position_auth::{CalendarPositionPolicy, CalendarPositionGuard, 
 pub use calendar_religion_auth::{CalendarReligionPolicy, CalendarReligionGuard, CalendarReligionServiceGuard};
 
 // <<< CUSTOM
+// Event-family permission policies, hand-written in the generated shape. The
+// module does not enable the generator's opt-in auth layer (`layers: true`),
+// so these are user-owned files (see metaphor.codegen.yaml) carrying the
+// `calendar_event*:*` permission vocabulary the guarded event-family routes
+// check against.
+pub mod calendar_event_auth;
+pub mod calendar_event_series_auth;
+pub mod calendar_event_exception_auth;
+pub mod calendar_event_attendee_auth;
+
+pub use calendar_event_auth::{CalendarEventPolicy, CalendarEventGuard, CalendarEventServiceGuard};
+pub use calendar_event_series_auth::{CalendarEventSeriesPolicy, CalendarEventSeriesGuard, CalendarEventSeriesServiceGuard};
+pub use calendar_event_exception_auth::{CalendarEventExceptionPolicy, CalendarEventExceptionGuard, CalendarEventExceptionServiceGuard};
+pub use calendar_event_attendee_auth::{CalendarEventAttendeePolicy, CalendarEventAttendeeGuard, CalendarEventAttendeeServiceGuard};
 // END CUSTOM

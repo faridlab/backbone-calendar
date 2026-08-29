@@ -240,4 +240,3 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarDepartmentDto> for CalendarDepa
 // Add custom DTOs specific to CalendarDepartment here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
-

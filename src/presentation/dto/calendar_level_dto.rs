@@ -240,4 +240,3 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarLevelDto> for CalendarLevel {
 // Add custom DTOs specific to CalendarLevel here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
-

@@ -26,10 +26,30 @@ user_owned:
   # - "src/application/service/onboarding_service.rs"
   # - "src/presentation/http/guarded_routes.rs"
 
+  # Event family (meetings / recurrence / attendees) — hand-written behavior on top of the
+  # generated CRUD surface. The series engine owns eager materialization, (start,stop)-identity
+  # rewrites, and the exception ledger; the guarded-routes file is the ONLY HTTP surface the
+  # event family mounts (schema-named paths, fail-closed permission guards). The three
+  # event-family repos are hand-owned because they add RLS-scoped transaction work the
+  # GenericCrudRepository newtype does not express.
+  - "src/application/service/calendar_event_series_service_custom.rs"
+  - "src/presentation/http/calendar_event_guarded_routes.rs"
+  # Event-family permission policies, in the generated shape but hand-written:
+  # the auth generator layer is opt-in (`layers: true`) and this module keeps it
+  # off, so these vocabulary files are user-owned instead of regenerated.
+  - "src/application/auth/calendar_event_auth.rs"
+  - "src/application/auth/calendar_event_series_auth.rs"
+  - "src/application/auth/calendar_event_exception_auth.rs"
+  - "src/application/auth/calendar_event_attendee_auth.rs"
+  - "src/infrastructure/persistence/calendar_event_repository.rs"
+  - "src/infrastructure/persistence/calendar_event_exception_repository.rs"
+  - "src/infrastructure/persistence/calendar_event_attendee_repository.rs"
+
   # Behavior tests (the golden cases / oracle) + BDD features.
   - "tests/features/**"
   # - "tests/*_golden_cases.rs"
   # - "tests/integrity_probes.rs"
+  - "tests/calendar_event_family_probes.rs"
 
   # Hand-authored module documentation.
   - "docs/**"

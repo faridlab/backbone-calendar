@@ -7,10 +7,18 @@ pub mod calendar_branch;
 pub mod calendar_department;
 pub mod calendar_employee;
 pub mod calendar_employee_status;
+pub mod calendar_event;
+pub mod calendar_event_attendee;
+pub mod calendar_event_exception;
+pub mod calendar_event_series;
 pub mod calendar_level;
 pub mod calendar_position;
 pub mod calendar_religion;
 pub mod employment_status;
+pub mod event_privacy;
+pub mod event_attendee_state;
+pub mod event_exception_kind;
+pub mod event_recurrence_freq;
 
 // Re-exports
 pub use calendar::Calendar;
@@ -28,6 +36,18 @@ pub use calendar_employee::CalendarEmployeeId;
 pub use calendar_employee_status::CalendarEmployeeStatus;
 pub use calendar_employee_status::CalendarEmployeeStatusBuilder;
 pub use calendar_employee_status::CalendarEmployeeStatusId;
+pub use calendar_event::CalendarEvent;
+pub use calendar_event::CalendarEventBuilder;
+pub use calendar_event::CalendarEventId;
+pub use calendar_event_attendee::CalendarEventAttendee;
+pub use calendar_event_attendee::CalendarEventAttendeeBuilder;
+pub use calendar_event_attendee::CalendarEventAttendeeId;
+pub use calendar_event_exception::CalendarEventException;
+pub use calendar_event_exception::CalendarEventExceptionBuilder;
+pub use calendar_event_exception::CalendarEventExceptionId;
+pub use calendar_event_series::CalendarEventSeries;
+pub use calendar_event_series::CalendarEventSeriesBuilder;
+pub use calendar_event_series::CalendarEventSeriesId;
 pub use calendar_level::CalendarLevel;
 pub use calendar_level::CalendarLevelBuilder;
 pub use calendar_level::CalendarLevelId;
@@ -38,6 +58,10 @@ pub use calendar_religion::CalendarReligion;
 pub use calendar_religion::CalendarReligionBuilder;
 pub use calendar_religion::CalendarReligionId;
 pub use employment_status::EmploymentStatus;
+pub use event_privacy::EventPrivacy;
+pub use event_attendee_state::EventAttendeeState;
+pub use event_exception_kind::EventExceptionKind;
+pub use event_recurrence_freq::EventRecurrenceFreq;
 
 // ==========================================================================
 // Entity Trait

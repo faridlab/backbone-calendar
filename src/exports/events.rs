@@ -146,6 +146,114 @@ pub struct CalendarEmployeeStatusDeletedEvent {
 }
 
 // ============================================================================
+// CALENDAREVENT EVENTS
+// ============================================================================
+
+/// Event published when a CalendarEvent is created
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventCreatedEvent {
+    pub id: CalendarEventId,
+    pub data: CalendarEventDto,
+    pub occurred_at: DateTime<Utc>,
+}
+
+/// Event published when a CalendarEvent is updated
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventUpdatedEvent {
+    pub id: CalendarEventId,
+    pub data: CalendarEventDto,
+    pub occurred_at: DateTime<Utc>,
+}
+
+/// Event published when a CalendarEvent is deleted
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventDeletedEvent {
+    pub id: CalendarEventId,
+    pub occurred_at: DateTime<Utc>,
+}
+
+// ============================================================================
+// CALENDAREVENTATTENDEE EVENTS
+// ============================================================================
+
+/// Event published when a CalendarEventAttendee is created
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventAttendeeCreatedEvent {
+    pub id: CalendarEventAttendeeId,
+    pub data: CalendarEventAttendeeDto,
+    pub occurred_at: DateTime<Utc>,
+}
+
+/// Event published when a CalendarEventAttendee is updated
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventAttendeeUpdatedEvent {
+    pub id: CalendarEventAttendeeId,
+    pub data: CalendarEventAttendeeDto,
+    pub occurred_at: DateTime<Utc>,
+}
+
+/// Event published when a CalendarEventAttendee is deleted
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventAttendeeDeletedEvent {
+    pub id: CalendarEventAttendeeId,
+    pub occurred_at: DateTime<Utc>,
+}
+
+// ============================================================================
+// CALENDAREVENTEXCEPTION EVENTS
+// ============================================================================
+
+/// Event published when a CalendarEventException is created
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventExceptionCreatedEvent {
+    pub id: CalendarEventExceptionId,
+    pub data: CalendarEventExceptionDto,
+    pub occurred_at: DateTime<Utc>,
+}
+
+/// Event published when a CalendarEventException is updated
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventExceptionUpdatedEvent {
+    pub id: CalendarEventExceptionId,
+    pub data: CalendarEventExceptionDto,
+    pub occurred_at: DateTime<Utc>,
+}
+
+/// Event published when a CalendarEventException is deleted
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventExceptionDeletedEvent {
+    pub id: CalendarEventExceptionId,
+    pub occurred_at: DateTime<Utc>,
+}
+
+// ============================================================================
+// CALENDAREVENTSERIES EVENTS
+// ============================================================================
+
+/// Event published when a CalendarEventSeries is created
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventSeriesCreatedEvent {
+    pub id: CalendarEventSeriesId,
+    pub data: CalendarEventSeriesDto,
+    pub occurred_at: DateTime<Utc>,
+}
+
+/// Event published when a CalendarEventSeries is updated
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventSeriesUpdatedEvent {
+    pub id: CalendarEventSeriesId,
+    pub data: CalendarEventSeriesDto,
+    pub occurred_at: DateTime<Utc>,
+}
+
+/// Event published when a CalendarEventSeries is deleted
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventSeriesDeletedEvent {
+    pub id: CalendarEventSeriesId,
+    pub occurred_at: DateTime<Utc>,
+}
+
+// ============================================================================
 // CALENDARLEVEL EVENTS
 // ============================================================================
 
@@ -249,6 +357,18 @@ pub enum CalendarEvent {
     CalendarEmployeeStatusCreated(CalendarEmployeeStatusCreatedEvent),
     CalendarEmployeeStatusUpdated(CalendarEmployeeStatusUpdatedEvent),
     CalendarEmployeeStatusDeleted(CalendarEmployeeStatusDeletedEvent),
+    CalendarEventCreated(CalendarEventCreatedEvent),
+    CalendarEventUpdated(CalendarEventUpdatedEvent),
+    CalendarEventDeleted(CalendarEventDeletedEvent),
+    CalendarEventAttendeeCreated(CalendarEventAttendeeCreatedEvent),
+    CalendarEventAttendeeUpdated(CalendarEventAttendeeUpdatedEvent),
+    CalendarEventAttendeeDeleted(CalendarEventAttendeeDeletedEvent),
+    CalendarEventExceptionCreated(CalendarEventExceptionCreatedEvent),
+    CalendarEventExceptionUpdated(CalendarEventExceptionUpdatedEvent),
+    CalendarEventExceptionDeleted(CalendarEventExceptionDeletedEvent),
+    CalendarEventSeriesCreated(CalendarEventSeriesCreatedEvent),
+    CalendarEventSeriesUpdated(CalendarEventSeriesUpdatedEvent),
+    CalendarEventSeriesDeleted(CalendarEventSeriesDeletedEvent),
     CalendarLevelCreated(CalendarLevelCreatedEvent),
     CalendarLevelUpdated(CalendarLevelUpdatedEvent),
     CalendarLevelDeleted(CalendarLevelDeletedEvent),

@@ -63,7 +63,7 @@ pub struct Calendar {
 impl Calendar {
     /// Create a builder for Calendar
     pub fn builder() -> CalendarBuilder {
-        CalendarBuilder::default()
+        <CalendarBuilder as Default>::default()
     }
 
     /// Create a new Calendar with required fields

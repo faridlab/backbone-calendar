@@ -1,0 +1,75 @@
+# =============================================================================
+# Domain: calendar
+# Entity: CalendarEventException
+# Description: The split/cancel ledger. Whenever an occurrence is edited (split
+#              from its series) or deleted, a ledger row claims the rule-grid
+#              slot (slot_start_at, slot_stop_at) the occurrence occupied at
+#              that moment. Series rewrites consult this ledger: a claimed slot
+#              is NEVER re-materialized, which is what makes single edits and
+#              deletes stick across rewrites. The slot pair is the (start,stop)
+#              identity the whole event family reconciles by.
+# =============================================================================
+
+models:
+  - name: CalendarEventException
+    collection: event_exceptions
+    description: "Ledger of series slots claimed by an edit or a cancel."
+
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique exception id"
+
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Org owner # logical FK organization.Company.id"
+
+      series_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(CalendarEventSeries.id)"]
+        description: "# logical FK event_series.id — the series the slot was claimed from"
+
+      event_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(CalendarEvent.id)"]
+        description: "# logical FK events.id — the detached (edited) or soft-deleted (cancelled) occurrence"
+
+      slot_start_at:
+        type: datetime
+        attributes: ["@required"]
+        description: "Slot start the occurrence occupied at detach/cancel time (UTC)"
+
+      slot_stop_at:
+        type: datetime
+        attributes: ["@required"]
+        description: "Slot stop the occurrence occupied at detach/cancel time (UTC)"
+
+      kind:
+        type: EventExceptionKind
+        attributes: ["@required"]
+        description: "Why the slot was claimed: edited (split off) or cancelled"
+
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    indexes:
+      # Plain lookup index; the enforced shape is the PARTIAL unique index
+      # (series_id, slot_start_at, slot_stop_at) WHERE alive — carried by the
+      # hand-written table migration, which a YAML index cannot express.
+      - type: index
+        fields: [series_id, slot_start_at, slot_stop_at]
+        description: "Slot claims per series (unique-where-alive at the DB)"
+
+enums:
+  - name: EventExceptionKind
+    description: "Why a series slot was claimed"
+    variants:
+      - name: edited
+        description: "Occurrence split from the series into a standalone event"
+        default: true
+      - name: cancelled
+        description: "Occurrence soft-deleted; its slot must stay unmaterialized"

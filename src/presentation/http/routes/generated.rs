@@ -14,6 +14,10 @@ use super::{
     calendar_department_handler::create_calendar_department_routes,
     calendar_employee_handler::create_calendar_employee_routes,
     calendar_employee_status_handler::create_calendar_employee_status_routes,
+    calendar_event_handler::create_calendar_event_routes,
+    calendar_event_attendee_handler::create_calendar_event_attendee_routes,
+    calendar_event_exception_handler::create_calendar_event_exception_routes,
+    calendar_event_series_handler::create_calendar_event_series_routes,
     calendar_level_handler::create_calendar_level_routes,
     calendar_position_handler::create_calendar_position_routes,
     calendar_religion_handler::create_calendar_religion_routes,
@@ -25,6 +29,10 @@ use crate::application::service::{
     CalendarDepartmentService,
     CalendarEmployeeService,
     CalendarEmployeeStatusService,
+    CalendarEventService,
+    CalendarEventAttendeeService,
+    CalendarEventExceptionService,
+    CalendarEventSeriesService,
     CalendarLevelService,
     CalendarPositionService,
     CalendarReligionService,
@@ -37,6 +45,10 @@ pub struct HttpServices {
     pub calendar_department: Arc<CalendarDepartmentService>,
     pub calendar_employee: Arc<CalendarEmployeeService>,
     pub calendar_employee_status: Arc<CalendarEmployeeStatusService>,
+    pub calendar_event: Arc<CalendarEventService>,
+    pub calendar_event_attendee: Arc<CalendarEventAttendeeService>,
+    pub calendar_event_exception: Arc<CalendarEventExceptionService>,
+    pub calendar_event_series: Arc<CalendarEventSeriesService>,
     pub calendar_level: Arc<CalendarLevelService>,
     pub calendar_position: Arc<CalendarPositionService>,
     pub calendar_religion: Arc<CalendarReligionService>,
@@ -69,6 +81,14 @@ pub fn configure_routes(services: HttpServices) -> Router {
         .merge(create_calendar_employee_routes(services.calendar_employee))
         // CalendarEmployeeStatus routes (12 Backbone endpoints)
         .merge(create_calendar_employee_status_routes(services.calendar_employee_status))
+        // CalendarEvent routes (12 Backbone endpoints)
+        .merge(create_calendar_event_routes(services.calendar_event))
+        // CalendarEventAttendee routes (12 Backbone endpoints)
+        .merge(create_calendar_event_attendee_routes(services.calendar_event_attendee))
+        // CalendarEventException routes (12 Backbone endpoints)
+        .merge(create_calendar_event_exception_routes(services.calendar_event_exception))
+        // CalendarEventSeries routes (12 Backbone endpoints)
+        .merge(create_calendar_event_series_routes(services.calendar_event_series))
         // CalendarLevel routes (12 Backbone endpoints)
         .merge(create_calendar_level_routes(services.calendar_level))
         // CalendarPosition routes (12 Backbone endpoints)
@@ -99,6 +119,22 @@ pub mod individual {
 
     pub fn calendar_employee_status_routes(service: Arc<CalendarEmployeeStatusService>) -> Router {
         create_calendar_employee_status_routes(service)
+    }
+
+    pub fn calendar_event_routes(service: Arc<CalendarEventService>) -> Router {
+        create_calendar_event_routes(service)
+    }
+
+    pub fn calendar_event_attendee_routes(service: Arc<CalendarEventAttendeeService>) -> Router {
+        create_calendar_event_attendee_routes(service)
+    }
+
+    pub fn calendar_event_exception_routes(service: Arc<CalendarEventExceptionService>) -> Router {
+        create_calendar_event_exception_routes(service)
+    }
+
+    pub fn calendar_event_series_routes(service: Arc<CalendarEventSeriesService>) -> Router {
+        create_calendar_event_series_routes(service)
     }
 
     pub fn calendar_level_routes(service: Arc<CalendarLevelService>) -> Router {

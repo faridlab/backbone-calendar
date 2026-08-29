@@ -214,6 +214,8 @@ dependencies = [
  "anyhow",
  "argon2",
  "async-trait",
+ "axum",
+ "backbone-orm",
  "chrono",
  "email_address",
  "jsonwebtoken",
@@ -223,6 +225,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "sqlx",
  "thiserror 1.0.69",
  "tokio",
  "tracing",
@@ -232,7 +235,7 @@ dependencies = [
 
 [[package]]
 name = "backbone-calendar"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "anyhow",
  "async-trait",

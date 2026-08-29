@@ -58,7 +58,7 @@ pub struct CalendarDepartment {
 impl CalendarDepartment {
     /// Create a builder for CalendarDepartment
     pub fn builder() -> CalendarDepartmentBuilder {
-        CalendarDepartmentBuilder::default()
+        <CalendarDepartmentBuilder as Default>::default()
     }
 
     /// Create a new CalendarDepartment with required fields

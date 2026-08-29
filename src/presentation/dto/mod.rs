@@ -10,6 +10,10 @@ pub mod calendar_branch_dto;
 pub mod calendar_department_dto;
 pub mod calendar_employee_dto;
 pub mod calendar_employee_status_dto;
+pub mod calendar_event_dto;
+pub mod calendar_event_attendee_dto;
+pub mod calendar_event_exception_dto;
+pub mod calendar_event_series_dto;
 pub mod calendar_level_dto;
 pub mod calendar_position_dto;
 pub mod calendar_religion_dto;
@@ -54,6 +58,38 @@ pub use calendar_employee_status_dto::{
     CalendarEmployeeStatusResponseDto,
     CalendarEmployeeStatusListResponseDto,
     CalendarEmployeeStatusSummaryDto,
+};
+pub use calendar_event_dto::{
+    CreateCalendarEventDto,
+    UpdateCalendarEventDto,
+    PatchCalendarEventDto,
+    CalendarEventResponseDto,
+    CalendarEventListResponseDto,
+    CalendarEventSummaryDto,
+};
+pub use calendar_event_attendee_dto::{
+    CreateCalendarEventAttendeeDto,
+    UpdateCalendarEventAttendeeDto,
+    PatchCalendarEventAttendeeDto,
+    CalendarEventAttendeeResponseDto,
+    CalendarEventAttendeeListResponseDto,
+    CalendarEventAttendeeSummaryDto,
+};
+pub use calendar_event_exception_dto::{
+    CreateCalendarEventExceptionDto,
+    UpdateCalendarEventExceptionDto,
+    PatchCalendarEventExceptionDto,
+    CalendarEventExceptionResponseDto,
+    CalendarEventExceptionListResponseDto,
+    CalendarEventExceptionSummaryDto,
+};
+pub use calendar_event_series_dto::{
+    CreateCalendarEventSeriesDto,
+    UpdateCalendarEventSeriesDto,
+    PatchCalendarEventSeriesDto,
+    CalendarEventSeriesResponseDto,
+    CalendarEventSeriesListResponseDto,
+    CalendarEventSeriesSummaryDto,
 };
 pub use calendar_level_dto::{
     CreateCalendarLevelDto,

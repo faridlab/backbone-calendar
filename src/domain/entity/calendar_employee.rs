@@ -58,7 +58,7 @@ pub struct CalendarEmployee {
 impl CalendarEmployee {
     /// Create a builder for CalendarEmployee
     pub fn builder() -> CalendarEmployeeBuilder {
-        CalendarEmployeeBuilder::default()
+        <CalendarEmployeeBuilder as Default>::default()
     }
 
     /// Create a new CalendarEmployee with required fields

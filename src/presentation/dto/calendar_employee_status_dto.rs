@@ -237,4 +237,3 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarEmployeeStatusDto> for Calendar
 // Add custom DTOs specific to CalendarEmployeeStatus here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
-

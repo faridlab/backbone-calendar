@@ -11,6 +11,10 @@ pub mod calendar_branch_repository;
 pub mod calendar_department_repository;
 pub mod calendar_employee_repository;
 pub mod calendar_employee_status_repository;
+pub mod calendar_event_repository;
+pub mod calendar_event_attendee_repository;
+pub mod calendar_event_exception_repository;
+pub mod calendar_event_series_repository;
 pub mod calendar_level_repository;
 pub mod calendar_position_repository;
 pub mod calendar_religion_repository;
@@ -45,6 +49,30 @@ pub use calendar_employee_status_repository::{
     CalendarEmployeeStatusPaginationParams,
     CalendarEmployeeStatusPaginatedResult,
     CalendarEmployeeStatusFilter,
+};
+pub use calendar_event_repository::{
+    CalendarEventRepository,
+    CalendarEventPaginationParams,
+    CalendarEventPaginatedResult,
+    CalendarEventFilter,
+};
+pub use calendar_event_attendee_repository::{
+    CalendarEventAttendeeRepository,
+    CalendarEventAttendeePaginationParams,
+    CalendarEventAttendeePaginatedResult,
+    CalendarEventAttendeeFilter,
+};
+pub use calendar_event_exception_repository::{
+    CalendarEventExceptionRepository,
+    CalendarEventExceptionPaginationParams,
+    CalendarEventExceptionPaginatedResult,
+    CalendarEventExceptionFilter,
+};
+pub use calendar_event_series_repository::{
+    CalendarEventSeriesRepository,
+    CalendarEventSeriesPaginationParams,
+    CalendarEventSeriesPaginatedResult,
+    CalendarEventSeriesFilter,
 };
 pub use calendar_level_repository::{
     CalendarLevelRepository,

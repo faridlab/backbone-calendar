@@ -17,6 +17,10 @@ use backbone_calendar::seeders::SeedCalendarBranchSeeder;
 use backbone_calendar::seeders::SeedCalendarDepartmentSeeder;
 use backbone_calendar::seeders::SeedCalendarEmployeeSeeder;
 use backbone_calendar::seeders::SeedCalendarEmployeeStatusSeeder;
+use backbone_calendar::seeders::SeedCalendarEventSeeder;
+use backbone_calendar::seeders::SeedCalendarEventAttendeeSeeder;
+use backbone_calendar::seeders::SeedCalendarEventExceptionSeeder;
+use backbone_calendar::seeders::SeedCalendarEventSeriesSeeder;
 use backbone_calendar::seeders::SeedCalendarLevelSeeder;
 use backbone_calendar::seeders::SeedCalendarPositionSeeder;
 use backbone_calendar::seeders::SeedCalendarReligionSeeder;
@@ -32,7 +36,7 @@ async fn main() -> Result<()> {
         .map(|s| s.as_str());
 
     let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
+        .map_err(|e| anyhow::anyhow!("DATABASE_URL must be set: {e}"))?;
 
     println!("Connecting to database...");
 
@@ -53,6 +57,10 @@ async fn main() -> Result<()> {
     seeders.push(Box::new(SeedCalendarDepartmentSeeder::new()));
     seeders.push(Box::new(SeedCalendarEmployeeSeeder::new()));
     seeders.push(Box::new(SeedCalendarEmployeeStatusSeeder::new()));
+    seeders.push(Box::new(SeedCalendarEventSeeder::new()));
+    seeders.push(Box::new(SeedCalendarEventAttendeeSeeder::new()));
+    seeders.push(Box::new(SeedCalendarEventExceptionSeeder::new()));
+    seeders.push(Box::new(SeedCalendarEventSeriesSeeder::new()));
     seeders.push(Box::new(SeedCalendarLevelSeeder::new()));
     seeders.push(Box::new(SeedCalendarPositionSeeder::new()));
     seeders.push(Box::new(SeedCalendarReligionSeeder::new()));

@@ -1,0 +1,93 @@
+# =============================================================================
+# Domain: calendar
+# Entity: CalendarEventSeries
+# Description: A recurrence rule plus its template event. Occurrences are
+#              EAGERLY materialized as real calendar.events rows (posture:
+#              eager, ADR-0016 — the declared opposite of maintenance's lazy
+#              clone-on-done). base_event_id points at the template /
+#              first-occurrence row, which is itself a member row of the
+#              series. Expansion is bounded by until/count when present, else
+#              a 15-year horizon, and hard-capped at 720 occurrences (the cap
+#              fails loudly — never a silent truncation).
+# =============================================================================
+
+models:
+  - name: CalendarEventSeries
+    collection: event_series
+    description: "A recurring event series: rule + eagerly materialized occurrences."
+
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique series id"
+
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Org owner # logical FK organization.Company.id"
+
+      name:
+        type: string?
+        attributes: ["@length(max=120)"]
+        description: "Series display name"
+
+      freq:
+        type: EventRecurrenceFreq
+        attributes: ["@required"]
+        description: "Recurrence frequency"
+
+      interval:
+        type: int
+        attributes: ["@default(1)"]
+        description: "Every N freq steps (application-validated >= 1)"
+
+      by_weekday:
+        type: string?
+        attributes: ["@length(max=20)"]
+        description: "Comma list of ISO weekdays (1=Mon..7=Sun), weekly freq only"
+
+      by_monthday:
+        type: string?
+        attributes: ["@length(max=40)"]
+        description: "Comma list of month days (1..31, negatives from month end), monthly freq only"
+
+      until:
+        type: date?
+        description: "Inclusive recurrence end date (mutually exclusive with count in practice)"
+
+      count:
+        type: int?
+        description: "Total occurrence count bound (>= 1; mutually exclusive with until in practice)"
+
+      base_event_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(CalendarEvent.id)"]
+        description: "# logical FK events.id — the template / first-occurrence member row"
+
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    indexes:
+      - type: index
+        fields: [company_id]
+        description: "Company series listings"
+      - type: index
+        fields: [base_event_id]
+        description: "Template event lookup"
+
+enums:
+  - name: EventRecurrenceFreq
+    description: "Recurrence frequency (RRULE FREQ)"
+    variants:
+      - name: daily
+        description: "Repeats every N days"
+      - name: weekly
+        description: "Repeats every N weeks (optionally on by_weekday days)"
+        default: true
+      - name: monthly
+        description: "Repeats every N months (optionally on by_monthday days)"
+      - name: yearly
+        description: "Repeats every N years"

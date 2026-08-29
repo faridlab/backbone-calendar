@@ -66,7 +66,8 @@ shared_types:
 
   Metadata: [Timestamps, Actors]
 
-# Import each entity model. Calendar + 7 scope junctions (Example skeleton removed).
+# Import each entity model. Calendar + 7 scope junctions (Example skeleton removed),
+# plus the event family (series / events / exception ledger / attendees).
 imports:
   - calendar.model.yaml
   - calendar_branch.model.yaml
@@ -76,3 +77,7 @@ imports:
   - calendar_position.model.yaml
   - calendar_employee_status.model.yaml
   - calendar_employee.model.yaml
+  - calendar_event_series.model.yaml
+  - calendar_event.model.yaml
+  - calendar_event_exception.model.yaml
+  - calendar_event_attendee.model.yaml

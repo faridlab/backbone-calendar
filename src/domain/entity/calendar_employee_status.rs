@@ -60,7 +60,7 @@ pub struct CalendarEmployeeStatus {
 impl CalendarEmployeeStatus {
     /// Create a builder for CalendarEmployeeStatus
     pub fn builder() -> CalendarEmployeeStatusBuilder {
-        CalendarEmployeeStatusBuilder::default()
+        <CalendarEmployeeStatusBuilder as Default>::default()
     }
 
     /// Create a new CalendarEmployeeStatus with required fields
@@ -233,7 +233,7 @@ impl CalendarEmployeeStatusBuilder {
         Ok(CalendarEmployeeStatus {
             id: Uuid::new_v4(),
             calendar_id,
-            employment_status: self.employment_status.unwrap_or(EmploymentStatus::default()),
+            employment_status: self.employment_status.unwrap_or_default(),
             metadata: AuditMetadata::default(),
         })
     }

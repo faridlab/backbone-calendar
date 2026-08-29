@@ -58,7 +58,7 @@ pub struct CalendarReligion {
 impl CalendarReligion {
     /// Create a builder for CalendarReligion
     pub fn builder() -> CalendarReligionBuilder {
-        CalendarReligionBuilder::default()
+        <CalendarReligionBuilder as Default>::default()
     }
 
     /// Create a new CalendarReligion with required fields

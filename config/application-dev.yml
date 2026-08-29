@@ -1,20 +1,12 @@
-# Calendar Development Configuration
-#
-# Overrides for local development
-
 server:
   host: 127.0.0.1
-
 database:
   url: postgresql://root:password@localhost:5432/calendar_dev
   max_connections: 5
-
 logging:
   level: debug
   format: pretty
-
 tracing:
-  enabled: false  # Disable in development
-
+  enabled: false
 metrics:
-  enabled: false  # Disable in development
+  enabled: false

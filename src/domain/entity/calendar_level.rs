@@ -58,7 +58,7 @@ pub struct CalendarLevel {
 impl CalendarLevel {
     /// Create a builder for CalendarLevel
     pub fn builder() -> CalendarLevelBuilder {
-        CalendarLevelBuilder::default()
+        <CalendarLevelBuilder as Default>::default()
     }
 
     /// Create a new CalendarLevel with required fields

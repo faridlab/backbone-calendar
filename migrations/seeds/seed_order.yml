@@ -15,3 +15,9 @@
 - calendar_level_seed
 - calendar_position_seed
 - calendar_religion_seed
+
+# Newly added seeds (preserve manual order above):
+- calendar_event_series_seed
+- calendar_event_seed
+- calendar_event_exception_seed
+- calendar_event_attendee_seed

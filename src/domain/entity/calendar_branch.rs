@@ -59,7 +59,7 @@ pub struct CalendarBranch {
 impl CalendarBranch {
     /// Create a builder for CalendarBranch
     pub fn builder() -> CalendarBranchBuilder {
-        CalendarBranchBuilder::default()
+        <CalendarBranchBuilder as Default>::default()
     }
 
     /// Create a new CalendarBranch with required fields

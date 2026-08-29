@@ -14,6 +14,10 @@ mod calendar_branch_seeder;
 mod calendar_department_seeder;
 mod calendar_employee_seeder;
 mod calendar_employee_status_seeder;
+mod calendar_event_seeder;
+mod calendar_event_attendee_seeder;
+mod calendar_event_exception_seeder;
+mod calendar_event_series_seeder;
 mod calendar_level_seeder;
 mod calendar_position_seeder;
 mod calendar_religion_seeder;
@@ -23,6 +27,10 @@ pub use calendar_branch_seeder::SeedCalendarBranchSeeder;
 pub use calendar_department_seeder::SeedCalendarDepartmentSeeder;
 pub use calendar_employee_seeder::SeedCalendarEmployeeSeeder;
 pub use calendar_employee_status_seeder::SeedCalendarEmployeeStatusSeeder;
+pub use calendar_event_seeder::SeedCalendarEventSeeder;
+pub use calendar_event_attendee_seeder::SeedCalendarEventAttendeeSeeder;
+pub use calendar_event_exception_seeder::SeedCalendarEventExceptionSeeder;
+pub use calendar_event_series_seeder::SeedCalendarEventSeriesSeeder;
 pub use calendar_level_seeder::SeedCalendarLevelSeeder;
 pub use calendar_position_seeder::SeedCalendarPositionSeeder;
 pub use calendar_religion_seeder::SeedCalendarReligionSeeder;
@@ -76,4 +84,3 @@ pub enum SeederType {
 // <<< CUSTOM SEEDERS START >>>
 // Add custom seeders here
 // <<< CUSTOM SEEDERS END >>>
-

@@ -293,6 +293,249 @@ pub struct CalendarEmployeeStatusRef {
 }
 
 // ============================================================================
+// CALENDAREVENT TYPES
+// ============================================================================
+
+/// Type-safe ID for CalendarEvent
+///
+/// Use this instead of raw Uuid for type safety across modules.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct CalendarEventId(pub Uuid);
+
+impl CalendarEventId {
+    pub fn new(id: Uuid) -> Self {
+        Self(id)
+    }
+
+    pub fn into_inner(self) -> Uuid {
+        self.0
+    }
+}
+
+impl From<Uuid> for CalendarEventId {
+    fn from(id: Uuid) -> Self {
+        Self(id)
+    }
+}
+
+impl From<CalendarEventId> for Uuid {
+    fn from(id: CalendarEventId) -> Self {
+        id.0
+    }
+}
+
+/// Data transfer object for CalendarEvent
+///
+/// This is the public representation of CalendarEvent for other modules.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventDto {
+    pub id: CalendarEventId,
+    pub company_id: Uuid,
+    pub series_id: Option<Uuid>,
+    pub title: String,
+    pub description: Option<String>,
+    pub start_at: DateTime<Utc>,
+    pub stop_at: DateTime<Utc>,
+    pub privacy: EventPrivacy,
+    pub organizer_user_id: Uuid,
+    pub location: Option<String>,
+    pub metadata: serde_json::Value,
+}
+
+/// Summary view of CalendarEvent for list displays
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventSummary {
+    pub id: CalendarEventId,
+    pub title: String,
+}
+
+/// Reference to CalendarEvent for foreign key relationships
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventRef {
+    pub id: CalendarEventId,
+}
+
+// ============================================================================
+// CALENDAREVENTATTENDEE TYPES
+// ============================================================================
+
+/// Type-safe ID for CalendarEventAttendee
+///
+/// Use this instead of raw Uuid for type safety across modules.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct CalendarEventAttendeeId(pub Uuid);
+
+impl CalendarEventAttendeeId {
+    pub fn new(id: Uuid) -> Self {
+        Self(id)
+    }
+
+    pub fn into_inner(self) -> Uuid {
+        self.0
+    }
+}
+
+impl From<Uuid> for CalendarEventAttendeeId {
+    fn from(id: Uuid) -> Self {
+        Self(id)
+    }
+}
+
+impl From<CalendarEventAttendeeId> for Uuid {
+    fn from(id: CalendarEventAttendeeId) -> Self {
+        id.0
+    }
+}
+
+/// Data transfer object for CalendarEventAttendee
+///
+/// This is the public representation of CalendarEventAttendee for other modules.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventAttendeeDto {
+    pub id: CalendarEventAttendeeId,
+    pub company_id: Uuid,
+    pub event_id: Uuid,
+    pub user_id: Uuid,
+    pub state: EventAttendeeState,
+    pub access_token: Uuid,
+    pub metadata: serde_json::Value,
+}
+
+/// Summary view of CalendarEventAttendee for list displays
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventAttendeeSummary {
+    pub id: CalendarEventAttendeeId,
+}
+
+/// Reference to CalendarEventAttendee for foreign key relationships
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventAttendeeRef {
+    pub id: CalendarEventAttendeeId,
+}
+
+// ============================================================================
+// CALENDAREVENTEXCEPTION TYPES
+// ============================================================================
+
+/// Type-safe ID for CalendarEventException
+///
+/// Use this instead of raw Uuid for type safety across modules.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct CalendarEventExceptionId(pub Uuid);
+
+impl CalendarEventExceptionId {
+    pub fn new(id: Uuid) -> Self {
+        Self(id)
+    }
+
+    pub fn into_inner(self) -> Uuid {
+        self.0
+    }
+}
+
+impl From<Uuid> for CalendarEventExceptionId {
+    fn from(id: Uuid) -> Self {
+        Self(id)
+    }
+}
+
+impl From<CalendarEventExceptionId> for Uuid {
+    fn from(id: CalendarEventExceptionId) -> Self {
+        id.0
+    }
+}
+
+/// Data transfer object for CalendarEventException
+///
+/// This is the public representation of CalendarEventException for other modules.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventExceptionDto {
+    pub id: CalendarEventExceptionId,
+    pub company_id: Uuid,
+    pub series_id: Uuid,
+    pub event_id: Uuid,
+    pub slot_start_at: DateTime<Utc>,
+    pub slot_stop_at: DateTime<Utc>,
+    pub kind: EventExceptionKind,
+    pub metadata: serde_json::Value,
+}
+
+/// Summary view of CalendarEventException for list displays
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventExceptionSummary {
+    pub id: CalendarEventExceptionId,
+}
+
+/// Reference to CalendarEventException for foreign key relationships
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventExceptionRef {
+    pub id: CalendarEventExceptionId,
+}
+
+// ============================================================================
+// CALENDAREVENTSERIES TYPES
+// ============================================================================
+
+/// Type-safe ID for CalendarEventSeries
+///
+/// Use this instead of raw Uuid for type safety across modules.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct CalendarEventSeriesId(pub Uuid);
+
+impl CalendarEventSeriesId {
+    pub fn new(id: Uuid) -> Self {
+        Self(id)
+    }
+
+    pub fn into_inner(self) -> Uuid {
+        self.0
+    }
+}
+
+impl From<Uuid> for CalendarEventSeriesId {
+    fn from(id: Uuid) -> Self {
+        Self(id)
+    }
+}
+
+impl From<CalendarEventSeriesId> for Uuid {
+    fn from(id: CalendarEventSeriesId) -> Self {
+        id.0
+    }
+}
+
+/// Data transfer object for CalendarEventSeries
+///
+/// This is the public representation of CalendarEventSeries for other modules.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventSeriesDto {
+    pub id: CalendarEventSeriesId,
+    pub company_id: Uuid,
+    pub name: Option<String>,
+    pub freq: EventRecurrenceFreq,
+    pub interval: i32,
+    pub by_weekday: Option<String>,
+    pub by_monthday: Option<String>,
+    pub until: Option<NaiveDate>,
+    pub count: Option<i32>,
+    pub base_event_id: Uuid,
+    pub metadata: serde_json::Value,
+}
+
+/// Summary view of CalendarEventSeries for list displays
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventSeriesSummary {
+    pub id: CalendarEventSeriesId,
+    pub name: Option<String>,
+}
+
+/// Reference to CalendarEventSeries for foreign key relationships
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CalendarEventSeriesRef {
+    pub id: CalendarEventSeriesId,
+}
+
+// ============================================================================
 // CALENDARLEVEL TYPES
 // ============================================================================
 

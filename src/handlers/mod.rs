@@ -14,6 +14,10 @@ use crate::application::service::CalendarBranchService;
 use crate::application::service::CalendarDepartmentService;
 use crate::application::service::CalendarEmployeeService;
 use crate::application::service::CalendarEmployeeStatusService;
+use crate::application::service::CalendarEventService;
+use crate::application::service::CalendarEventAttendeeService;
+use crate::application::service::CalendarEventExceptionService;
+use crate::application::service::CalendarEventSeriesService;
 use crate::application::service::CalendarLevelService;
 use crate::application::service::CalendarPositionService;
 use crate::application::service::CalendarReligionService;
@@ -46,6 +50,14 @@ pub struct AppState {
     pub calendar_employee_service: Arc<CalendarEmployeeService>,
     /// CalendarEmployeeStatus service
     pub calendar_employee_status_service: Arc<CalendarEmployeeStatusService>,
+    /// CalendarEvent service
+    pub calendar_event_service: Arc<CalendarEventService>,
+    /// CalendarEventAttendee service
+    pub calendar_event_attendee_service: Arc<CalendarEventAttendeeService>,
+    /// CalendarEventException service
+    pub calendar_event_exception_service: Arc<CalendarEventExceptionService>,
+    /// CalendarEventSeries service
+    pub calendar_event_series_service: Arc<CalendarEventSeriesService>,
     /// CalendarLevel service
     pub calendar_level_service: Arc<CalendarLevelService>,
     /// CalendarPosition service
@@ -62,6 +74,10 @@ impl AppState {
         calendar_department_service: Arc<CalendarDepartmentService>,
         calendar_employee_service: Arc<CalendarEmployeeService>,
         calendar_employee_status_service: Arc<CalendarEmployeeStatusService>,
+        calendar_event_service: Arc<CalendarEventService>,
+        calendar_event_attendee_service: Arc<CalendarEventAttendeeService>,
+        calendar_event_exception_service: Arc<CalendarEventExceptionService>,
+        calendar_event_series_service: Arc<CalendarEventSeriesService>,
         calendar_level_service: Arc<CalendarLevelService>,
         calendar_position_service: Arc<CalendarPositionService>,
         calendar_religion_service: Arc<CalendarReligionService>
@@ -72,6 +88,10 @@ impl AppState {
             calendar_department_service,
             calendar_employee_service,
             calendar_employee_status_service,
+            calendar_event_service,
+            calendar_event_attendee_service,
+            calendar_event_exception_service,
+            calendar_event_series_service,
             calendar_level_service,
             calendar_position_service,
             calendar_religion_service,
@@ -86,6 +106,10 @@ impl AppState {
             calendar_department_service: module.calendar_department_service.clone(),
             calendar_employee_service: module.calendar_employee_service.clone(),
             calendar_employee_status_service: module.calendar_employee_status_service.clone(),
+            calendar_event_service: module.calendar_event_service.clone(),
+            calendar_event_attendee_service: module.calendar_event_attendee_service.clone(),
+            calendar_event_exception_service: module.calendar_event_exception_service.clone(),
+            calendar_event_series_service: module.calendar_event_series_service.clone(),
             calendar_level_service: module.calendar_level_service.clone(),
             calendar_position_service: module.calendar_position_service.clone(),
             calendar_religion_service: module.calendar_religion_service.clone(),
@@ -103,6 +127,10 @@ pub struct AppStateBuilder {
     calendar_department_service: Option<Arc<CalendarDepartmentService>>,
     calendar_employee_service: Option<Arc<CalendarEmployeeService>>,
     calendar_employee_status_service: Option<Arc<CalendarEmployeeStatusService>>,
+    calendar_event_service: Option<Arc<CalendarEventService>>,
+    calendar_event_attendee_service: Option<Arc<CalendarEventAttendeeService>>,
+    calendar_event_exception_service: Option<Arc<CalendarEventExceptionService>>,
+    calendar_event_series_service: Option<Arc<CalendarEventSeriesService>>,
     calendar_level_service: Option<Arc<CalendarLevelService>>,
     calendar_position_service: Option<Arc<CalendarPositionService>>,
     calendar_religion_service: Option<Arc<CalendarReligionService>>,
@@ -144,6 +172,30 @@ impl AppStateBuilder {
         self
     }
 
+    /// Set the CalendarEvent service.
+    pub fn with_calendar_event_service(mut self, service: Arc<CalendarEventService>) -> Self {
+        self.calendar_event_service = Some(service);
+        self
+    }
+
+    /// Set the CalendarEventAttendee service.
+    pub fn with_calendar_event_attendee_service(mut self, service: Arc<CalendarEventAttendeeService>) -> Self {
+        self.calendar_event_attendee_service = Some(service);
+        self
+    }
+
+    /// Set the CalendarEventException service.
+    pub fn with_calendar_event_exception_service(mut self, service: Arc<CalendarEventExceptionService>) -> Self {
+        self.calendar_event_exception_service = Some(service);
+        self
+    }
+
+    /// Set the CalendarEventSeries service.
+    pub fn with_calendar_event_series_service(mut self, service: Arc<CalendarEventSeriesService>) -> Self {
+        self.calendar_event_series_service = Some(service);
+        self
+    }
+
     /// Set the CalendarLevel service.
     pub fn with_calendar_level_service(mut self, service: Arc<CalendarLevelService>) -> Self {
         self.calendar_level_service = Some(service);
@@ -174,6 +226,10 @@ impl AppStateBuilder {
             calendar_department_service: self.calendar_department_service.expect("calendar_department_service is required"),
             calendar_employee_service: self.calendar_employee_service.expect("calendar_employee_service is required"),
             calendar_employee_status_service: self.calendar_employee_status_service.expect("calendar_employee_status_service is required"),
+            calendar_event_service: self.calendar_event_service.expect("calendar_event_service is required"),
+            calendar_event_attendee_service: self.calendar_event_attendee_service.expect("calendar_event_attendee_service is required"),
+            calendar_event_exception_service: self.calendar_event_exception_service.expect("calendar_event_exception_service is required"),
+            calendar_event_series_service: self.calendar_event_series_service.expect("calendar_event_series_service is required"),
             calendar_level_service: self.calendar_level_service.expect("calendar_level_service is required"),
             calendar_position_service: self.calendar_position_service.expect("calendar_position_service is required"),
             calendar_religion_service: self.calendar_religion_service.expect("calendar_religion_service is required"),

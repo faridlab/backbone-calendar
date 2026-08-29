@@ -21,6 +21,14 @@ tags:
     description: CalendarEmployee management endpoints
   - name: CalendarEmployeeStatuses
     description: CalendarEmployeeStatus management endpoints
+  - name: CalendarEvents
+    description: CalendarEvent management endpoints
+  - name: CalendarEventAttendees
+    description: CalendarEventAttendee management endpoints
+  - name: CalendarEventExceptions
+    description: CalendarEventException management endpoints
+  - name: CalendarEventSerieses
+    description: CalendarEventSeries management endpoints
   - name: CalendarLevels
     description: CalendarLevel management endpoints
   - name: CalendarPositions
@@ -1859,6 +1867,1470 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+  /api/v1/calendar_events:
+    get:
+      tags:
+        - CalendarEvents
+      summary: List CalendarEvents
+      description: Get a paginated list of CalendarEvents with optional filtering and sorting
+      operationId: listCalendarEvents
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+        - $ref: '#/components/parameters/SortByParam'
+        - $ref: '#/components/parameters/SortOrderParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - CalendarEvents
+      summary: Create CalendarEvent
+      description: Create a new CalendarEvent
+      operationId: createCalendarEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCalendarEventRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEvent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/calendar_events/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+
+    get:
+      tags:
+        - CalendarEvents
+      summary: Get CalendarEvent by ID
+      operationId: getCalendarEvent
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEvent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - CalendarEvents
+      summary: Update CalendarEvent (full)
+      operationId: updateCalendarEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCalendarEventRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEvent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - CalendarEvents
+      summary: Update CalendarEvent (partial)
+      operationId: patchCalendarEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchCalendarEventRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEvent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - CalendarEvents
+      summary: Delete CalendarEvent (soft)
+      operationId: deleteCalendarEvent
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/calendar_events/bulk:
+    post:
+      tags:
+        - CalendarEvents
+      summary: Bulk create CalendarEvents
+      operationId: bulkCreateCalendarEvents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreateCalendarEventRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarEvent'
+    put:
+      tags:
+        - CalendarEvents
+      summary: Bulk update CalendarEvents (full, atomic)
+      operationId: bulkUpdateCalendarEvents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    required: [id]
+                    properties:
+                      id:
+                        type: string
+                  - $ref: '#/components/schemas/UpdateCalendarEventRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventBulkResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    patch:
+      tags:
+        - CalendarEvents
+      summary: Bulk partial-update CalendarEvents (atomic)
+      operationId: bulkPatchCalendarEvents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [ids, patch]
+                  properties:
+                    ids:
+                      type: array
+                      items: { type: string }
+                    patch:
+                      type: object
+                      additionalProperties: true
+                - type: object
+                  required: [items]
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        type: object
+                        required: [id, patch]
+                        properties:
+                          id: { type: string }
+                          patch: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventBulkResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/calendar_events/upsert:
+    post:
+      tags:
+        - CalendarEvents
+      summary: Upsert CalendarEvent
+      operationId: upsertCalendarEvent
+      parameters:
+        - name: key_field
+          in: query
+          schema:
+            type: string
+        - name: key_value
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCalendarEventRequest'
+      responses:
+        '200':
+          description: Upserted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEvent'
+
+  /api/v1/calendar_events/trash:
+    get:
+      tags:
+        - CalendarEvents
+      summary: List deleted CalendarEvents
+      operationId: listDeletedCalendarEvents
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventList'
+
+  /api/v1/calendar_events/{id}/restore:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    post:
+      tags:
+        - CalendarEvents
+      summary: Restore deleted CalendarEvent
+      operationId: restoreCalendarEvent
+      responses:
+        '200':
+          description: Restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEvent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/calendar_events/empty:
+    delete:
+      tags:
+        - CalendarEvents
+      summary: Empty trash for CalendarEvents
+      operationId: emptyTrashCalendarEvents
+      responses:
+        '200':
+          description: Trash emptied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted_count:
+                    type: integer
+
+  /api/v1/calendar_events/delete/bulk:
+    post:
+      tags:
+        - CalendarEvents
+      summary: Bulk soft-delete CalendarEvents by ids (atomic)
+      operationId: bulkDeleteCalendarEvents
+      requestBody:
+        $ref: '#/components/requestBodies/BatchIds'
+      responses:
+        '200':
+          description: Soft-deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  soft_deleted: { type: integer }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/calendar_events/restore/bulk:
+    post:
+      tags:
+        - CalendarEvents
+      summary: Bulk restore CalendarEvents by ids (atomic)
+      operationId: bulkRestoreCalendarEvents
+      requestBody:
+        $ref: '#/components/requestBodies/BatchIds'
+      responses:
+        '200':
+          description: Restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventBulkResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/calendar_events/restore/all:
+    post:
+      tags:
+        - CalendarEvents
+      summary: Restore all soft-deleted CalendarEvents
+      operationId: restoreAllCalendarEvents
+      responses:
+        '200':
+          description: Restored
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  restored: { type: integer }
+
+  /api/v1/calendar_events/trash/bulk:
+    delete:
+      tags:
+        - CalendarEvents
+      summary: Bulk permanently-delete CalendarEvents from trash by ids (atomic)
+      operationId: bulkPermanentDeleteCalendarEvents
+      requestBody:
+        $ref: '#/components/requestBodies/BatchIds'
+      responses:
+        '200':
+          description: Permanently deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  permanently_deleted: { type: integer }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/calendar_event_attendees:
+    get:
+      tags:
+        - CalendarEventAttendees
+      summary: List CalendarEventAttendees
+      description: Get a paginated list of CalendarEventAttendees with optional filtering and sorting
+      operationId: listCalendarEventAttendees
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+        - $ref: '#/components/parameters/SortByParam'
+        - $ref: '#/components/parameters/SortOrderParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventAttendeeList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - CalendarEventAttendees
+      summary: Create CalendarEventAttendee
+      description: Create a new CalendarEventAttendee
+      operationId: createCalendarEventAttendee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCalendarEventAttendeeRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventAttendee'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/calendar_event_attendees/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+
+    get:
+      tags:
+        - CalendarEventAttendees
+      summary: Get CalendarEventAttendee by ID
+      operationId: getCalendarEventAttendee
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventAttendee'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - CalendarEventAttendees
+      summary: Update CalendarEventAttendee (full)
+      operationId: updateCalendarEventAttendee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCalendarEventAttendeeRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventAttendee'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - CalendarEventAttendees
+      summary: Update CalendarEventAttendee (partial)
+      operationId: patchCalendarEventAttendee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchCalendarEventAttendeeRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventAttendee'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - CalendarEventAttendees
+      summary: Delete CalendarEventAttendee (soft)
+      operationId: deleteCalendarEventAttendee
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/calendar_event_attendees/bulk:
+    post:
+      tags:
+        - CalendarEventAttendees
+      summary: Bulk create CalendarEventAttendees
+      operationId: bulkCreateCalendarEventAttendees
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreateCalendarEventAttendeeRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarEventAttendee'
+    put:
+      tags:
+        - CalendarEventAttendees
+      summary: Bulk update CalendarEventAttendees (full, atomic)
+      operationId: bulkUpdateCalendarEventAttendees
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    required: [id]
+                    properties:
+                      id:
+                        type: string
+                  - $ref: '#/components/schemas/UpdateCalendarEventAttendeeRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventAttendeeBulkResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    patch:
+      tags:
+        - CalendarEventAttendees
+      summary: Bulk partial-update CalendarEventAttendees (atomic)
+      operationId: bulkPatchCalendarEventAttendees
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [ids, patch]
+                  properties:
+                    ids:
+                      type: array
+                      items: { type: string }
+                    patch:
+                      type: object
+                      additionalProperties: true
+                - type: object
+                  required: [items]
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        type: object
+                        required: [id, patch]
+                        properties:
+                          id: { type: string }
+                          patch: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventAttendeeBulkResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/calendar_event_attendees/upsert:
+    post:
+      tags:
+        - CalendarEventAttendees
+      summary: Upsert CalendarEventAttendee
+      operationId: upsertCalendarEventAttendee
+      parameters:
+        - name: key_field
+          in: query
+          schema:
+            type: string
+        - name: key_value
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCalendarEventAttendeeRequest'
+      responses:
+        '200':
+          description: Upserted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventAttendee'
+
+  /api/v1/calendar_event_attendees/trash:
+    get:
+      tags:
+        - CalendarEventAttendees
+      summary: List deleted CalendarEventAttendees
+      operationId: listDeletedCalendarEventAttendees
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventAttendeeList'
+
+  /api/v1/calendar_event_attendees/{id}/restore:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    post:
+      tags:
+        - CalendarEventAttendees
+      summary: Restore deleted CalendarEventAttendee
+      operationId: restoreCalendarEventAttendee
+      responses:
+        '200':
+          description: Restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventAttendee'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/calendar_event_attendees/empty:
+    delete:
+      tags:
+        - CalendarEventAttendees
+      summary: Empty trash for CalendarEventAttendees
+      operationId: emptyTrashCalendarEventAttendees
+      responses:
+        '200':
+          description: Trash emptied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted_count:
+                    type: integer
+
+  /api/v1/calendar_event_attendees/delete/bulk:
+    post:
+      tags:
+        - CalendarEventAttendees
+      summary: Bulk soft-delete CalendarEventAttendees by ids (atomic)
+      operationId: bulkDeleteCalendarEventAttendees
+      requestBody:
+        $ref: '#/components/requestBodies/BatchIds'
+      responses:
+        '200':
+          description: Soft-deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  soft_deleted: { type: integer }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/calendar_event_attendees/restore/bulk:
+    post:
+      tags:
+        - CalendarEventAttendees
+      summary: Bulk restore CalendarEventAttendees by ids (atomic)
+      operationId: bulkRestoreCalendarEventAttendees
+      requestBody:
+        $ref: '#/components/requestBodies/BatchIds'
+      responses:
+        '200':
+          description: Restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventAttendeeBulkResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/calendar_event_attendees/restore/all:
+    post:
+      tags:
+        - CalendarEventAttendees
+      summary: Restore all soft-deleted CalendarEventAttendees
+      operationId: restoreAllCalendarEventAttendees
+      responses:
+        '200':
+          description: Restored
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  restored: { type: integer }
+
+  /api/v1/calendar_event_attendees/trash/bulk:
+    delete:
+      tags:
+        - CalendarEventAttendees
+      summary: Bulk permanently-delete CalendarEventAttendees from trash by ids (atomic)
+      operationId: bulkPermanentDeleteCalendarEventAttendees
+      requestBody:
+        $ref: '#/components/requestBodies/BatchIds'
+      responses:
+        '200':
+          description: Permanently deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  permanently_deleted: { type: integer }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/calendar_event_exceptions:
+    get:
+      tags:
+        - CalendarEventExceptions
+      summary: List CalendarEventExceptions
+      description: Get a paginated list of CalendarEventExceptions with optional filtering and sorting
+      operationId: listCalendarEventExceptions
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+        - $ref: '#/components/parameters/SortByParam'
+        - $ref: '#/components/parameters/SortOrderParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventExceptionList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - CalendarEventExceptions
+      summary: Create CalendarEventException
+      description: Create a new CalendarEventException
+      operationId: createCalendarEventException
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCalendarEventExceptionRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventException'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/calendar_event_exceptions/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+
+    get:
+      tags:
+        - CalendarEventExceptions
+      summary: Get CalendarEventException by ID
+      operationId: getCalendarEventException
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventException'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - CalendarEventExceptions
+      summary: Update CalendarEventException (full)
+      operationId: updateCalendarEventException
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCalendarEventExceptionRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventException'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - CalendarEventExceptions
+      summary: Update CalendarEventException (partial)
+      operationId: patchCalendarEventException
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchCalendarEventExceptionRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventException'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - CalendarEventExceptions
+      summary: Delete CalendarEventException (soft)
+      operationId: deleteCalendarEventException
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/calendar_event_exceptions/bulk:
+    post:
+      tags:
+        - CalendarEventExceptions
+      summary: Bulk create CalendarEventExceptions
+      operationId: bulkCreateCalendarEventExceptions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreateCalendarEventExceptionRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarEventException'
+    put:
+      tags:
+        - CalendarEventExceptions
+      summary: Bulk update CalendarEventExceptions (full, atomic)
+      operationId: bulkUpdateCalendarEventExceptions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    required: [id]
+                    properties:
+                      id:
+                        type: string
+                  - $ref: '#/components/schemas/UpdateCalendarEventExceptionRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventExceptionBulkResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    patch:
+      tags:
+        - CalendarEventExceptions
+      summary: Bulk partial-update CalendarEventExceptions (atomic)
+      operationId: bulkPatchCalendarEventExceptions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [ids, patch]
+                  properties:
+                    ids:
+                      type: array
+                      items: { type: string }
+                    patch:
+                      type: object
+                      additionalProperties: true
+                - type: object
+                  required: [items]
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        type: object
+                        required: [id, patch]
+                        properties:
+                          id: { type: string }
+                          patch: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventExceptionBulkResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/calendar_event_exceptions/upsert:
+    post:
+      tags:
+        - CalendarEventExceptions
+      summary: Upsert CalendarEventException
+      operationId: upsertCalendarEventException
+      parameters:
+        - name: key_field
+          in: query
+          schema:
+            type: string
+        - name: key_value
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCalendarEventExceptionRequest'
+      responses:
+        '200':
+          description: Upserted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventException'
+
+  /api/v1/calendar_event_exceptions/trash:
+    get:
+      tags:
+        - CalendarEventExceptions
+      summary: List deleted CalendarEventExceptions
+      operationId: listDeletedCalendarEventExceptions
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventExceptionList'
+
+  /api/v1/calendar_event_exceptions/{id}/restore:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    post:
+      tags:
+        - CalendarEventExceptions
+      summary: Restore deleted CalendarEventException
+      operationId: restoreCalendarEventException
+      responses:
+        '200':
+          description: Restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventException'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/calendar_event_exceptions/empty:
+    delete:
+      tags:
+        - CalendarEventExceptions
+      summary: Empty trash for CalendarEventExceptions
+      operationId: emptyTrashCalendarEventExceptions
+      responses:
+        '200':
+          description: Trash emptied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted_count:
+                    type: integer
+
+  /api/v1/calendar_event_exceptions/delete/bulk:
+    post:
+      tags:
+        - CalendarEventExceptions
+      summary: Bulk soft-delete CalendarEventExceptions by ids (atomic)
+      operationId: bulkDeleteCalendarEventExceptions
+      requestBody:
+        $ref: '#/components/requestBodies/BatchIds'
+      responses:
+        '200':
+          description: Soft-deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  soft_deleted: { type: integer }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/calendar_event_exceptions/restore/bulk:
+    post:
+      tags:
+        - CalendarEventExceptions
+      summary: Bulk restore CalendarEventExceptions by ids (atomic)
+      operationId: bulkRestoreCalendarEventExceptions
+      requestBody:
+        $ref: '#/components/requestBodies/BatchIds'
+      responses:
+        '200':
+          description: Restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventExceptionBulkResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/calendar_event_exceptions/restore/all:
+    post:
+      tags:
+        - CalendarEventExceptions
+      summary: Restore all soft-deleted CalendarEventExceptions
+      operationId: restoreAllCalendarEventExceptions
+      responses:
+        '200':
+          description: Restored
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  restored: { type: integer }
+
+  /api/v1/calendar_event_exceptions/trash/bulk:
+    delete:
+      tags:
+        - CalendarEventExceptions
+      summary: Bulk permanently-delete CalendarEventExceptions from trash by ids (atomic)
+      operationId: bulkPermanentDeleteCalendarEventExceptions
+      requestBody:
+        $ref: '#/components/requestBodies/BatchIds'
+      responses:
+        '200':
+          description: Permanently deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  permanently_deleted: { type: integer }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/calendar_event_serieses:
+    get:
+      tags:
+        - CalendarEventSerieses
+      summary: List CalendarEventSerieses
+      description: Get a paginated list of CalendarEventSerieses with optional filtering and sorting
+      operationId: listCalendarEventSerieses
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+        - $ref: '#/components/parameters/SortByParam'
+        - $ref: '#/components/parameters/SortOrderParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventSeriesList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - CalendarEventSerieses
+      summary: Create CalendarEventSeries
+      description: Create a new CalendarEventSeries
+      operationId: createCalendarEventSeries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCalendarEventSeriesRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventSeries'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/calendar_event_serieses/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+
+    get:
+      tags:
+        - CalendarEventSerieses
+      summary: Get CalendarEventSeries by ID
+      operationId: getCalendarEventSeries
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventSeries'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - CalendarEventSerieses
+      summary: Update CalendarEventSeries (full)
+      operationId: updateCalendarEventSeries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCalendarEventSeriesRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventSeries'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - CalendarEventSerieses
+      summary: Update CalendarEventSeries (partial)
+      operationId: patchCalendarEventSeries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchCalendarEventSeriesRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventSeries'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - CalendarEventSerieses
+      summary: Delete CalendarEventSeries (soft)
+      operationId: deleteCalendarEventSeries
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/calendar_event_serieses/bulk:
+    post:
+      tags:
+        - CalendarEventSerieses
+      summary: Bulk create CalendarEventSerieses
+      operationId: bulkCreateCalendarEventSerieses
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreateCalendarEventSeriesRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarEventSeries'
+    put:
+      tags:
+        - CalendarEventSerieses
+      summary: Bulk update CalendarEventSerieses (full, atomic)
+      operationId: bulkUpdateCalendarEventSerieses
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    required: [id]
+                    properties:
+                      id:
+                        type: string
+                  - $ref: '#/components/schemas/UpdateCalendarEventSeriesRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventSeriesBulkResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    patch:
+      tags:
+        - CalendarEventSerieses
+      summary: Bulk partial-update CalendarEventSerieses (atomic)
+      operationId: bulkPatchCalendarEventSerieses
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [ids, patch]
+                  properties:
+                    ids:
+                      type: array
+                      items: { type: string }
+                    patch:
+                      type: object
+                      additionalProperties: true
+                - type: object
+                  required: [items]
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        type: object
+                        required: [id, patch]
+                        properties:
+                          id: { type: string }
+                          patch: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventSeriesBulkResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/calendar_event_serieses/upsert:
+    post:
+      tags:
+        - CalendarEventSerieses
+      summary: Upsert CalendarEventSeries
+      operationId: upsertCalendarEventSeries
+      parameters:
+        - name: key_field
+          in: query
+          schema:
+            type: string
+        - name: key_value
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCalendarEventSeriesRequest'
+      responses:
+        '200':
+          description: Upserted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventSeries'
+
+  /api/v1/calendar_event_serieses/trash:
+    get:
+      tags:
+        - CalendarEventSerieses
+      summary: List deleted CalendarEventSerieses
+      operationId: listDeletedCalendarEventSerieses
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventSeriesList'
+
+  /api/v1/calendar_event_serieses/{id}/restore:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    post:
+      tags:
+        - CalendarEventSerieses
+      summary: Restore deleted CalendarEventSeries
+      operationId: restoreCalendarEventSeries
+      responses:
+        '200':
+          description: Restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventSeries'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/calendar_event_serieses/empty:
+    delete:
+      tags:
+        - CalendarEventSerieses
+      summary: Empty trash for CalendarEventSerieses
+      operationId: emptyTrashCalendarEventSerieses
+      responses:
+        '200':
+          description: Trash emptied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted_count:
+                    type: integer
+
+  /api/v1/calendar_event_serieses/delete/bulk:
+    post:
+      tags:
+        - CalendarEventSerieses
+      summary: Bulk soft-delete CalendarEventSerieses by ids (atomic)
+      operationId: bulkDeleteCalendarEventSerieses
+      requestBody:
+        $ref: '#/components/requestBodies/BatchIds'
+      responses:
+        '200':
+          description: Soft-deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  soft_deleted: { type: integer }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/calendar_event_serieses/restore/bulk:
+    post:
+      tags:
+        - CalendarEventSerieses
+      summary: Bulk restore CalendarEventSerieses by ids (atomic)
+      operationId: bulkRestoreCalendarEventSerieses
+      requestBody:
+        $ref: '#/components/requestBodies/BatchIds'
+      responses:
+        '200':
+          description: Restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventSeriesBulkResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/calendar_event_serieses/restore/all:
+    post:
+      tags:
+        - CalendarEventSerieses
+      summary: Restore all soft-deleted CalendarEventSerieses
+      operationId: restoreAllCalendarEventSerieses
+      responses:
+        '200':
+          description: Restored
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  restored: { type: integer }
+
+  /api/v1/calendar_event_serieses/trash/bulk:
+    delete:
+      tags:
+        - CalendarEventSerieses
+      summary: Bulk permanently-delete CalendarEventSerieses from trash by ids (atomic)
+      operationId: bulkPermanentDeleteCalendarEventSerieses
+      requestBody:
+        $ref: '#/components/requestBodies/BatchIds'
+      responses:
+        '200':
+          description: Permanently deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  permanently_deleted: { type: integer }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
   /api/v1/calendar_levels:
     get:
       tags:
@@ -3462,6 +4934,637 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CalendarEmployeeStatus'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    CalendarEvent:
+      type: object
+      required:
+        - id
+        - company_id
+        - title
+        - start_at
+        - stop_at
+        - privacy
+        - organizer_user_id
+        - metadata
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        series_id:
+          nullable: true
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          nullable: true
+          type: string
+        start_at:
+          type: string
+          format: date-time
+        stop_at:
+          type: string
+          format: date-time
+        privacy:
+          type: string
+        organizer_user_id:
+          type: string
+          format: uuid
+        location:
+          nullable: true
+          type: string
+        metadata:
+          type: object
+
+    CalendarEventBulkResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarEvent'
+        total: { type: integer }
+        failed: { type: integer }
+        errors:
+          type: array
+          items: { type: string }
+
+    CreateCalendarEventRequest:
+      type: object
+      required:
+        - company_id
+        - title
+        - start_at
+        - stop_at
+        - privacy
+        - organizer_user_id
+        - metadata
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        series_id:
+          nullable: true
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          nullable: true
+          type: string
+        start_at:
+          type: string
+          format: date-time
+        stop_at:
+          type: string
+          format: date-time
+        privacy:
+          type: string
+        organizer_user_id:
+          type: string
+          format: uuid
+        location:
+          nullable: true
+          type: string
+        metadata:
+          type: object
+
+    UpdateCalendarEventRequest:
+      type: object
+      required:
+        - company_id
+        - title
+        - start_at
+        - stop_at
+        - privacy
+        - organizer_user_id
+        - metadata
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        series_id:
+          nullable: true
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          nullable: true
+          type: string
+        start_at:
+          type: string
+          format: date-time
+        stop_at:
+          type: string
+          format: date-time
+        privacy:
+          type: string
+        organizer_user_id:
+          type: string
+          format: uuid
+        location:
+          nullable: true
+          type: string
+        metadata:
+          type: object
+
+    PatchCalendarEventRequest:
+      type: object
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        series_id:
+          nullable: true
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          nullable: true
+          type: string
+        start_at:
+          type: string
+          format: date-time
+        stop_at:
+          type: string
+          format: date-time
+        privacy:
+          type: string
+        organizer_user_id:
+          type: string
+          format: uuid
+        location:
+          nullable: true
+          type: string
+        metadata:
+          type: object
+
+    CalendarEventList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarEvent'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    CalendarEventAttendee:
+      type: object
+      required:
+        - id
+        - company_id
+        - event_id
+        - user_id
+        - state
+        - access_token
+        - metadata
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        state:
+          type: string
+        access_token:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+
+    CalendarEventAttendeeBulkResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarEventAttendee'
+        total: { type: integer }
+        failed: { type: integer }
+        errors:
+          type: array
+          items: { type: string }
+
+    CreateCalendarEventAttendeeRequest:
+      type: object
+      required:
+        - company_id
+        - event_id
+        - user_id
+        - state
+        - access_token
+        - metadata
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        state:
+          type: string
+        access_token:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+
+    UpdateCalendarEventAttendeeRequest:
+      type: object
+      required:
+        - company_id
+        - event_id
+        - user_id
+        - state
+        - access_token
+        - metadata
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        state:
+          type: string
+        access_token:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+
+    PatchCalendarEventAttendeeRequest:
+      type: object
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        state:
+          type: string
+        access_token:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+
+    CalendarEventAttendeeList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarEventAttendee'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    CalendarEventException:
+      type: object
+      required:
+        - id
+        - company_id
+        - series_id
+        - event_id
+        - slot_start_at
+        - slot_stop_at
+        - kind
+        - metadata
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        series_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        slot_start_at:
+          type: string
+          format: date-time
+        slot_stop_at:
+          type: string
+          format: date-time
+        kind:
+          type: string
+        metadata:
+          type: object
+
+    CalendarEventExceptionBulkResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarEventException'
+        total: { type: integer }
+        failed: { type: integer }
+        errors:
+          type: array
+          items: { type: string }
+
+    CreateCalendarEventExceptionRequest:
+      type: object
+      required:
+        - company_id
+        - series_id
+        - event_id
+        - slot_start_at
+        - slot_stop_at
+        - kind
+        - metadata
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        series_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        slot_start_at:
+          type: string
+          format: date-time
+        slot_stop_at:
+          type: string
+          format: date-time
+        kind:
+          type: string
+        metadata:
+          type: object
+
+    UpdateCalendarEventExceptionRequest:
+      type: object
+      required:
+        - company_id
+        - series_id
+        - event_id
+        - slot_start_at
+        - slot_stop_at
+        - kind
+        - metadata
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        series_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        slot_start_at:
+          type: string
+          format: date-time
+        slot_stop_at:
+          type: string
+          format: date-time
+        kind:
+          type: string
+        metadata:
+          type: object
+
+    PatchCalendarEventExceptionRequest:
+      type: object
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        series_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        slot_start_at:
+          type: string
+          format: date-time
+        slot_stop_at:
+          type: string
+          format: date-time
+        kind:
+          type: string
+        metadata:
+          type: object
+
+    CalendarEventExceptionList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarEventException'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    CalendarEventSeries:
+      type: object
+      required:
+        - id
+        - company_id
+        - freq
+        - interval
+        - base_event_id
+        - metadata
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        name:
+          nullable: true
+          type: string
+        freq:
+          type: string
+        interval:
+          type: integer
+          format: int32
+        by_weekday:
+          nullable: true
+          type: string
+        by_monthday:
+          nullable: true
+          type: string
+        until:
+          nullable: true
+          type: string
+          format: date
+        count:
+          nullable: true
+          type: integer
+          format: int32
+        base_event_id:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+
+    CalendarEventSeriesBulkResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarEventSeries'
+        total: { type: integer }
+        failed: { type: integer }
+        errors:
+          type: array
+          items: { type: string }
+
+    CreateCalendarEventSeriesRequest:
+      type: object
+      required:
+        - company_id
+        - freq
+        - interval
+        - base_event_id
+        - metadata
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        name:
+          nullable: true
+          type: string
+        freq:
+          type: string
+        interval:
+          type: integer
+          format: int32
+        by_weekday:
+          nullable: true
+          type: string
+        by_monthday:
+          nullable: true
+          type: string
+        until:
+          nullable: true
+          type: string
+          format: date
+        count:
+          nullable: true
+          type: integer
+          format: int32
+        base_event_id:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+
+    UpdateCalendarEventSeriesRequest:
+      type: object
+      required:
+        - company_id
+        - freq
+        - interval
+        - base_event_id
+        - metadata
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        name:
+          nullable: true
+          type: string
+        freq:
+          type: string
+        interval:
+          type: integer
+          format: int32
+        by_weekday:
+          nullable: true
+          type: string
+        by_monthday:
+          nullable: true
+          type: string
+        until:
+          nullable: true
+          type: string
+          format: date
+        count:
+          nullable: true
+          type: integer
+          format: int32
+        base_event_id:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+
+    PatchCalendarEventSeriesRequest:
+      type: object
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        name:
+          nullable: true
+          type: string
+        freq:
+          type: string
+        interval:
+          type: integer
+          format: int32
+        by_weekday:
+          nullable: true
+          type: string
+        by_monthday:
+          nullable: true
+          type: string
+        until:
+          nullable: true
+          type: string
+          format: date
+        count:
+          nullable: true
+          type: integer
+          format: int32
+        base_event_id:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+
+    CalendarEventSeriesList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarEventSeries'
         meta:
           $ref: '#/components/schemas/PaginationMeta'
 

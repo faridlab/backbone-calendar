@@ -10,11 +10,20 @@ pub mod calendar_branch_handler;
 pub mod calendar_department_handler;
 pub mod calendar_employee_handler;
 pub mod calendar_employee_status_handler;
+pub mod calendar_event_handler;
+pub mod calendar_event_attendee_handler;
+pub mod calendar_event_exception_handler;
+pub mod calendar_event_series_handler;
 pub mod calendar_level_handler;
 pub mod calendar_position_handler;
 pub mod calendar_religion_handler;
 
 // <<< CUSTOM
+// The guarded event-family composition. Auth-gated at the module level: without
+// the `auth` feature the module (and therefore every event-family route) does
+// not exist — nothing event-family mounts, fail-closed.
+#[cfg(feature = "auth")]
+pub mod calendar_event_guarded_routes;
 // END CUSTOM
 
 // Re-exports
@@ -23,8 +32,14 @@ pub use calendar_branch_handler::{create_calendar_branch_routes, create_calendar
 pub use calendar_department_handler::{create_calendar_department_routes, create_calendar_department_read_routes, create_calendar_department_write_routes};
 pub use calendar_employee_handler::{create_calendar_employee_routes, create_calendar_employee_read_routes, create_calendar_employee_write_routes};
 pub use calendar_employee_status_handler::{create_calendar_employee_status_routes, create_calendar_employee_status_read_routes, create_calendar_employee_status_write_routes};
+pub use calendar_event_handler::{create_calendar_event_routes, create_calendar_event_read_routes, create_calendar_event_write_routes};
+pub use calendar_event_attendee_handler::{create_calendar_event_attendee_routes, create_calendar_event_attendee_read_routes, create_calendar_event_attendee_write_routes};
+pub use calendar_event_exception_handler::{create_calendar_event_exception_routes, create_calendar_event_exception_read_routes, create_calendar_event_exception_write_routes};
+pub use calendar_event_series_handler::{create_calendar_event_series_routes, create_calendar_event_series_read_routes, create_calendar_event_series_write_routes};
 pub use calendar_level_handler::{create_calendar_level_routes, create_calendar_level_read_routes, create_calendar_level_write_routes};
 pub use calendar_position_handler::{create_calendar_position_routes, create_calendar_position_read_routes, create_calendar_position_write_routes};
 pub use calendar_religion_handler::{create_calendar_religion_routes, create_calendar_religion_read_routes, create_calendar_religion_write_routes};
 // <<< CUSTOM
+#[cfg(feature = "auth")]
+pub use calendar_event_guarded_routes::create_calendar_event_guarded_routes;
 // END CUSTOM

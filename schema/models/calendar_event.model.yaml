@@ -1,0 +1,94 @@
+# =============================================================================
+# Domain: calendar
+# Entity: CalendarEvent
+# Description: A calendar event — either a materialized occurrence of a series
+#              (series_id set) or a standalone event (series_id NULL). Start/stop
+#              are UTC timestamps (storage truth); occurrence identity within a
+#              series is the (start_at, stop_at) pair. Privacy is enforced as a
+#              declared read fence at the database (RLS), not application
+#              filtering. No allday field this wave (declared deferral).
+# =============================================================================
+
+models:
+  - name: CalendarEvent
+    collection: events
+    description: "A calendar event: series occurrence or standalone meeting."
+
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique event id"
+
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Org owner # logical FK organization.Company.id"
+
+      series_id:
+        type: uuid?
+        attributes: ["@foreign_key(CalendarEventSeries.id)"]
+        description: "# logical FK event_series.id — owning series, NULL = standalone (detached occurrences also become NULL)"
+
+      title:
+        type: string
+        attributes: ["@required", "@length(max=200)"]
+        description: "Event title"
+
+      description:
+        type: string?
+        attributes: ["@length(max=4000)"]
+        description: "Free-form description"
+
+      start_at:
+        type: datetime
+        attributes: ["@required"]
+        description: "Event start (UTC)"
+
+      stop_at:
+        type: datetime
+        attributes: ["@required"]
+        description: "Event stop (UTC); must be after start_at"
+
+      privacy:
+        type: EventPrivacy
+        attributes: ["@default(public)"]
+        description: "Visibility fence: public / private / confidential"
+
+      organizer_user_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "# logical FK sapiens.User.id — the organizing user"
+
+      location:
+        type: string?
+        attributes: ["@length(max=300)"]
+        description: "Location free text"
+
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    indexes:
+      - type: index
+        fields: [company_id, start_at]
+        description: "Company timeline scans"
+      - type: index
+        fields: [series_id, start_at]
+        description: "Series occurrence lookups"
+      - type: index
+        fields: [organizer_user_id]
+        description: "Organizer listings"
+
+enums:
+  - name: EventPrivacy
+    description: "Event visibility (declared read fence; both private and confidential are row-invisible to non-participants)"
+    variants:
+      - name: public
+        description: "Visible to everyone inside the company fence"
+        default: true
+      - name: private
+        description: "Visible to organizer and attendees only"
+      - name: confidential
+        description: "Visible to organizer and attendees only"

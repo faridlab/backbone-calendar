@@ -8,7 +8,7 @@
 //! ## Usage from other modules
 //!
 //! ```text
-//! use calendar::exports::{CalendarDto, CalendarQueryService};
+//! use calendar::exports::{CalendarDto};
 //! ```
 
 mod types;
@@ -42,6 +42,18 @@ pub use events::*;
 /// - `CalendarEmployeeStatusDto` - Data transfer object for CalendarEmployeeStatus
 /// - `CalendarEmployeeStatusSummary` - Summary view of CalendarEmployeeStatus
 /// - `CalendarEmployeeStatusId` - Type-safe ID wrapper
+/// - `CalendarEventDto` - Data transfer object for CalendarEvent
+/// - `CalendarEventSummary` - Summary view of CalendarEvent
+/// - `CalendarEventId` - Type-safe ID wrapper
+/// - `CalendarEventAttendeeDto` - Data transfer object for CalendarEventAttendee
+/// - `CalendarEventAttendeeSummary` - Summary view of CalendarEventAttendee
+/// - `CalendarEventAttendeeId` - Type-safe ID wrapper
+/// - `CalendarEventExceptionDto` - Data transfer object for CalendarEventException
+/// - `CalendarEventExceptionSummary` - Summary view of CalendarEventException
+/// - `CalendarEventExceptionId` - Type-safe ID wrapper
+/// - `CalendarEventSeriesDto` - Data transfer object for CalendarEventSeries
+/// - `CalendarEventSeriesSummary` - Summary view of CalendarEventSeries
+/// - `CalendarEventSeriesId` - Type-safe ID wrapper
 /// - `CalendarLevelDto` - Data transfer object for CalendarLevel
 /// - `CalendarLevelSummary` - Summary view of CalendarLevel
 /// - `CalendarLevelId` - Type-safe ID wrapper
@@ -51,9 +63,6 @@ pub use events::*;
 /// - `CalendarReligionDto` - Data transfer object for CalendarReligion
 /// - `CalendarReligionSummary` - Summary view of CalendarReligion
 /// - `CalendarReligionId` - Type-safe ID wrapper
-///
-/// ## Public Services
-/// - `CalendarQueryService` - Read-only queries
 ///
 /// ## Public Events
 /// - `CalendarCreatedEvent` - Published when Calendar is created
@@ -71,6 +80,18 @@ pub use events::*;
 /// - `CalendarEmployeeStatusCreatedEvent` - Published when CalendarEmployeeStatus is created
 /// - `CalendarEmployeeStatusUpdatedEvent` - Published when CalendarEmployeeStatus is updated
 /// - `CalendarEmployeeStatusDeletedEvent` - Published when CalendarEmployeeStatus is deleted
+/// - `CalendarEventCreatedEvent` - Published when CalendarEvent is created
+/// - `CalendarEventUpdatedEvent` - Published when CalendarEvent is updated
+/// - `CalendarEventDeletedEvent` - Published when CalendarEvent is deleted
+/// - `CalendarEventAttendeeCreatedEvent` - Published when CalendarEventAttendee is created
+/// - `CalendarEventAttendeeUpdatedEvent` - Published when CalendarEventAttendee is updated
+/// - `CalendarEventAttendeeDeletedEvent` - Published when CalendarEventAttendee is deleted
+/// - `CalendarEventExceptionCreatedEvent` - Published when CalendarEventException is created
+/// - `CalendarEventExceptionUpdatedEvent` - Published when CalendarEventException is updated
+/// - `CalendarEventExceptionDeletedEvent` - Published when CalendarEventException is deleted
+/// - `CalendarEventSeriesCreatedEvent` - Published when CalendarEventSeries is created
+/// - `CalendarEventSeriesUpdatedEvent` - Published when CalendarEventSeries is updated
+/// - `CalendarEventSeriesDeletedEvent` - Published when CalendarEventSeries is deleted
 /// - `CalendarLevelCreatedEvent` - Published when CalendarLevel is created
 /// - `CalendarLevelUpdatedEvent` - Published when CalendarLevel is updated
 /// - `CalendarLevelDeletedEvent` - Published when CalendarLevel is deleted

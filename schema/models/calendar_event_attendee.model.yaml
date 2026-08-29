@@ -1,0 +1,78 @@
+# =============================================================================
+# Domain: calendar
+# Entity: CalendarEventAttendee
+# Description: An attendance invitation row. One live attendee per (event,
+#              user) is enforced BY THE DATABASE (partial unique index over
+#              event_id + user_id where alive) — the DB backstop ADR-0015
+#              makes mandatory; the application additionally dedups at write
+#              time with a clear conflict error. state is a hand-set state
+#              machine (no validation gate); the organizer is auto-accepted at
+#              creation. access_token is the invitation/ics token seam — a
+#              unique plain token, NO transport built on it this wave.
+# =============================================================================
+
+models:
+  - name: CalendarEventAttendee
+    collection: event_attendees
+    description: "An event attendee with a hand-set response state."
+
+    fields:
+      id:
+        type: uuid
+        attributes: ["@id", "@default(uuid)"]
+        description: "Unique attendee row id"
+
+      company_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "Org owner # logical FK organization.Company.id"
+
+      event_id:
+        type: uuid
+        attributes: ["@required", "@foreign_key(CalendarEvent.id)"]
+        description: "# logical FK events.id — the attended event"
+
+      user_id:
+        type: uuid
+        attributes: ["@required", "@exclude_from_foreign_key_check"]
+        description: "# logical FK sapiens.User.id — the attending user"
+
+      state:
+        type: EventAttendeeState
+        attributes: ["@default(needs_action)"]
+        description: "Response state (hand-set; organizer auto-accepted on create)"
+
+      access_token:
+        type: uuid
+        attributes: ["@required", "@default(uuid)"]
+        description: "Per-attendee invitation token (unique; ics/invitation seam, no transport this wave)"
+
+      metadata:
+        type: Metadata
+        attributes: ["@audit_metadata"]
+        description: "Audit metadata"
+
+    indexes:
+      # Plain lookup; the enforced shape is the PARTIAL unique index
+      # (event_id, user_id) WHERE alive — carried by the hand-written table
+      # migration (partial so soft-delete + re-add works).
+      - type: index
+        fields: [event_id, user_id]
+        description: "Attendance lookups (unique-where-alive at the DB)"
+      - type: unique
+        fields: [access_token]
+        description: "One invitation token per attendee row, forever"
+
+enums:
+  - name: EventAttendeeState
+    description: "Attendee response state"
+    variants:
+      - name: needs_action
+        description: "Invited, no answer yet"
+        default: true
+      - name: accepted
+        description: "Accepted (organizer rows start here)"
+      - name: declined
+        description: "Declined"
+      - name: tentative
+        description: "Tentatively accepted"

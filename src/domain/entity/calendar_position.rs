@@ -58,7 +58,7 @@ pub struct CalendarPosition {
 impl CalendarPosition {
     /// Create a builder for CalendarPosition
     pub fn builder() -> CalendarPositionBuilder {
-        CalendarPositionBuilder::default()
+        <CalendarPositionBuilder as Default>::default()
     }
 
     /// Create a new CalendarPosition with required fields
