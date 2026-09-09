@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the CalendarDepartment aggregate.
 //! Implementation is in the infrastructure layer.
 
-use async_trait::async_trait;
 use anyhow::Result;
+use async_trait::async_trait;
 use uuid::Uuid;
 
 use crate::domain::entity::CalendarDepartment;
@@ -61,7 +61,6 @@ impl CalendarDepartmentFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait CalendarDepartmentRepository: Send + Sync {
-
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -76,7 +75,11 @@ pub trait CalendarDepartmentRepository: Send + Sync {
     async fn find_all(&self) -> Result<Vec<CalendarDepartment>>;
 
     /// Update calendar_department by ID
-    async fn update(&self, id: &str, entity: &CalendarDepartment) -> Result<Option<CalendarDepartment>>;
+    async fn update(
+        &self,
+        id: &str,
+        entity: &CalendarDepartment,
+    ) -> Result<Option<CalendarDepartment>>;
 
     /// Delete calendar_department by ID
     async fn delete(&self, id: &str) -> Result<bool>;
@@ -86,10 +89,17 @@ pub trait CalendarDepartmentRepository: Send + Sync {
     // =========================================================================
 
     /// List calendar_department with pagination
-    async fn list(&self, params: CalendarDepartmentPaginationParams) -> Result<CalendarDepartmentPaginatedResult>;
+    async fn list(
+        &self,
+        params: CalendarDepartmentPaginationParams,
+    ) -> Result<CalendarDepartmentPaginatedResult>;
 
     /// List calendar_department with pagination and filters
-    async fn list_with_filters(&self, params: CalendarDepartmentPaginationParams, filters: CalendarDepartmentFilter) -> Result<CalendarDepartmentPaginatedResult>;
+    async fn list_with_filters(
+        &self,
+        params: CalendarDepartmentPaginationParams,
+        filters: CalendarDepartmentFilter,
+    ) -> Result<CalendarDepartmentPaginatedResult>;
 
     /// Count all calendar_department entities
     async fn count(&self) -> Result<u64>;
@@ -111,7 +121,10 @@ pub trait CalendarDepartmentRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<CalendarDepartment>>;
 
     /// List soft-deleted calendar_department entities
-    async fn list_deleted(&self, params: CalendarDepartmentPaginationParams) -> Result<CalendarDepartmentPaginatedResult>;
+    async fn list_deleted(
+        &self,
+        params: CalendarDepartmentPaginationParams,
+    ) -> Result<CalendarDepartmentPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

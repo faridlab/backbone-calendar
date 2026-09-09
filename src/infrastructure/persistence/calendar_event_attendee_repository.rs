@@ -30,8 +30,11 @@ pub struct CalendarEventAttendeeRepository(
 );
 
 impl std::ops::Deref for CalendarEventAttendeeRepository {
-    type Target = backbone_orm::GenericCrudRepository<CalendarEventAttendee, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    type Target =
+        backbone_orm::GenericCrudRepository<CalendarEventAttendee, backbone_orm::SoftDelete>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 impl CalendarEventAttendeeRepository {
@@ -55,18 +58,15 @@ impl CalendarEventAttendeeRepository {
     pub async fn bulk_insert_scoped(
         &self,
         exec: impl sqlx::Executor<'_, Database = Postgres>,
-        company_id: Uuid,
         event_ids: &[Uuid],
         user_states: &[(Uuid, &str)],
         acting_user_id: Uuid,
     ) -> Result<(), sqlx::Error> {
-        let mut companies = Vec::with_capacity(event_ids.len() * user_states.len());
         let mut events = Vec::with_capacity(event_ids.len() * user_states.len());
         let mut users = Vec::with_capacity(event_ids.len() * user_states.len());
         let mut states = Vec::with_capacity(event_ids.len() * user_states.len());
         for event_id in event_ids {
             for (user_id, state) in user_states {
-                companies.push(company_id);
                 events.push(*event_id);
                 users.push(*user_id);
                 states.push(state.to_string());
@@ -75,14 +75,13 @@ impl CalendarEventAttendeeRepository {
 
         sqlx::query(
             r#"INSERT INTO calendar.event_attendees
-                   (company_id, event_id, user_id, state, metadata)
-               SELECT company_id, event_id, user_id,
+                   (event_id, user_id, state, metadata)
+               SELECT event_id, user_id,
                       state::event_attendee_state,
-                      jsonb_build_object('created_by', $5::text)
-               FROM UNNEST($1::uuid[], $2::uuid[], $3::uuid[], $4::text[])
-                    AS u(company_id, event_id, user_id, state)"#,
+                      jsonb_build_object('created_by', $4::text)
+               FROM UNNEST($1::uuid[], $2::uuid[], $3::text[])
+                    AS u(event_id, user_id, state)"#,
         )
-        .bind(&companies)
         .bind(&events)
         .bind(&users)
         .bind(&states)
@@ -101,7 +100,7 @@ impl CalendarEventAttendeeRepository {
         event_id: Uuid,
     ) -> Result<Vec<CalendarEventAttendee>, sqlx::Error> {
         sqlx::query_as::<_, CalendarEventAttendee>(
-            r#"SELECT id, company_id, event_id, user_id, state, access_token, metadata
+            r#"SELECT id, event_id, user_id, state, access_token, metadata
                FROM calendar.event_attendees
                WHERE event_id = $1
                  AND (metadata->>'deleted_at') IS NULL"#,
@@ -138,4 +137,8 @@ impl CalendarEventAttendeeRepository {
     }
 }
 
-backbone_core::impl_crud_repository!(CalendarEventAttendeeRepository, CalendarEventAttendee, soft_delete);
+backbone_core::impl_crud_repository!(
+    CalendarEventAttendeeRepository,
+    CalendarEventAttendee,
+    soft_delete
+);

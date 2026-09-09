@@ -1,8 +1,8 @@
+use super::AuditMetadata;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
-use super::AuditMetadata;
 
 /// Strongly-typed ID for CalendarEmployee
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -10,9 +10,15 @@ use super::AuditMetadata;
 pub struct CalendarEmployeeId(pub Uuid);
 
 impl CalendarEmployeeId {
-    pub fn new(id: Uuid) -> Self { Self(id) }
-    pub fn generate() -> Self { Self(Uuid::new_v4()) }
-    pub fn into_inner(self) -> Uuid { self.0 }
+    pub fn new(id: Uuid) -> Self {
+        Self(id)
+    }
+    pub fn generate() -> Self {
+        Self(Uuid::new_v4())
+    }
+    pub fn into_inner(self) -> Uuid {
+        self.0
+    }
 }
 
 impl std::fmt::Display for CalendarEmployeeId {
@@ -29,20 +35,28 @@ impl std::str::FromStr for CalendarEmployeeId {
 }
 
 impl From<Uuid> for CalendarEmployeeId {
-    fn from(id: Uuid) -> Self { Self(id) }
+    fn from(id: Uuid) -> Self {
+        Self(id)
+    }
 }
 
 impl From<CalendarEmployeeId> for Uuid {
-    fn from(id: CalendarEmployeeId) -> Self { id.0 }
+    fn from(id: CalendarEmployeeId) -> Self {
+        id.0
+    }
 }
 
 impl AsRef<Uuid> for CalendarEmployeeId {
-    fn as_ref(&self) -> &Uuid { &self.0 }
+    fn as_ref(&self) -> &Uuid {
+        &self.0
+    }
 }
 
 impl std::ops::Deref for CalendarEmployeeId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -121,7 +135,6 @@ impl CalendarEmployee {
         self.metadata.deleted_by.as_ref()
     }
 
-
     // ==========================================================
     // Partial Update
     // ==========================================================
@@ -131,10 +144,14 @@ impl CalendarEmployee {
         for (key, value) in fields {
             match key.as_str() {
                 "calendar_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.calendar_id = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.calendar_id = v;
+                    }
                 }
                 "employee_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.employee_id = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.employee_id = v;
+                    }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -226,8 +243,12 @@ impl CalendarEmployeeBuilder {
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<CalendarEmployee, String> {
-        let calendar_id = self.calendar_id.ok_or_else(|| "calendar_id is required".to_string())?;
-        let employee_id = self.employee_id.ok_or_else(|| "employee_id is required".to_string())?;
+        let calendar_id = self
+            .calendar_id
+            .ok_or_else(|| "calendar_id is required".to_string())?;
+        let employee_id = self
+            .employee_id
+            .ok_or_else(|| "employee_id is required".to_string())?;
 
         Ok(CalendarEmployee {
             id: Uuid::new_v4(),

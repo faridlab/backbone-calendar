@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{DateTime, Utc, NaiveDate};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::Calendar;
 use crate::domain::entity::AuditMetadata;
+use crate::domain::entity::Calendar;
 
 // =============================================================================
 // Create DTO
@@ -32,9 +32,6 @@ use crate::domain::entity::AuditMetadata;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateCalendarDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01"))]
@@ -66,9 +63,6 @@ pub struct CreateCalendarDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCalendarDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01"))]
@@ -100,9 +94,6 @@ pub struct UpdateCalendarDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchCalendarDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -125,7 +116,12 @@ pub struct PatchCalendarDto {
 impl PatchCalendarDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.company_id.is_some() || self.name.is_some() || self.date_start.is_some() || self.date_end.is_some() || self.is_holiday.is_some() || self.can_everyone_view.is_some() || self.note.is_some()
+        self.name.is_some()
+            || self.date_start.is_some()
+            || self.date_end.is_some()
+            || self.is_holiday.is_some()
+            || self.can_everyone_view.is_some()
+            || self.note.is_some()
     }
 }
 
@@ -141,10 +137,11 @@ impl PatchCalendarDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct CalendarResponseDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     pub id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    pub company_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01"))]
@@ -213,9 +210,9 @@ impl CalendarListResponseDto {
 #[serde(rename_all = "camelCase")]
 pub struct CalendarSummaryDto {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub name: String,
     pub date_start: NaiveDate,
+    pub date_end: NaiveDate,
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -227,7 +224,6 @@ impl From<Calendar> for CalendarResponseDto {
     fn from(entity: Calendar) -> Self {
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             name: entity.name,
             date_start: entity.date_start,
             date_end: entity.date_end,
@@ -244,9 +240,9 @@ impl From<Calendar> for CalendarSummaryDto {
         let created_at = backbone_core::PersistentEntity::created_at(&entity);
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             name: entity.name,
             date_start: entity.date_start,
+            date_end: entity.date_end,
             created_at,
         }
     }
@@ -256,7 +252,6 @@ impl From<CreateCalendarDto> for Calendar {
     fn from(dto: CreateCalendarDto) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id: dto.company_id,
             name: dto.name,
             date_start: dto.date_start,
             date_end: dto.date_end,
@@ -272,7 +267,6 @@ impl From<&Calendar> for CalendarResponseDto {
     fn from(entity: &Calendar) -> Self {
         Self {
             id: entity.id.clone(),
-            company_id: entity.company_id.clone(),
             name: entity.name.clone(),
             date_start: entity.date_start.clone(),
             date_end: entity.date_end.clone(),
@@ -292,7 +286,6 @@ impl backbone_core::FromCreateDto<CreateCalendarDto> for Calendar {
 
 impl backbone_core::ApplyUpdateDto<UpdateCalendarDto> for Calendar {
     fn apply_update(mut self, dto: UpdateCalendarDto) -> backbone_core::ServiceResult<Self> {
-        self.company_id = dto.company_id;
         self.name = dto.name;
         self.date_start = dto.date_start;
         self.date_end = dto.date_end;

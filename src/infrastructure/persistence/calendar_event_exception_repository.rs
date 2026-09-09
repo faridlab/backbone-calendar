@@ -15,8 +15,8 @@
 //! row).
 
 use chrono::{DateTime, Utc};
-use sqlx::{Postgres};
 use sqlx::PgPool;
+use sqlx::Postgres;
 use uuid::Uuid;
 
 use crate::domain::entity::CalendarEventException;
@@ -33,8 +33,11 @@ pub struct CalendarEventExceptionRepository(
 );
 
 impl std::ops::Deref for CalendarEventExceptionRepository {
-    type Target = backbone_orm::GenericCrudRepository<CalendarEventException, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    type Target =
+        backbone_orm::GenericCrudRepository<CalendarEventException, backbone_orm::SoftDelete>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 impl CalendarEventExceptionRepository {
@@ -58,7 +61,6 @@ impl CalendarEventExceptionRepository {
     pub async fn claim_slot_scoped(
         &self,
         exec: impl sqlx::Executor<'_, Database = Postgres>,
-        company_id: Uuid,
         series_id: Uuid,
         event_id: Uuid,
         slot_start_at: DateTime<Utc>,
@@ -68,15 +70,14 @@ impl CalendarEventExceptionRepository {
     ) -> Result<(), sqlx::Error> {
         sqlx::query(
             r#"INSERT INTO calendar.event_exceptions
-                   (company_id, series_id, event_id, slot_start_at, slot_stop_at,
+                   (series_id, event_id, slot_start_at, slot_stop_at,
                     kind, metadata)
-               VALUES ($1, $2, $3, $4, $5, $6::event_exception_kind,
-                       jsonb_build_object('created_by', $7::text))
+               VALUES ($1, $2, $3, $4, $5::event_exception_kind,
+                       jsonb_build_object('created_by', $6::text))
                ON CONFLICT (series_id, slot_start_at, slot_stop_at)
                    WHERE (metadata->>'deleted_at') IS NULL
                DO NOTHING"#,
         )
-        .bind(company_id)
         .bind(series_id)
         .bind(event_id)
         .bind(slot_start_at)
@@ -108,4 +109,8 @@ impl CalendarEventExceptionRepository {
     }
 }
 
-backbone_core::impl_crud_repository!(CalendarEventExceptionRepository, CalendarEventException, soft_delete);
+backbone_core::impl_crud_repository!(
+    CalendarEventExceptionRepository,
+    CalendarEventException,
+    soft_delete
+);

@@ -5,10 +5,10 @@
 //! Entity-specific predicate structs implementing `backbone_core::Specification`.
 //! Combinators (AND/OR/NOT) are available via the trait methods — no duplication.
 
-use backbone_core::Specification;
 use crate::domain::entity::CalendarLevel;
+use backbone_core::Specification;
 
-pub use backbone_core::{AndSpecification, OrSpecification, NotSpecification};
+pub use backbone_core::{AndSpecification, NotSpecification, OrSpecification};
 
 // ─── Entity-specific predicates ──────────────────────────────────────────────
 //

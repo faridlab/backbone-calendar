@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::CalendarEventException;
 use crate::domain::entity::AuditMetadata;
+use crate::domain::entity::CalendarEventException;
 use crate::domain::entity::EventExceptionKind;
 
 // =============================================================================
@@ -33,13 +33,16 @@ use crate::domain::entity::EventExceptionKind;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateCalendarEventExceptionDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(alias = "series_id")]
     pub series_id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(alias = "event_id")]
     pub event_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
@@ -64,13 +67,16 @@ pub struct CreateCalendarEventExceptionDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCalendarEventExceptionDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(alias = "series_id")]
     pub series_id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(alias = "event_id")]
     pub event_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
@@ -95,13 +101,16 @@ pub struct UpdateCalendarEventExceptionDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchCalendarEventExceptionDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(skip_serializing_if = "Option::is_none", alias = "series_id")]
     pub series_id: Option<Uuid>,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(skip_serializing_if = "Option::is_none", alias = "event_id")]
     pub event_id: Option<Uuid>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
@@ -117,7 +126,11 @@ pub struct PatchCalendarEventExceptionDto {
 impl PatchCalendarEventExceptionDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.company_id.is_some() || self.series_id.is_some() || self.event_id.is_some() || self.slot_start_at.is_some() || self.slot_stop_at.is_some() || self.kind.is_some()
+        self.series_id.is_some()
+            || self.event_id.is_some()
+            || self.slot_start_at.is_some()
+            || self.slot_stop_at.is_some()
+            || self.kind.is_some()
     }
 }
 
@@ -133,13 +146,20 @@ impl PatchCalendarEventExceptionDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct CalendarEventExceptionResponseDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     pub id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    pub company_id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     pub series_id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     pub event_id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     pub slot_start_at: DateTime<Utc>,
@@ -179,7 +199,12 @@ pub struct CalendarEventExceptionListResponseDto {
 
 impl CalendarEventExceptionListResponseDto {
     /// Create a new list response from items and pagination info
-    pub fn new(items: Vec<CalendarEventExceptionResponseDto>, total: u64, page: u32, per_page: u32) -> Self {
+    pub fn new(
+        items: Vec<CalendarEventExceptionResponseDto>,
+        total: u64,
+        page: u32,
+        per_page: u32,
+    ) -> Self {
         let total_pages = if per_page > 0 {
             ((total as f64) / (per_page as f64)).ceil() as u32
         } else {
@@ -203,9 +228,9 @@ impl CalendarEventExceptionListResponseDto {
 #[serde(rename_all = "camelCase")]
 pub struct CalendarEventExceptionSummaryDto {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub series_id: Uuid,
     pub event_id: Uuid,
+    pub slot_start_at: DateTime<Utc>,
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -217,7 +242,6 @@ impl From<CalendarEventException> for CalendarEventExceptionResponseDto {
     fn from(entity: CalendarEventException) -> Self {
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             series_id: entity.series_id,
             event_id: entity.event_id,
             slot_start_at: entity.slot_start_at,
@@ -233,9 +257,9 @@ impl From<CalendarEventException> for CalendarEventExceptionSummaryDto {
         let created_at = backbone_core::PersistentEntity::created_at(&entity);
         Self {
             id: entity.id,
-            company_id: entity.company_id,
             series_id: entity.series_id,
             event_id: entity.event_id,
+            slot_start_at: entity.slot_start_at,
             created_at,
         }
     }
@@ -245,7 +269,6 @@ impl From<CreateCalendarEventExceptionDto> for CalendarEventException {
     fn from(dto: CreateCalendarEventExceptionDto) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id: dto.company_id,
             series_id: dto.series_id,
             event_id: dto.event_id,
             slot_start_at: dto.slot_start_at,
@@ -260,7 +283,6 @@ impl From<&CalendarEventException> for CalendarEventExceptionResponseDto {
     fn from(entity: &CalendarEventException) -> Self {
         Self {
             id: entity.id.clone(),
-            company_id: entity.company_id.clone(),
             series_id: entity.series_id.clone(),
             event_id: entity.event_id.clone(),
             slot_start_at: entity.slot_start_at.clone(),
@@ -278,8 +300,10 @@ impl backbone_core::FromCreateDto<CreateCalendarEventExceptionDto> for CalendarE
 }
 
 impl backbone_core::ApplyUpdateDto<UpdateCalendarEventExceptionDto> for CalendarEventException {
-    fn apply_update(mut self, dto: UpdateCalendarEventExceptionDto) -> backbone_core::ServiceResult<Self> {
-        self.company_id = dto.company_id;
+    fn apply_update(
+        mut self,
+        dto: UpdateCalendarEventExceptionDto,
+    ) -> backbone_core::ServiceResult<Self> {
         self.series_id = dto.series_id;
         self.event_id = dto.event_id;
         self.slot_start_at = dto.slot_start_at;

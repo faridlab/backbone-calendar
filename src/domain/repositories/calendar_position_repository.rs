@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the CalendarPosition aggregate.
 //! Implementation is in the infrastructure layer.
 
-use async_trait::async_trait;
 use anyhow::Result;
+use async_trait::async_trait;
 use uuid::Uuid;
 
 use crate::domain::entity::CalendarPosition;
@@ -61,7 +61,6 @@ impl CalendarPositionFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait CalendarPositionRepository: Send + Sync {
-
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -76,7 +75,8 @@ pub trait CalendarPositionRepository: Send + Sync {
     async fn find_all(&self) -> Result<Vec<CalendarPosition>>;
 
     /// Update calendar_position by ID
-    async fn update(&self, id: &str, entity: &CalendarPosition) -> Result<Option<CalendarPosition>>;
+    async fn update(&self, id: &str, entity: &CalendarPosition)
+        -> Result<Option<CalendarPosition>>;
 
     /// Delete calendar_position by ID
     async fn delete(&self, id: &str) -> Result<bool>;
@@ -86,10 +86,17 @@ pub trait CalendarPositionRepository: Send + Sync {
     // =========================================================================
 
     /// List calendar_position with pagination
-    async fn list(&self, params: CalendarPositionPaginationParams) -> Result<CalendarPositionPaginatedResult>;
+    async fn list(
+        &self,
+        params: CalendarPositionPaginationParams,
+    ) -> Result<CalendarPositionPaginatedResult>;
 
     /// List calendar_position with pagination and filters
-    async fn list_with_filters(&self, params: CalendarPositionPaginationParams, filters: CalendarPositionFilter) -> Result<CalendarPositionPaginatedResult>;
+    async fn list_with_filters(
+        &self,
+        params: CalendarPositionPaginationParams,
+        filters: CalendarPositionFilter,
+    ) -> Result<CalendarPositionPaginatedResult>;
 
     /// Count all calendar_position entities
     async fn count(&self) -> Result<u64>;
@@ -111,7 +118,10 @@ pub trait CalendarPositionRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<CalendarPosition>>;
 
     /// List soft-deleted calendar_position entities
-    async fn list_deleted(&self, params: CalendarPositionPaginationParams) -> Result<CalendarPositionPaginatedResult>;
+    async fn list_deleted(
+        &self,
+        params: CalendarPositionPaginationParams,
+    ) -> Result<CalendarPositionPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

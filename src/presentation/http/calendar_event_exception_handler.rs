@@ -8,9 +8,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use axum::Router;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 // Backbone framework imports
 use backbone_core::http::BackboneCrudHandler;
@@ -22,12 +22,14 @@ use backbone_auth::middleware::AuthContext;
 use backbone_auth::AuthMiddleware;
 
 // Domain imports
-use crate::domain::entity::*;
 use crate::application::service::{CalendarEventExceptionService, ServiceError};
+use crate::domain::entity::*;
 
 // DTO imports
-use crate::presentation::dto::{CreateCalendarEventExceptionDto, UpdateCalendarEventExceptionDto, PatchCalendarEventExceptionDto, CalendarEventExceptionResponseDto};
-
+use crate::presentation::dto::{
+    CalendarEventExceptionResponseDto, CreateCalendarEventExceptionDto,
+    PatchCalendarEventExceptionDto, UpdateCalendarEventExceptionDto,
+};
 
 /// Application error type
 #[derive(Debug, thiserror::Error)]
@@ -61,9 +63,18 @@ impl axum::response::IntoResponse for CalendarEventExceptionError {
 
         let (status, code) = match &self {
             Self::NotFound(_) => (StatusCode::NOT_FOUND, "CALENDAREVENTEXCEPTION_NOT_FOUND"),
-            Self::Validation(_) => (StatusCode::BAD_REQUEST, "CALENDAREVENTEXCEPTION_VALIDATION_ERROR"),
-            Self::Database(_) => (StatusCode::INTERNAL_SERVER_ERROR, "CALENDAREVENTEXCEPTION_DATABASE_ERROR"),
-            Self::Internal(_) => (StatusCode::INTERNAL_SERVER_ERROR, "CALENDAREVENTEXCEPTION_INTERNAL_ERROR"),
+            Self::Validation(_) => (
+                StatusCode::BAD_REQUEST,
+                "CALENDAREVENTEXCEPTION_VALIDATION_ERROR",
+            ),
+            Self::Database(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "CALENDAREVENTEXCEPTION_DATABASE_ERROR",
+            ),
+            Self::Internal(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "CALENDAREVENTEXCEPTION_INTERNAL_ERROR",
+            ),
         };
 
         let body = serde_json::json!({
@@ -108,11 +119,16 @@ impl axum::response::IntoResponse for CalendarEventExceptionError {
 /// let service = Arc::new(CalendarEventExceptionService::with_repository(repository));
 /// let router = create_calendar_event_exception_routes(service);
 /// ```
-pub fn create_calendar_event_exception_routes(service: Arc<CalendarEventExceptionService>) -> Router {
-    BackboneCrudHandler::<CalendarEventExceptionService, CalendarEventException, CreateCalendarEventExceptionDto, UpdateCalendarEventExceptionDto, CalendarEventExceptionResponseDto>::routes(
-        service,
-        "/calendar_event_exceptions",
-    )
+pub fn create_calendar_event_exception_routes(
+    service: Arc<CalendarEventExceptionService>,
+) -> Router {
+    BackboneCrudHandler::<
+        CalendarEventExceptionService,
+        CalendarEventException,
+        CreateCalendarEventExceptionDto,
+        UpdateCalendarEventExceptionDto,
+        CalendarEventExceptionResponseDto,
+    >::routes(service, "/calendar_event_exceptions")
 }
 
 /// Create Axum router with only the read (GET) endpoints for CalendarEventException.
@@ -120,11 +136,16 @@ pub fn create_calendar_event_exception_routes(service: Arc<CalendarEventExceptio
 /// Safe for public, unauthenticated exposure (e.g., reference data).
 /// Mutations must be served separately via `create_calendar_event_exception_write_routes`,
 /// typically wrapped in an auth middleware layer.
-pub fn create_calendar_event_exception_read_routes(service: Arc<CalendarEventExceptionService>) -> Router {
-    BackboneCrudHandler::<CalendarEventExceptionService, CalendarEventException, CreateCalendarEventExceptionDto, UpdateCalendarEventExceptionDto, CalendarEventExceptionResponseDto>::read_routes(
-        service,
-        "/calendar_event_exceptions",
-    )
+pub fn create_calendar_event_exception_read_routes(
+    service: Arc<CalendarEventExceptionService>,
+) -> Router {
+    BackboneCrudHandler::<
+        CalendarEventExceptionService,
+        CalendarEventException,
+        CreateCalendarEventExceptionDto,
+        UpdateCalendarEventExceptionDto,
+        CalendarEventExceptionResponseDto,
+    >::read_routes(service, "/calendar_event_exceptions")
 }
 
 /// Create Axum router with only the write (mutation) endpoints for CalendarEventException.
@@ -138,11 +159,16 @@ pub fn create_calendar_event_exception_read_routes(service: Arc<CalendarEventExc
 /// they bypass all business invariants. If the module exposes a validated write
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
-pub fn create_calendar_event_exception_write_routes(service: Arc<CalendarEventExceptionService>) -> Router {
-    BackboneCrudHandler::<CalendarEventExceptionService, CalendarEventException, CreateCalendarEventExceptionDto, UpdateCalendarEventExceptionDto, CalendarEventExceptionResponseDto>::write_routes(
-        service,
-        "/calendar_event_exceptions",
-    )
+pub fn create_calendar_event_exception_write_routes(
+    service: Arc<CalendarEventExceptionService>,
+) -> Router {
+    BackboneCrudHandler::<
+        CalendarEventExceptionService,
+        CalendarEventException,
+        CreateCalendarEventExceptionDto,
+        UpdateCalendarEventExceptionDto,
+        CalendarEventExceptionResponseDto,
+    >::write_routes(service, "/calendar_event_exceptions")
 }
 
 /// Create authenticated routes with auth middleware.
@@ -151,7 +177,9 @@ pub fn create_calendar_event_exception_write_routes(service: Arc<CalendarEventEx
 /// is responsible for extracting and validating tokens, then providing
 /// an `AuthContext` via request extensions.
 #[cfg(feature = "auth")]
-pub fn create_protected_calendar_event_exception_routes<A: AuthMiddleware + Send + Sync + 'static>(
+pub fn create_protected_calendar_event_exception_routes<
+    A: AuthMiddleware + Send + Sync + 'static,
+>(
     service: Arc<CalendarEventExceptionService>,
     auth: Arc<A>,
 ) -> Router {
@@ -159,30 +187,35 @@ pub fn create_protected_calendar_event_exception_routes<A: AuthMiddleware + Send
     use axum::response::IntoResponse;
 
     let auth_layer = auth.clone();
-    create_calendar_event_exception_routes(service)
-        .layer(middleware::from_fn(move |mut req: axum::extract::Request, next: axum::middleware::Next| {
+    create_calendar_event_exception_routes(service).layer(middleware::from_fn(
+        move |mut req: axum::extract::Request, next: axum::middleware::Next| {
             let auth = auth_layer.clone();
             async move {
-                let token = req.headers()
+                let token = req
+                    .headers()
                     .get(axum::http::header::AUTHORIZATION)
                     .and_then(|h| h.to_str().ok())
-                    .and_then(|raw| raw.strip_prefix("Bearer ").or_else(|| raw.strip_prefix("bearer ")))
+                    .and_then(|raw| {
+                        raw.strip_prefix("Bearer ")
+                            .or_else(|| raw.strip_prefix("bearer "))
+                    })
                     .unwrap_or("");
                 match auth.authenticate(token).await {
                     Ok(ctx) => {
                         req.extensions_mut().insert(ctx);
                         next.run(req).await
                     }
-                    Err(_) => {
-                        (axum::http::StatusCode::UNAUTHORIZED,
-                         axum::Json(serde_json::json!({
-                             "success": false,
-                             "error": "unauthorized",
-                             "message": "Authentication required"
-                         }))
-                        ).into_response()
-                    }
+                    Err(_) => (
+                        axum::http::StatusCode::UNAUTHORIZED,
+                        axum::Json(serde_json::json!({
+                            "success": false,
+                            "error": "unauthorized",
+                            "message": "Authentication required"
+                        })),
+                    )
+                        .into_response(),
                 }
             }
-        }))
+        },
+    ))
 }

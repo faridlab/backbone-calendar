@@ -22,8 +22,11 @@ pub struct CalendarEmployeeStatusRepository(
 );
 
 impl std::ops::Deref for CalendarEmployeeStatusRepository {
-    type Target = backbone_orm::GenericCrudRepository<CalendarEmployeeStatus, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    type Target =
+        backbone_orm::GenericCrudRepository<CalendarEmployeeStatus, backbone_orm::SoftDelete>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 impl CalendarEmployeeStatusRepository {
@@ -33,4 +36,8 @@ impl CalendarEmployeeStatusRepository {
     }
 }
 
-backbone_core::impl_crud_repository!(CalendarEmployeeStatusRepository, CalendarEmployeeStatus, soft_delete);
+backbone_core::impl_crud_repository!(
+    CalendarEmployeeStatusRepository,
+    CalendarEmployeeStatus,
+    soft_delete
+);

@@ -10,9 +10,10 @@
 //! - the **custom read-port** `working_days` delegates to [`CalendarRepository::working_days`],
 //!   which holds the hand-written SQL (4-layer rule: services orchestrate, repos hold SQL).
 //!
-//! Company scoping (ADR-0008) is NOT done here — the caller (HTTP composition root via
-//! `with_request_scope`, or a job via `with_company_scope`) sets it; `find_by_id` and the repo's
-//! `company_scope::fetch_all_scoped` both honour the task-local RLS fence.
+//! Tenancy (ADR-0029): the module is tenant-agnostic and this impl adds no scoping. The port keeps
+//! its `company_id` parameter — it names the org unit whose working days are counted (a company-kind
+//! org unit's id equals its legacy company id) — and the repository honours the COMPOSING service's
+//! ambient request org scope when one is bound.
 
 use anyhow::Result;
 use async_trait::async_trait;
@@ -55,7 +56,10 @@ impl CalendarQueryService for CalendarModule {
             .calendar_service
             .find_by_id(&id.into_inner().to_string())
             .await?;
-        Ok(entity.map(|e| CalendarSummary { id: CalendarId(e.id), name: e.name }))
+        Ok(entity.map(|e| CalendarSummary {
+            id: CalendarId(e.id),
+            name: e.name,
+        }))
     }
 
     async fn calendar_exists(&self, id: CalendarId) -> Result<bool> {
@@ -82,7 +86,9 @@ impl CalendarQueryService for CalendarModule {
             .calendar_branch_service
             .find_by_id(&id.into_inner().to_string())
             .await?;
-        Ok(entity.map(|e| CalendarBranchSummary { id: CalendarBranchId(e.id) }))
+        Ok(entity.map(|e| CalendarBranchSummary {
+            id: CalendarBranchId(e.id),
+        }))
     }
 
     async fn calendar_branch_exists(&self, id: CalendarBranchId) -> Result<bool> {
@@ -112,7 +118,9 @@ impl CalendarQueryService for CalendarModule {
             .calendar_department_service
             .find_by_id(&id.into_inner().to_string())
             .await?;
-        Ok(entity.map(|e| CalendarDepartmentSummary { id: CalendarDepartmentId(e.id) }))
+        Ok(entity.map(|e| CalendarDepartmentSummary {
+            id: CalendarDepartmentId(e.id),
+        }))
     }
 
     async fn calendar_department_exists(&self, id: CalendarDepartmentId) -> Result<bool> {
@@ -142,7 +150,9 @@ impl CalendarQueryService for CalendarModule {
             .calendar_employee_service
             .find_by_id(&id.into_inner().to_string())
             .await?;
-        Ok(entity.map(|e| CalendarEmployeeSummary { id: CalendarEmployeeId(e.id) }))
+        Ok(entity.map(|e| CalendarEmployeeSummary {
+            id: CalendarEmployeeId(e.id),
+        }))
     }
 
     async fn calendar_employee_exists(&self, id: CalendarEmployeeId) -> Result<bool> {
@@ -172,7 +182,9 @@ impl CalendarQueryService for CalendarModule {
             .calendar_employee_status_service
             .find_by_id(&id.into_inner().to_string())
             .await?;
-        Ok(entity.map(|e| CalendarEmployeeStatusSummary { id: CalendarEmployeeStatusId(e.id) }))
+        Ok(entity.map(|e| CalendarEmployeeStatusSummary {
+            id: CalendarEmployeeStatusId(e.id),
+        }))
     }
 
     async fn calendar_employee_status_exists(&self, id: CalendarEmployeeStatusId) -> Result<bool> {
@@ -199,7 +211,9 @@ impl CalendarQueryService for CalendarModule {
             .calendar_level_service
             .find_by_id(&id.into_inner().to_string())
             .await?;
-        Ok(entity.map(|e| CalendarLevelSummary { id: CalendarLevelId(e.id) }))
+        Ok(entity.map(|e| CalendarLevelSummary {
+            id: CalendarLevelId(e.id),
+        }))
     }
 
     async fn calendar_level_exists(&self, id: CalendarLevelId) -> Result<bool> {
@@ -229,7 +243,9 @@ impl CalendarQueryService for CalendarModule {
             .calendar_position_service
             .find_by_id(&id.into_inner().to_string())
             .await?;
-        Ok(entity.map(|e| CalendarPositionSummary { id: CalendarPositionId(e.id) }))
+        Ok(entity.map(|e| CalendarPositionSummary {
+            id: CalendarPositionId(e.id),
+        }))
     }
 
     async fn calendar_position_exists(&self, id: CalendarPositionId) -> Result<bool> {
@@ -259,7 +275,9 @@ impl CalendarQueryService for CalendarModule {
             .calendar_religion_service
             .find_by_id(&id.into_inner().to_string())
             .await?;
-        Ok(entity.map(|e| CalendarReligionSummary { id: CalendarReligionId(e.id) }))
+        Ok(entity.map(|e| CalendarReligionSummary {
+            id: CalendarReligionId(e.id),
+        }))
     }
 
     async fn calendar_religion_exists(&self, id: CalendarReligionId) -> Result<bool> {
@@ -270,12 +288,7 @@ impl CalendarQueryService for CalendarModule {
             .is_some())
     }
 
-    async fn working_days(
-        &self,
-        company_id: Uuid,
-        from: NaiveDate,
-        to: NaiveDate,
-    ) -> Result<u32> {
+    async fn working_days(&self, company_id: Uuid, from: NaiveDate, to: NaiveDate) -> Result<u32> {
         Ok(self
             .calendar_repository
             .working_days(&self.db_pool, company_id, from, to)
@@ -292,7 +305,6 @@ impl CalendarQueryService for CalendarModule {
 fn calendar_to_dto(e: Calendar) -> Result<CalendarDto> {
     Ok(CalendarDto {
         id: CalendarId(e.id),
-        company_id: e.company_id,
         name: e.name,
         date_start: e.date_start,
         date_end: e.date_end,
@@ -307,7 +319,6 @@ fn calendar_branch_to_dto(e: CalendarBranch) -> Result<CalendarBranchDto> {
     Ok(CalendarBranchDto {
         id: CalendarBranchId(e.id),
         calendar_id: e.calendar_id,
-        company_id: e.company_id,
         branch_id: e.branch_id,
         metadata: serde_json::to_value(&e.metadata)?,
     })

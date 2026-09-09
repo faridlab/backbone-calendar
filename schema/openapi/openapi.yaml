@@ -4435,7 +4435,6 @@ components:
       type: object
       required:
         - id
-        - company_id
         - name
         - date_start
         - date_end
@@ -4444,9 +4443,6 @@ components:
         - metadata
       properties:
         id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         name:
@@ -4483,7 +4479,6 @@ components:
     CreateCalendarRequest:
       type: object
       required:
-        - company_id
         - name
         - date_start
         - date_end
@@ -4491,9 +4486,6 @@ components:
         - can_everyone_view
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         name:
           type: string
         date_start:
@@ -4515,7 +4507,6 @@ components:
     UpdateCalendarRequest:
       type: object
       required:
-        - company_id
         - name
         - date_start
         - date_end
@@ -4523,9 +4514,6 @@ components:
         - can_everyone_view
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         name:
           type: string
         date_start:
@@ -4547,9 +4535,6 @@ components:
     PatchCalendarRequest:
       type: object
       properties:
-        company_id:
-          type: string
-          format: uuid
         name:
           type: string
         date_start:
@@ -4583,7 +4568,6 @@ components:
       required:
         - id
         - calendar_id
-        - company_id
         - branch_id
         - metadata
       properties:
@@ -4591,9 +4575,6 @@ components:
           type: string
           format: uuid
         calendar_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         branch_id:
@@ -4619,14 +4600,10 @@ components:
       type: object
       required:
         - calendar_id
-        - company_id
         - branch_id
         - metadata
       properties:
         calendar_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         branch_id:
@@ -4639,14 +4616,10 @@ components:
       type: object
       required:
         - calendar_id
-        - company_id
         - branch_id
         - metadata
       properties:
         calendar_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         branch_id:
@@ -4659,9 +4632,6 @@ components:
       type: object
       properties:
         calendar_id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         branch_id:
@@ -4941,7 +4911,6 @@ components:
       type: object
       required:
         - id
-        - company_id
         - title
         - start_at
         - stop_at
@@ -4950,9 +4919,6 @@ components:
         - metadata
       properties:
         id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         series_id:
@@ -4997,7 +4963,6 @@ components:
     CreateCalendarEventRequest:
       type: object
       required:
-        - company_id
         - title
         - start_at
         - stop_at
@@ -5005,9 +4970,6 @@ components:
         - organizer_user_id
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         series_id:
           nullable: true
           type: string
@@ -5037,7 +4999,6 @@ components:
     UpdateCalendarEventRequest:
       type: object
       required:
-        - company_id
         - title
         - start_at
         - stop_at
@@ -5045,9 +5006,6 @@ components:
         - organizer_user_id
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         series_id:
           nullable: true
           type: string
@@ -5077,9 +5035,6 @@ components:
     PatchCalendarEventRequest:
       type: object
       properties:
-        company_id:
-          type: string
-          format: uuid
         series_id:
           nullable: true
           type: string
@@ -5120,7 +5075,6 @@ components:
       type: object
       required:
         - id
-        - company_id
         - event_id
         - user_id
         - state
@@ -5128,9 +5082,6 @@ components:
         - metadata
       properties:
         id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         event_id:
@@ -5163,16 +5114,12 @@ components:
     CreateCalendarEventAttendeeRequest:
       type: object
       required:
-        - company_id
         - event_id
         - user_id
         - state
         - access_token
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         event_id:
           type: string
           format: uuid
@@ -5190,16 +5137,12 @@ components:
     UpdateCalendarEventAttendeeRequest:
       type: object
       required:
-        - company_id
         - event_id
         - user_id
         - state
         - access_token
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         event_id:
           type: string
           format: uuid
@@ -5217,9 +5160,6 @@ components:
     PatchCalendarEventAttendeeRequest:
       type: object
       properties:
-        company_id:
-          type: string
-          format: uuid
         event_id:
           type: string
           format: uuid
@@ -5248,7 +5188,6 @@ components:
       type: object
       required:
         - id
-        - company_id
         - series_id
         - event_id
         - slot_start_at
@@ -5257,9 +5196,6 @@ components:
         - metadata
       properties:
         id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         series_id:
@@ -5295,7 +5231,6 @@ components:
     CreateCalendarEventExceptionRequest:
       type: object
       required:
-        - company_id
         - series_id
         - event_id
         - slot_start_at
@@ -5303,9 +5238,6 @@ components:
         - kind
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         series_id:
           type: string
           format: uuid
@@ -5326,7 +5258,6 @@ components:
     UpdateCalendarEventExceptionRequest:
       type: object
       required:
-        - company_id
         - series_id
         - event_id
         - slot_start_at
@@ -5334,9 +5265,6 @@ components:
         - kind
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         series_id:
           type: string
           format: uuid
@@ -5357,9 +5285,6 @@ components:
     PatchCalendarEventExceptionRequest:
       type: object
       properties:
-        company_id:
-          type: string
-          format: uuid
         series_id:
           type: string
           format: uuid
@@ -5391,16 +5316,12 @@ components:
       type: object
       required:
         - id
-        - company_id
         - freq
         - interval
         - base_event_id
         - metadata
       properties:
         id:
-          type: string
-          format: uuid
-        company_id:
           type: string
           format: uuid
         name:
@@ -5447,15 +5368,11 @@ components:
     CreateCalendarEventSeriesRequest:
       type: object
       required:
-        - company_id
         - freq
         - interval
         - base_event_id
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         name:
           nullable: true
           type: string
@@ -5487,15 +5404,11 @@ components:
     UpdateCalendarEventSeriesRequest:
       type: object
       required:
-        - company_id
         - freq
         - interval
         - base_event_id
         - metadata
       properties:
-        company_id:
-          type: string
-          format: uuid
         name:
           nullable: true
           type: string
@@ -5527,9 +5440,6 @@ components:
     PatchCalendarEventSeriesRequest:
       type: object
       properties:
-        company_id:
-          type: string
-          format: uuid
         name:
           nullable: true
           type: string

@@ -5,8 +5,8 @@
 //! Returns an `EntityValidator<CalendarEmployeeStatus>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
 use crate::domain::entity::CalendarEmployeeStatus;
+use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for CalendarEmployeeStatus entities.
 pub type CalendarEmployeeStatusValidator = EntityValidator<CalendarEmployeeStatus>;
@@ -16,7 +16,7 @@ pub fn calendar_employee_status_validator() -> CalendarEmployeeStatusValidator {
     EntityValidator::new()
     // <<< CUSTOM RULES
     // END CUSTOM RULES
-        // No schema-derived rules — add custom rules above.
+    // No schema-derived rules — add custom rules above.
 }
 
 // <<< CUSTOM

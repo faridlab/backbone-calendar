@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::CalendarBranch;
 use crate::domain::entity::AuditMetadata;
+use crate::domain::entity::CalendarBranch;
 
 // =============================================================================
 // Create DTO
@@ -32,13 +32,16 @@ use crate::domain::entity::AuditMetadata;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateCalendarBranchDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(alias = "calendar_id")]
     pub calendar_id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(alias = "branch_id")]
     pub branch_id: Uuid,
 }
@@ -56,13 +59,16 @@ pub struct CreateCalendarBranchDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCalendarBranchDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(alias = "calendar_id")]
     pub calendar_id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(alias = "company_id")]
-    pub company_id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(alias = "branch_id")]
     pub branch_id: Uuid,
 }
@@ -80,13 +86,16 @@ pub struct UpdateCalendarBranchDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchCalendarBranchDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(skip_serializing_if = "Option::is_none", alias = "calendar_id")]
     pub calendar_id: Option<Uuid>,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "company_id")]
-    pub company_id: Option<Uuid>,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(skip_serializing_if = "Option::is_none", alias = "branch_id")]
     pub branch_id: Option<Uuid>,
 }
@@ -94,7 +103,7 @@ pub struct PatchCalendarBranchDto {
 impl PatchCalendarBranchDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.calendar_id.is_some() || self.company_id.is_some() || self.branch_id.is_some()
+        self.calendar_id.is_some() || self.branch_id.is_some()
     }
 }
 
@@ -110,13 +119,20 @@ impl PatchCalendarBranchDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct CalendarBranchResponseDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     pub id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     pub calendar_id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    pub company_id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     pub branch_id: Uuid,
     pub metadata: AuditMetadata,
 }
@@ -151,7 +167,12 @@ pub struct CalendarBranchListResponseDto {
 
 impl CalendarBranchListResponseDto {
     /// Create a new list response from items and pagination info
-    pub fn new(items: Vec<CalendarBranchResponseDto>, total: u64, page: u32, per_page: u32) -> Self {
+    pub fn new(
+        items: Vec<CalendarBranchResponseDto>,
+        total: u64,
+        page: u32,
+        per_page: u32,
+    ) -> Self {
         let total_pages = if per_page > 0 {
             ((total as f64) / (per_page as f64)).ceil() as u32
         } else {
@@ -176,7 +197,6 @@ impl CalendarBranchListResponseDto {
 pub struct CalendarBranchSummaryDto {
     pub id: Uuid,
     pub calendar_id: Uuid,
-    pub company_id: Uuid,
     pub branch_id: Uuid,
     pub created_at: Option<DateTime<Utc>>,
 }
@@ -190,7 +210,6 @@ impl From<CalendarBranch> for CalendarBranchResponseDto {
         Self {
             id: entity.id,
             calendar_id: entity.calendar_id,
-            company_id: entity.company_id,
             branch_id: entity.branch_id,
             metadata: entity.metadata,
         }
@@ -203,7 +222,6 @@ impl From<CalendarBranch> for CalendarBranchSummaryDto {
         Self {
             id: entity.id,
             calendar_id: entity.calendar_id,
-            company_id: entity.company_id,
             branch_id: entity.branch_id,
             created_at,
         }
@@ -215,7 +233,6 @@ impl From<CreateCalendarBranchDto> for CalendarBranch {
         Self {
             id: Uuid::new_v4(),
             calendar_id: dto.calendar_id,
-            company_id: dto.company_id,
             branch_id: dto.branch_id,
             metadata: AuditMetadata::default(),
         }
@@ -227,7 +244,6 @@ impl From<&CalendarBranch> for CalendarBranchResponseDto {
         Self {
             id: entity.id.clone(),
             calendar_id: entity.calendar_id.clone(),
-            company_id: entity.company_id.clone(),
             branch_id: entity.branch_id.clone(),
             metadata: entity.metadata.clone(),
         }
@@ -243,7 +259,6 @@ impl backbone_core::FromCreateDto<CreateCalendarBranchDto> for CalendarBranch {
 impl backbone_core::ApplyUpdateDto<UpdateCalendarBranchDto> for CalendarBranch {
     fn apply_update(mut self, dto: UpdateCalendarBranchDto) -> backbone_core::ServiceResult<Self> {
         self.calendar_id = dto.calendar_id;
-        self.company_id = dto.company_id;
         self.branch_id = dto.branch_id;
         Ok(self)
     }

@@ -41,9 +41,10 @@ impl Seeder for SeedCalendarEmployeeStatusSeeder {
 
     async fn should_run(&self, pool: &PgPool) -> Result<bool> {
         // Check if calendar.calendar_employee_statuses table has any data
-        let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM calendar.calendar_employee_statuses")
-            .fetch_one(pool)
-            .await?;
+        let count: (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM calendar.calendar_employee_statuses")
+                .fetch_one(pool)
+                .await?;
         Ok(count.0 == 0)
     }
 

@@ -23,7 +23,9 @@ pub struct CalendarPositionRepository(
 
 impl std::ops::Deref for CalendarPositionRepository {
     type Target = backbone_orm::GenericCrudRepository<CalendarPosition, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 impl CalendarPositionRepository {

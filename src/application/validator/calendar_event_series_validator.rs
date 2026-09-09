@@ -5,9 +5,9 @@
 //! Returns an `EntityValidator<CalendarEventSeries>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
-use backbone_core::{OptionalNotBlank};
 use crate::domain::entity::CalendarEventSeries;
+use backbone_core::OptionalNotBlank;
+use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for CalendarEventSeries entities.
 pub type CalendarEventSeriesValidator = EntityValidator<CalendarEventSeries>;
@@ -15,9 +15,17 @@ pub type CalendarEventSeriesValidator = EntityValidator<CalendarEventSeries>;
 /// Build a validator for CalendarEventSeries with all schema-defined field rules.
 pub fn calendar_event_series_validator() -> CalendarEventSeriesValidator {
     EntityValidator::new()
-        .rule(OptionalNotBlank::new("name", |e: &CalendarEventSeries| e.name.as_deref()))
-        .rule(OptionalNotBlank::new("by_weekday", |e: &CalendarEventSeries| e.by_weekday.as_deref()))
-        .rule(OptionalNotBlank::new("by_monthday", |e: &CalendarEventSeries| e.by_monthday.as_deref()))
+        .rule(OptionalNotBlank::new("name", |e: &CalendarEventSeries| {
+            e.name.as_deref()
+        }))
+        .rule(OptionalNotBlank::new(
+            "by_weekday",
+            |e: &CalendarEventSeries| e.by_weekday.as_deref(),
+        ))
+        .rule(OptionalNotBlank::new(
+            "by_monthday",
+            |e: &CalendarEventSeries| e.by_monthday.as_deref(),
+        ))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

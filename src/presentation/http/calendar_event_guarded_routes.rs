@@ -31,19 +31,24 @@
 //!
 //! # How a request is scoped (the fences made real)
 //!
-//! Every handler derives its scope from two request extensions the HOST auth
-//! stack provides — never from the request body:
+//! Tenancy (ADR-0029): the module is tenant-agnostic — it extracts no tenant
+//! identity and installs no fence. Every handler derives its acting identity
+//! from two request extensions the HOST auth stack provides — never from the
+//! request body:
 //!
-//! * [`CompanyContext`] (from `backbone_auth::company`, inserted by the host's
-//!   `company_auth` layer over a signed Bearer token): the company AND the
-//!   acting user. A request without it is rejected 401 by the extractor.
+//! * [`OrgContext`] (from `backbone_auth::org`, inserted by the composing
+//!   service's org auth layer over a signed Bearer token): the acting user and
+//!   the org node. A request without it is rejected 401 by the extractor.
 //! * `AuthContext` (permissions): the RBAC vocabulary check. A request without
 //!   it is rejected 401 here; a caller lacking the route's permission gets 403.
 //!
-//! The two are combined into the engine's `ScopeCtx`, and every statement this
-//! file issues runs inside a transaction that pins `app.company_id` and
-//! `app.user_id` via `set_config(..., true)`. Visibility therefore comes from
-//! the ROW-LEVEL-SECURITY fences (company isolation + the restrictive
+//! The org identity used by the DATABASE is the ambient request scope the
+//! composing service bound (`with_org_request_scope`) — this file never pins a
+//! tenant variable itself. It relays that scope onto its transactions via
+//! `backbone_orm::org_scope::bind_org_scope_on` and pins `app.user_id`
+//! transaction-locally for the DOMAIN privacy read fence on `calendar.events`
+//! (public, or organizer, or a live attendee). Visibility therefore comes from
+//! the ROW-LEVEL-SECURITY fences (the decorator's org policy + the restrictive
 //! `calendar_events_privacy_read` policy), NOT from application filtering: the
 //! SQL here carries no privacy predicate at all.
 //!
@@ -60,9 +65,9 @@
 //! # Declared deferrals (see docs/event-family.md)
 //!
 //! * `/ics` export is deferred: when it lands it must be token-gated through
-//!   the attendee `access_token` seam (the W7 events ruling).
+//!   the attendee `access_token` seam.
 //! * No availability endpoint exists here, and nothing in the event family may
-//!   consult `CalendarRepository::working_days` — that port's company-wide
+//!   consult `CalendarRepository::working_days` — that port's org-wide
 //!   Mon–Fri-minus-holidays simplification is working-time-family only.
 //! * `calendar_sms` is a flag-only channel overlay marker in `Cargo.toml`; no
 //!   transport code ships under it.
@@ -76,8 +81,8 @@ use axum::{
     routing::{get, post, put},
     Json, Router,
 };
-use backbone_auth::company::CompanyContext;
 use backbone_auth::middleware::AuthContext;
+use backbone_auth::org::OrgContext;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
@@ -111,14 +116,15 @@ mod event_permissions {
 // =============================================================================
 
 /// Shared handler state: the series engine (all validated writes), the pool
-/// (RLS-scoped reads and the few composition-level updates below), and the
+/// (scope-relayed reads and the few composition-level updates below), and the
 /// generated CRUD service.
 ///
 /// The generated `CalendarEventService` is held per the fixed construction
 /// surface but is intentionally NOT used to serve reads here: the generic CRUD
-/// path does not pin the request GUCs (`app.company_id` / `app.user_id`), so
-/// under the enabled RLS fences it would see zero rows. It remains available to
-/// the composing host for the trusted/admin surface (`all_crud_routes`).
+/// path runs no scoped transaction (no org-scope relay, no acting-user pin),
+/// so under the installed row-level fences it would see zero rows. It remains
+/// available to the composing host for the trusted/admin surface
+/// (`all_crud_routes`).
 #[derive(Clone)]
 struct EventFamilyState {
     engine: Arc<CalendarEventSeriesEngine>,
@@ -135,7 +141,11 @@ pub fn create_calendar_event_guarded_routes(
     events_svc: Arc<CalendarEventService>,
     pool: PgPool,
 ) -> Router {
-    let state = EventFamilyState { engine, events_svc, pool };
+    let state = EventFamilyState {
+        engine,
+        events_svc,
+        pool,
+    };
     Router::new()
         .route("/events", get(list_events).post(create_standalone_event))
         .route(
@@ -146,7 +156,10 @@ pub fn create_calendar_event_guarded_routes(
                 .delete(delete_event),
         )
         .route("/events/:id/attendees", post(attach_attendees))
-        .route("/event-series", get(list_series).post(create_series_handler))
+        .route(
+            "/event-series",
+            get(list_series).post(create_series_handler),
+        )
         .route(
             "/event-series/:id",
             get(get_series)
@@ -154,7 +167,10 @@ pub fn create_calendar_event_guarded_routes(
                 .delete(delete_series),
         )
         .route("/event-series/:id/occurrences", get(series_occurrences))
-        .route("/event-attendees/:id/state", put(set_attendee_state_handler))
+        .route(
+            "/event-attendees/:id/state",
+            put(set_attendee_state_handler),
+        )
         .with_state(state)
 }
 
@@ -163,14 +179,20 @@ pub fn create_calendar_event_guarded_routes(
 // =============================================================================
 
 /// Fail-closed gate: check the route's permission on the `AuthContext`, then
-/// derive the engine `ScopeCtx` from the signed `CompanyContext`.
+/// derive the engine `ScopeCtx` from the signed [`OrgContext`].
 ///
-/// The acting user is the token's `sub` (the same signed source as the
-/// company). A `sub` that is not a UUID cannot own or attend rows in this
+/// The acting user is the token's `sub` (the same signed source as the org
+/// node). A `sub` that is not a UUID cannot own or attend rows in this
 /// model (`organizer_user_id` / `user_id` are UUIDs), so such a principal is
 /// rejected outright rather than mapped to a zero-visibility reader.
+///
+/// The gate carries the ACTING USER only; the org identity is deliberately not
+/// threaded through it. Database-side org isolation rides the ambient request
+/// scope the composing service bound (`with_org_request_scope`), relayed onto
+/// each transaction by [`bind_scope`] — the module never re-derives a tenant
+/// from the request.
 fn gate(
-    tenant: &CompanyContext,
+    org: &OrgContext,
     auth: &Option<axum::Extension<AuthContext>>,
     permission: &str,
 ) -> Result<ScopeCtx, axum::response::Response> {
@@ -194,7 +216,7 @@ fn gate(
         )
             .into_response());
     }
-    let acting_user_id = Uuid::parse_str(&tenant.user_id).map_err(|_| {
+    let acting_user_id = Uuid::parse_str(&org.user_id).map_err(|_| {
         (
             StatusCode::UNAUTHORIZED,
             Json(ErrorBody {
@@ -204,10 +226,7 @@ fn gate(
         )
             .into_response()
     })?;
-    Ok(ScopeCtx {
-        company_id: tenant.company_id,
-        acting_user_id,
-    })
+    Ok(ScopeCtx { acting_user_id })
 }
 
 // =============================================================================
@@ -232,11 +251,14 @@ fn event_family_error_response(e: EventFamilyError) -> axum::response::Response 
         EventFamilyError::DuplicateAttendee { .. } => {
             (StatusCode::CONFLICT, "CALENDAR_ATTENDEE_DUPLICATE")
         }
-        EventFamilyError::Validation(_) => (StatusCode::BAD_REQUEST, "CALENDAR_EVENT_VALIDATION_ERROR"),
-        EventFamilyError::NotFound => (StatusCode::NOT_FOUND, "CALENDAR_EVENT_NOT_FOUND"),
-        EventFamilyError::Db(_) => {
-            (StatusCode::INTERNAL_SERVER_ERROR, "CALENDAR_EVENT_DATABASE_ERROR")
+        EventFamilyError::Validation(_) => {
+            (StatusCode::BAD_REQUEST, "CALENDAR_EVENT_VALIDATION_ERROR")
         }
+        EventFamilyError::NotFound => (StatusCode::NOT_FOUND, "CALENDAR_EVENT_NOT_FOUND"),
+        EventFamilyError::Db(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "CALENDAR_EVENT_DATABASE_ERROR",
+        ),
     };
     (
         status,
@@ -275,25 +297,27 @@ fn db_error_response(e: sqlx::Error) -> axum::response::Response {
 }
 
 // =============================================================================
-// RLS-scoped statement helpers
+// Scope-relay statement helpers
 // =============================================================================
 
-/// Pin the request GUCs on a transaction-local basis so the strict company
-/// fence and the privacy read fence evaluate every statement of this caller.
-/// `set_config(..., true)` is transaction-scoped: the values cannot leak onto
-/// a pooled connection reused by the next request.
-async fn pin_scope(
+/// Make the row-level fences evaluate for every statement of this transaction:
+/// relay the composing service's ambient request org scope — when one is
+/// bound — via `bind_org_scope_on` (the decorator's org policy reads those
+/// fence variables), then pin `app.user_id` transaction-locally for the DOMAIN
+/// privacy read fence on `calendar.events` (public, or organizer, or a live
+/// attendee). `set_config(..., true)` is transaction-scoped: no value can leak
+/// onto a pooled connection reused by the next request.
+async fn bind_scope(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     scope: &ScopeCtx,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query(
-        "SELECT set_config('app.company_id', $1, true), \
-                set_config('app.user_id', $2, true)",
-    )
-    .bind(scope.company_id.to_string())
-    .bind(scope.acting_user_id.to_string())
-    .execute(&mut **tx)
-    .await?;
+    if let Some(org) = backbone_orm::org_scope::current_org_scope() {
+        backbone_orm::org_scope::bind_org_scope_on(&mut **tx, &org).await?;
+    }
+    sqlx::query("SELECT set_config('app.user_id', $1, true)")
+        .bind(scope.acting_user_id.to_string())
+        .execute(&mut **tx)
+        .await?;
     Ok(())
 }
 
@@ -322,14 +346,12 @@ impl EventRow {
         self.privacy.parse().unwrap_or(EventPrivacy::Public)
     }
 
-    /// The response DTO carries the row's company. Rows are only visible to a
-    /// caller whose own company matches (the RLS fence decided that), so the
-    /// caller's fence value IS the row's value here.
-    fn into_dto(self, company_id: Uuid) -> CalendarEventResponseDto {
+    /// The response DTO. Row visibility was already decided by the row-level
+    /// fences on the scoped transaction this row came from.
+    fn into_dto(self) -> CalendarEventResponseDto {
         let privacy = self.privacy();
         CalendarEventResponseDto {
             id: self.id,
-            company_id,
             series_id: self.series_id,
             title: self.title,
             description: self.description,
@@ -360,10 +382,9 @@ struct SeriesRow {
 }
 
 impl SeriesRow {
-    fn into_dto(self, company_id: Uuid) -> CalendarEventSeriesResponseDto {
+    fn into_dto(self) -> CalendarEventSeriesResponseDto {
         CalendarEventSeriesResponseDto {
             id: self.id,
-            company_id,
             name: self.name,
             freq: self.freq.parse().unwrap_or(EventRecurrenceFreq::Weekly),
             interval: self.interval,
@@ -560,7 +581,10 @@ fn validate_title(title: &str) -> Result<(), axum::response::Response> {
     Ok(())
 }
 
-fn validate_window(start: DateTime<Utc>, stop: DateTime<Utc>) -> Result<(), axum::response::Response> {
+fn validate_window(
+    start: DateTime<Utc>,
+    stop: DateTime<Utc>,
+) -> Result<(), axum::response::Response> {
     if stop <= start {
         return Err(validation_response("stop_at must be after start_at"));
     }
@@ -635,15 +659,15 @@ fn edit_scope_token(raw: &str) -> Result<EditScopeToken, axum::response::Respons
 // =============================================================================
 
 /// `GET /events` — list the caller's visible events. Visibility is decided by
-/// the RLS fences (company + privacy); the SQL adds only range, liveness, and
-/// ordering.
+/// the row-level fences (org + privacy); the SQL adds only range, liveness,
+/// and ordering.
 async fn list_events(
     State(st): State<EventFamilyState>,
-    tenant: CompanyContext,
+    org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Query(q): Query<ListEventsQuery>,
 ) -> axum::response::Response {
-    let scope = match gate(&tenant, &auth, event_permissions::READ) {
+    let scope = match gate(&org, &auth, event_permissions::READ) {
         Ok(s) => s,
         Err(resp) => return resp,
     };
@@ -653,7 +677,7 @@ async fn list_events(
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
-    if let Err(e) = pin_scope(&mut tx, &scope).await {
+    if let Err(e) = bind_scope(&mut tx, &scope).await {
         return db_error_response(e);
     }
     let rows = match sqlx::query_as::<_, EventRow>(
@@ -678,7 +702,7 @@ async fn list_events(
     let total = rows.len();
     let items = rows
         .into_iter()
-        .map(|row| row.into_dto(scope.company_id))
+        .map(|row| row.into_dto())
         .collect::<Vec<_>>();
     (StatusCode::OK, Json(EventListResponse { items, total })).into_response()
 }
@@ -688,11 +712,11 @@ async fn list_events(
 /// accepted attendee by the engine.
 async fn create_standalone_event(
     State(st): State<EventFamilyState>,
-    tenant: CompanyContext,
+    org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     axum::Json(b): axum::Json<CreateStandaloneBody>,
 ) -> axum::response::Response {
-    let scope = match gate(&tenant, &auth, event_permissions::CREATE) {
+    let scope = match gate(&org, &auth, event_permissions::CREATE) {
         Ok(s) => s,
         Err(resp) => return resp,
     };
@@ -727,11 +751,11 @@ async fn create_standalone_event(
 /// indistinguishable from a missing one (404) by design.
 async fn get_event(
     State(st): State<EventFamilyState>,
-    tenant: CompanyContext,
+    org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
 ) -> axum::response::Response {
-    let scope = match gate(&tenant, &auth, event_permissions::READ) {
+    let scope = match gate(&org, &auth, event_permissions::READ) {
         Ok(s) => s,
         Err(resp) => return resp,
     };
@@ -739,11 +763,11 @@ async fn get_event(
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
-    if let Err(e) = pin_scope(&mut tx, &scope).await {
+    if let Err(e) = bind_scope(&mut tx, &scope).await {
         return db_error_response(e);
     }
     match fetch_event(&mut tx, id).await {
-        Ok(Some(row)) => (StatusCode::OK, Json(row.into_dto(scope.company_id))).into_response(),
+        Ok(Some(row)) => (StatusCode::OK, Json(row.into_dto())).into_response(),
         Ok(None) => not_found_response(),
         Err(e) => db_error_response(e),
     }
@@ -816,7 +840,7 @@ async fn apply_event_edit(
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
-    if let Err(e) = pin_scope(&mut tx, scope).await {
+    if let Err(e) = bind_scope(&mut tx, scope).await {
         return db_error_response(e);
     }
     let row = match fetch_event(&mut tx, id).await {
@@ -940,12 +964,12 @@ async fn apply_event_edit(
 /// `PATCH /events/:id` — partial edit, `edit_scope` defaults to `this`.
 async fn edit_event(
     State(st): State<EventFamilyState>,
-    tenant: CompanyContext,
+    org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
     axum::Json(b): axum::Json<EventEditBody>,
 ) -> axum::response::Response {
-    let scope = match gate(&tenant, &auth, event_permissions::UPDATE) {
+    let scope = match gate(&org, &auth, event_permissions::UPDATE) {
         Ok(s) => s,
         Err(resp) => return resp,
     };
@@ -955,12 +979,12 @@ async fn edit_event(
 /// `PUT /events/:id` — replace edit, `edit_scope` defaults to `all`.
 async fn replace_event(
     State(st): State<EventFamilyState>,
-    tenant: CompanyContext,
+    org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
     axum::Json(b): axum::Json<EventEditBody>,
 ) -> axum::response::Response {
-    let scope = match gate(&tenant, &auth, event_permissions::UPDATE) {
+    let scope = match gate(&org, &auth, event_permissions::UPDATE) {
         Ok(s) => s,
         Err(resp) => return resp,
     };
@@ -973,11 +997,11 @@ async fn replace_event(
 /// soft-deleted in place with the house metadata shape.
 async fn delete_event(
     State(st): State<EventFamilyState>,
-    tenant: CompanyContext,
+    org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
 ) -> axum::response::Response {
-    let scope = match gate(&tenant, &auth, event_permissions::DELETE) {
+    let scope = match gate(&org, &auth, event_permissions::DELETE) {
         Ok(s) => s,
         Err(resp) => return resp,
     };
@@ -985,7 +1009,7 @@ async fn delete_event(
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
-    if let Err(e) = pin_scope(&mut tx, &scope).await {
+    if let Err(e) = bind_scope(&mut tx, &scope).await {
         return db_error_response(e);
     }
     let row = match fetch_event(&mut tx, id).await {
@@ -1026,12 +1050,12 @@ async fn delete_event(
 /// `uq_calendar_event_attendees_event_user` backstops it (409 on conflict).
 async fn attach_attendees(
     State(st): State<EventFamilyState>,
-    tenant: CompanyContext,
+    org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
     axum::Json(b): axum::Json<AttachAttendeesBody>,
 ) -> axum::response::Response {
-    let scope = match gate(&tenant, &auth, event_permissions::UPDATE) {
+    let scope = match gate(&org, &auth, event_permissions::UPDATE) {
         Ok(s) => s,
         Err(resp) => return resp,
     };
@@ -1055,14 +1079,14 @@ async fn attach_attendees(
 // Handlers — series
 // =============================================================================
 
-/// `GET /event-series` — list the caller's visible series (company fence only;
+/// `GET /event-series` — list the caller's visible series (org fence only;
 /// the privacy fence is declared on `calendar.events`).
 async fn list_series(
     State(st): State<EventFamilyState>,
-    tenant: CompanyContext,
+    org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
 ) -> axum::response::Response {
-    let scope = match gate(&tenant, &auth, event_permissions::READ) {
+    let scope = match gate(&org, &auth, event_permissions::READ) {
         Ok(s) => s,
         Err(resp) => return resp,
     };
@@ -1070,7 +1094,7 @@ async fn list_series(
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
-    if let Err(e) = pin_scope(&mut tx, &scope).await {
+    if let Err(e) = bind_scope(&mut tx, &scope).await {
         return db_error_response(e);
     }
     let rows = match sqlx::query_as::<_, SeriesRow>(
@@ -1090,7 +1114,7 @@ async fn list_series(
     let total = rows.len();
     let items = rows
         .into_iter()
-        .map(|row| row.into_dto(scope.company_id))
+        .map(|row| row.into_dto())
         .collect::<Vec<_>>();
     (StatusCode::OK, Json(SeriesListResponse { items, total })).into_response()
 }
@@ -1109,11 +1133,11 @@ async fn list_series(
 /// adds no second, quieter one.
 async fn create_series_handler(
     State(st): State<EventFamilyState>,
-    tenant: CompanyContext,
+    org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     axum::Json(b): axum::Json<CreateSeriesBody>,
 ) -> axum::response::Response {
-    let scope = match gate(&tenant, &auth, event_permissions::CREATE) {
+    let scope = match gate(&org, &auth, event_permissions::CREATE) {
         Ok(s) => s,
         Err(resp) => return resp,
     };
@@ -1157,11 +1181,11 @@ async fn create_series_handler(
 /// `GET /event-series/:id`.
 async fn get_series(
     State(st): State<EventFamilyState>,
-    tenant: CompanyContext,
+    org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
 ) -> axum::response::Response {
-    let scope = match gate(&tenant, &auth, event_permissions::READ) {
+    let scope = match gate(&org, &auth, event_permissions::READ) {
         Ok(s) => s,
         Err(resp) => return resp,
     };
@@ -1169,11 +1193,11 @@ async fn get_series(
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
-    if let Err(e) = pin_scope(&mut tx, &scope).await {
+    if let Err(e) = bind_scope(&mut tx, &scope).await {
         return db_error_response(e);
     }
     match fetch_series(&mut tx, id).await {
-        Ok(Some(row)) => (StatusCode::OK, Json(row.into_dto(scope.company_id))).into_response(),
+        Ok(Some(row)) => (StatusCode::OK, Json(row.into_dto())).into_response(),
         Ok(None) => not_found_response(),
         Err(e) => db_error_response(e),
     }
@@ -1185,12 +1209,12 @@ async fn get_series(
 /// the exception ledger — which is what makes single edits and deletes stick.
 async fn rewrite_series_handler(
     State(st): State<EventFamilyState>,
-    tenant: CompanyContext,
+    org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
     axum::Json(b): axum::Json<RewriteSeriesBody>,
 ) -> axum::response::Response {
-    let scope = match gate(&tenant, &auth, event_permissions::UPDATE) {
+    let scope = match gate(&org, &auth, event_permissions::UPDATE) {
         Ok(s) => s,
         Err(resp) => return resp,
     };
@@ -1238,11 +1262,11 @@ async fn rewrite_series_handler(
 /// runs as one scoped transaction here.
 async fn delete_series(
     State(st): State<EventFamilyState>,
-    tenant: CompanyContext,
+    org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
 ) -> axum::response::Response {
-    let scope = match gate(&tenant, &auth, event_permissions::DELETE) {
+    let scope = match gate(&org, &auth, event_permissions::DELETE) {
         Ok(s) => s,
         Err(resp) => return resp,
     };
@@ -1250,7 +1274,7 @@ async fn delete_series(
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
-    if let Err(e) = pin_scope(&mut tx, &scope).await {
+    if let Err(e) = bind_scope(&mut tx, &scope).await {
         return db_error_response(e);
     };
     let exists = match sqlx::query_scalar::<_, i64>(
@@ -1302,11 +1326,11 @@ async fn delete_series(
 /// (edited) occurrences no longer appear here: they became standalone events.
 async fn series_occurrences(
     State(st): State<EventFamilyState>,
-    tenant: CompanyContext,
+    org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
 ) -> axum::response::Response {
-    let scope = match gate(&tenant, &auth, event_permissions::READ) {
+    let scope = match gate(&org, &auth, event_permissions::READ) {
         Ok(s) => s,
         Err(resp) => return resp,
     };
@@ -1314,7 +1338,7 @@ async fn series_occurrences(
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
-    if let Err(e) = pin_scope(&mut tx, &scope).await {
+    if let Err(e) = bind_scope(&mut tx, &scope).await {
         return db_error_response(e);
     }
     let series_exists = match sqlx::query_scalar::<_, i64>(
@@ -1348,7 +1372,7 @@ async fn series_occurrences(
     let total = rows.len();
     let items = rows
         .into_iter()
-        .map(|row| row.into_dto(scope.company_id))
+        .map(|row| row.into_dto())
         .collect::<Vec<_>>();
     (StatusCode::OK, Json(EventListResponse { items, total })).into_response()
 }
@@ -1362,12 +1386,12 @@ async fn series_occurrences(
 /// enum, faithful to the ported state machine.
 async fn set_attendee_state_handler(
     State(st): State<EventFamilyState>,
-    tenant: CompanyContext,
+    org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
     axum::Json(b): axum::Json<AttendeeStateBody>,
 ) -> axum::response::Response {
-    let scope = match gate(&tenant, &auth, event_permissions::UPDATE) {
+    let scope = match gate(&org, &auth, event_permissions::UPDATE) {
         Ok(s) => s,
         Err(resp) => return resp,
     };
@@ -1398,7 +1422,6 @@ mod tests {
     use axum::body::Body;
     use axum::http::{Method, Request, StatusCode};
     use axum::middleware::{self, Next};
-    use backbone_auth::company::{company_auth, CompanyVerifier};
     use sqlx::postgres::PgPoolOptions;
     use tower::ServiceExt;
 
@@ -1413,25 +1436,33 @@ mod tests {
             .expect("lazy pool options parse");
         let engine = Arc::new(CalendarEventSeriesEngine::new(
             pool.clone(),
-            Arc::new(crate::infrastructure::persistence::CalendarEventRepository::new(
-                pool.clone(),
-            )),
-            Arc::new(crate::infrastructure::persistence::CalendarEventSeriesRepository::new(
-                pool.clone(),
-            )),
-            Arc::new(crate::infrastructure::persistence::CalendarEventExceptionRepository::new(
-                pool.clone(),
-            )),
-            Arc::new(crate::infrastructure::persistence::CalendarEventAttendeeRepository::new(
-                pool.clone(),
-            )),
-        ));
-        let events_svc = Arc::new(
-            CalendarEventService::with_repository(Arc::new(
+            Arc::new(
                 crate::infrastructure::persistence::CalendarEventRepository::new(pool.clone()),
-            )),
-        );
-        EventFamilyState { engine, events_svc, pool }
+            ),
+            Arc::new(
+                crate::infrastructure::persistence::CalendarEventSeriesRepository::new(
+                    pool.clone(),
+                ),
+            ),
+            Arc::new(
+                crate::infrastructure::persistence::CalendarEventExceptionRepository::new(
+                    pool.clone(),
+                ),
+            ),
+            Arc::new(
+                crate::infrastructure::persistence::CalendarEventAttendeeRepository::new(
+                    pool.clone(),
+                ),
+            ),
+        ));
+        let events_svc = Arc::new(CalendarEventService::with_repository(Arc::new(
+            crate::infrastructure::persistence::CalendarEventRepository::new(pool.clone()),
+        )));
+        EventFamilyState {
+            engine,
+            events_svc,
+            pool,
+        }
     }
 
     fn lazy_router() -> Router {
@@ -1439,10 +1470,11 @@ mod tests {
         create_calendar_event_guarded_routes(st.engine.clone(), st.events_svc.clone(), st.pool)
     }
 
-    fn tenant_of(company_id: Uuid, user_id: Uuid) -> CompanyContext {
-        CompanyContext {
-            company_id,
-            branch_id: None,
+    fn org_of(acting_unit_id: Uuid, user_id: Uuid) -> OrgContext {
+        OrgContext {
+            acting_unit_id,
+            entitled_units: vec![],
+            legacy_company_id: None,
             user_id: user_id.to_string(),
         }
     }
@@ -1456,15 +1488,15 @@ mod tests {
     }
 
     /// Wrap the router with the two extensions the host auth stack provides in
-    /// production: the signed `CompanyContext` and the RBAC `AuthContext`.
-    fn as_caller(router: Router, tenant: &CompanyContext, auth: Option<AuthContext>) -> Router {
-        let tenant = tenant.clone();
+    /// production: the signed `OrgContext` and the RBAC `AuthContext`.
+    fn as_caller(router: Router, org: &OrgContext, auth: Option<AuthContext>) -> Router {
+        let org = org.clone();
         router.layer(middleware::from_fn(
             move |mut req: axum::extract::Request, next: Next| {
-                let tenant = tenant.clone();
+                let org = org.clone();
                 let auth = auth.clone();
                 async move {
-                    req.extensions_mut().insert(tenant);
+                    req.extensions_mut().insert(org);
                     if let Some(auth) = auth {
                         req.extensions_mut().insert(auth);
                     }
@@ -1481,7 +1513,7 @@ mod tests {
         serde_json::from_slice(&bytes).expect("body is JSON")
     }
 
-    const COMPANY: Uuid = Uuid::nil();
+    const UNIT: Uuid = Uuid::nil();
     const USER_A: Uuid = Uuid::nil();
 
     // ── router shape: fail-closed surface ───────────────────────────────────
@@ -1493,7 +1525,10 @@ mod tests {
         for (method, uri) in [
             (Method::GET, "/event-exceptions"),
             (Method::POST, "/event-exceptions"),
-            (Method::GET, "/event-exceptions/00000000-0000-0000-0000-000000000000"),
+            (
+                Method::GET,
+                "/event-exceptions/00000000-0000-0000-0000-000000000000",
+            ),
         ] {
             let resp = app
                 .clone()
@@ -1514,9 +1549,9 @@ mod tests {
         }
     }
 
-    /// No company context → 401 before any handler logic runs.
+    /// No org context → 401 before any handler logic runs.
     #[tokio::test]
-    async fn request_without_company_context_is_unauthenticated() {
+    async fn request_without_org_context_is_unauthenticated() {
         let app = lazy_router();
         let resp = app
             .oneshot(
@@ -1531,11 +1566,11 @@ mod tests {
         assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
     }
 
-    /// Company context but no RBAC context → 401 (fail-closed: the permission
+    /// Org context but no RBAC context → 401 (fail-closed: the permission
     /// check cannot even be attempted).
     #[tokio::test]
     async fn request_without_auth_context_is_unauthenticated() {
-        let app = as_caller(lazy_router(), &tenant_of(COMPANY, USER_A), None);
+        let app = as_caller(lazy_router(), &org_of(UNIT, USER_A), None);
         let resp = app
             .oneshot(
                 Request::builder()
@@ -1555,7 +1590,7 @@ mod tests {
     /// read-only caller cannot reach the write verbs.
     #[tokio::test]
     async fn permissionless_caller_is_forbidden() {
-        let app = as_caller(lazy_router(), &tenant_of(COMPANY, USER_A), Some(auth_with(&[])));
+        let app = as_caller(lazy_router(), &org_of(UNIT, USER_A), Some(auth_with(&[])));
         let resp = app
             .oneshot(
                 Request::builder()
@@ -1572,7 +1607,7 @@ mod tests {
 
         let app = as_caller(
             lazy_router(),
-            &tenant_of(COMPANY, USER_A),
+            &org_of(UNIT, USER_A),
             Some(auth_with(&[event_permissions::READ])),
         );
         // A well-formed body matters here: axum runs the Json extractor before
@@ -1603,14 +1638,15 @@ mod tests {
     /// → rejected 401 (fail-closed), not mapped to a zero-visibility reader.
     #[tokio::test]
     async fn non_uuid_principal_is_rejected() {
-        let tenant = CompanyContext {
-            company_id: COMPANY,
-            branch_id: None,
+        let org = OrgContext {
+            acting_unit_id: UNIT,
+            entitled_units: vec![],
+            legacy_company_id: None,
             user_id: "not-a-uuid".to_string(),
         };
         let app = as_caller(
             lazy_router(),
-            &tenant,
+            &org,
             Some(auth_with(&[event_permissions::READ])),
         );
         let resp = app
@@ -1635,7 +1671,7 @@ mod tests {
     async fn permitted_caller_reaches_the_scoped_read() {
         let app = as_caller(
             lazy_router(),
-            &tenant_of(COMPANY, USER_A),
+            &org_of(UNIT, USER_A),
             Some(auth_with(&[event_permissions::READ])),
         );
         let resp = app
@@ -1658,7 +1694,7 @@ mod tests {
     async fn unknown_edit_scope_is_a_validation_error() {
         let app = as_caller(
             lazy_router(),
-            &tenant_of(COMPANY, USER_A),
+            &org_of(UNIT, USER_A),
             Some(auth_with(&[event_permissions::UPDATE])),
         );
         let resp = app
@@ -1685,7 +1721,7 @@ mod tests {
     async fn inverted_window_is_rejected() {
         let app = as_caller(
             lazy_router(),
-            &tenant_of(COMPANY, USER_A),
+            &org_of(UNIT, USER_A),
             Some(auth_with(&[event_permissions::CREATE])),
         );
         let resp = app
@@ -1720,7 +1756,7 @@ mod tests {
     async fn unbounded_series_hits_the_loud_cap_not_a_surface_400() {
         let app = as_caller(
             lazy_router(),
-            &tenant_of(COMPANY, USER_A),
+            &org_of(UNIT, USER_A),
             Some(auth_with(&[event_permissions::CREATE])),
         );
         let resp = app
@@ -1770,7 +1806,10 @@ mod tests {
             message.contains("721"),
             "message carries the projection: {message}"
         );
-        assert!(message.contains("720"), "message carries the cap: {message}");
+        assert!(
+            message.contains("720"),
+            "message carries the cap: {message}"
+        );
     }
 
     /// Duplicate attendee → 409 `CALENDAR_ATTENDEE_DUPLICATE`.
@@ -1793,424 +1832,5 @@ mod tests {
         assert_eq!(resp.status(), StatusCode::NOT_FOUND);
         let resp = event_family_error_response(EventFamilyError::Db(sqlx::Error::RowNotFound));
         assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
-    }
-
-    // ── DB-backed fence probes ──────────────────────────────────────────────
-    //
-    // Skipped LOUD when the probe database is not configured. Setup (outside
-    // the test binary):
-    //
-    //   * a scratch database with the module's migrations applied in filename
-    //     order;
-    //   * a NOSUPERUSER LOGIN role that owns nothing (so the RLS fences apply
-    //     to it) with USAGE on schema `calendar` and SELECT / INSERT / UPDATE
-    //     / DELETE on the four family tables.
-    //
-    // Point `CALENDAR_PROBE_DATABASE_URL` at that role's connection.
-
-    async fn probe_pool() -> Option<PgPool> {
-        let url = match std::env::var("CALENDAR_PROBE_DATABASE_URL") {
-            Ok(url) => url,
-            Err(_) => {
-                eprintln!(
-                    "SKIP (loud): CALENDAR_PROBE_DATABASE_URL is not set — \
-                     the DB-backed fence probes did not run"
-                );
-                return None;
-            }
-        };
-        match PgPoolOptions::new().max_connections(4).connect(&url).await {
-            Ok(pool) => Some(pool),
-            Err(e) => {
-                eprintln!(
-                    "SKIP (loud): could not connect the probe pool ({url}): {e} — \
-                     the DB-backed fence probes did not run"
-                );
-                None
-            }
-        }
-    }
-
-    fn probe_router(pool: &PgPool) -> Router {
-        let engine = Arc::new(CalendarEventSeriesEngine::new(
-            pool.clone(),
-            Arc::new(crate::infrastructure::persistence::CalendarEventRepository::new(
-                pool.clone(),
-            )),
-            Arc::new(crate::infrastructure::persistence::CalendarEventSeriesRepository::new(
-                pool.clone(),
-            )),
-            Arc::new(crate::infrastructure::persistence::CalendarEventExceptionRepository::new(
-                pool.clone(),
-            )),
-            Arc::new(crate::infrastructure::persistence::CalendarEventAttendeeRepository::new(
-                pool.clone(),
-            )),
-        ));
-        let events_svc = Arc::new(CalendarEventService::with_repository(Arc::new(
-            crate::infrastructure::persistence::CalendarEventRepository::new(pool.clone()),
-        )));
-        create_calendar_event_guarded_routes(engine, events_svc, pool.clone())
-    }
-
-    /// Seed one event row as the organizer under the probe role, with the
-    /// request GUCs pinned (the RLS WITH CHECK must pass).
-    async fn seed_event(
-        pool: &PgPool,
-        scope: &ScopeCtx,
-        title: &str,
-        privacy: EventPrivacy,
-    ) -> Uuid {
-        let id = Uuid::new_v4();
-        let mut tx = pool.begin().await.expect("seed tx");
-        pin_scope(&mut tx, scope).await.expect("seed scope");
-        let start = chrono::Utc::now() + chrono::TimeDelta::hours(1);
-        let stop = start + chrono::TimeDelta::hours(1);
-        sqlx::query(
-            "INSERT INTO calendar.events \
-             (id, company_id, series_id, title, start_at, stop_at, privacy, organizer_user_id) \
-             VALUES ($1, $2, NULL, $3, $4, $5, $6::event_privacy, $7)",
-        )
-        .bind(id)
-        .bind(scope.company_id)
-        .bind(title)
-        .bind(start)
-        .bind(stop)
-        .bind(privacy.to_string())
-        .bind(scope.acting_user_id)
-        .execute(&mut *tx)
-        .await
-        .expect("seed event");
-        tx.commit().await.expect("seed commit");
-        id
-    }
-
-    async fn seed_attendee(pool: &PgPool, scope: &ScopeCtx, event_id: Uuid, user: Uuid) {
-        let mut tx = pool.begin().await.expect("seed tx");
-        pin_scope(&mut tx, scope).await.expect("seed scope");
-        sqlx::query(
-            "INSERT INTO calendar.event_attendees (id, company_id, event_id, user_id, state) \
-             VALUES ($1, $2, $3, $4, 'needs_action'::event_attendee_state)",
-        )
-        .bind(Uuid::new_v4())
-        .bind(scope.company_id)
-        .bind(event_id)
-        .bind(user)
-        .execute(&mut *tx)
-        .await
-        .expect("seed attendee");
-        tx.commit().await.expect("seed commit");
-    }
-
-    async fn list_titles_as(
-        pool: &PgPool,
-        company: Uuid,
-        user: Uuid,
-        permissions: &[&str],
-    ) -> Vec<String> {
-        let app = as_caller(
-            probe_router(pool),
-            &tenant_of(company, user),
-            Some(auth_with(permissions)),
-        );
-        let resp = app
-            .oneshot(
-                Request::builder()
-                    .method(Method::GET)
-                    .uri("/events")
-                    .body(Body::empty())
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
-        assert_eq!(
-            resp.status(),
-            StatusCode::OK,
-            "list must succeed for a permitted caller"
-        );
-        let body = body_json(resp).await;
-        body["items"]
-            .as_array()
-            .expect("items array")
-            .iter()
-            .map(|item| item["title"].as_str().unwrap().to_string())
-            .collect()
-    }
-
-    /// Cross-fence invisibility (the wave's DoD leg), through the HTTP
-    /// surface: user B in the SAME company sees user A's public event but
-    /// neither the private nor the confidential one; the organizer sees all
-    /// three; an attendee sees the private event they attend. Visibility is
-    /// decided by the RLS policy — this file's SQL carries no privacy
-    /// predicate.
-    #[tokio::test]
-    async fn cross_fence_invisibility_through_http() {
-        let Some(pool) = probe_pool().await else { return };
-        let company = Uuid::new_v4();
-        let user_a = Uuid::new_v4();
-        let user_b = Uuid::new_v4();
-        let user_c = Uuid::new_v4();
-        let scope_a = ScopeCtx { company_id: company, acting_user_id: user_a };
-
-        seed_event(&pool, &scope_a, "probe-public", EventPrivacy::Public).await;
-        let private_id = seed_event(&pool, &scope_a, "probe-private", EventPrivacy::Private).await;
-        seed_event(&pool, &scope_a, "probe-confidential", EventPrivacy::Confidential).await;
-        seed_attendee(&pool, &scope_a, private_id, user_c).await;
-
-        // Fenced-out role in the same company: public only.
-        let seen_by_b = list_titles_as(&pool, company, user_b, &[event_permissions::READ]).await;
-        assert_eq!(
-            seen_by_b,
-            vec!["probe-public".to_string()],
-            "user B must see ONLY the public event (privacy fence), got {seen_by_b:?}"
-        );
-
-        // Organizer sees everything they organized.
-        let seen_by_a = list_titles_as(&pool, company, user_a, &[event_permissions::READ]).await;
-        assert_eq!(seen_by_a.len(), 3, "organizer sees all three: {seen_by_a:?}");
-
-        // Attendee sees public + the private event they attend.
-        let seen_by_c = list_titles_as(&pool, company, user_c, &[event_permissions::READ]).await;
-        assert_eq!(
-            seen_by_c.len(),
-            2,
-            "attendee sees public + attended private: {seen_by_c:?}"
-        );
-        assert!(seen_by_c.contains(&"probe-private".to_string()));
-        assert!(!seen_by_c.contains(&"probe-confidential".to_string()));
-    }
-
-    /// Company-fence regression: another company's caller sees zero rows.
-    #[tokio::test]
-    async fn company_fence_hides_other_companies() {
-        let Some(pool) = probe_pool().await else { return };
-        let company = Uuid::new_v4();
-        let scope_a = ScopeCtx { company_id: company, acting_user_id: Uuid::new_v4() };
-        seed_event(&pool, &scope_a, "other-company-event", EventPrivacy::Public).await;
-
-        let other_company = Uuid::new_v4();
-        let seen =
-            list_titles_as(&pool, other_company, Uuid::new_v4(), &[event_permissions::READ]).await;
-        assert!(
-            seen.is_empty(),
-            "a different app.company_id must see zero event-family rows, got {seen:?}"
-        );
-    }
-
-    /// The same privacy fence at SQL level, on separate connections with
-    /// different pinned users — and the fail-closed case: `app.user_id` unset
-    /// ⇒ only public rows are readable, even inside the right company.
-    #[tokio::test]
-    async fn privacy_fence_at_sql_level() {
-        let Some(pool) = probe_pool().await else { return };
-        let company = Uuid::new_v4();
-        let user_a = Uuid::new_v4();
-        let scope_a = ScopeCtx { company_id: company, acting_user_id: user_a };
-        seed_event(&pool, &scope_a, "sql-public", EventPrivacy::Public).await;
-        seed_event(&pool, &scope_a, "sql-private", EventPrivacy::Private).await;
-
-        let count_visible = |pool: &PgPool, company: Uuid, user: Option<Uuid>| {
-            let pool = pool.clone();
-            async move {
-                let mut tx = pool.begin().await.expect("tx");
-                sqlx::query("SELECT set_config('app.company_id', $1, true)")
-                    .bind(company.to_string())
-                    .execute(&mut *tx)
-                    .await
-                    .expect("pin company");
-                if let Some(user) = user {
-                    sqlx::query("SELECT set_config('app.user_id', $1, true)")
-                        .bind(user.to_string())
-                        .execute(&mut *tx)
-                        .await
-                        .expect("pin user");
-                }
-                let n: i64 = sqlx::query_scalar(
-                    "SELECT COUNT(*) FROM calendar.events \
-                     WHERE (metadata->>'deleted_at') IS NULL",
-                )
-                .fetch_one(&mut *tx)
-                .await
-                .expect("count");
-                tx.rollback().await.expect("rollback resets the LOCAL settings");
-                n
-            }
-        };
-
-        let as_organizer = count_visible(&pool, company, Some(user_a)).await;
-        assert_eq!(as_organizer, 2, "organizer sees both rows");
-        let as_stranger = count_visible(&pool, company, Some(Uuid::new_v4())).await;
-        assert_eq!(as_stranger, 1, "non-participant sees only the public row");
-        let unscoped = count_visible(&pool, company, None).await;
-        assert_eq!(
-            unscoped, 1,
-            "unset app.user_id fails closed: only public rows are readable"
-        );
-    }
-
-    /// The full `company_auth` token path: a request with a valid signed token
-    /// carrying the company claim reaches the handler; a token without the
-    /// claim is rejected 401 before any event-family logic.
-    #[tokio::test]
-    async fn signed_company_token_path() {
-        let verifier = CompanyVerifier::hs256(b"probe-secret");
-        let company = Uuid::new_v4();
-        let user = Uuid::new_v4();
-
-        let claims = serde_json::json!({
-            "sub": user.to_string(),
-            "exp": 4102444800i64,
-            "company_id": company.to_string(),
-        });
-        let token = jsonwebtoken::encode(
-            &jsonwebtoken::Header::default(),
-            &claims,
-            &jsonwebtoken::EncodingKey::from_secret(b"probe-secret"),
-        )
-        .expect("mint token");
-
-        // Valid token + host-inserted AuthContext → guard passes, scoped read
-        // runs (lazy pool ⇒ mapped 500, proving the route was reached).
-        let app = lazy_router()
-            .route_layer(middleware::from_fn_with_state(
-                verifier.clone(),
-                company_auth,
-            ))
-            .layer(middleware::from_fn(
-                move |mut req: axum::extract::Request, next: Next| {
-                    let auth = AuthContext {
-                        user_id: user.to_string(),
-                        roles: vec![],
-                        permissions: vec![event_permissions::READ.to_string()],
-                    };
-                    async move {
-                        req.extensions_mut().insert(auth);
-                        next.run(req).await
-                    }
-                },
-            ));
-        let resp = app
-            .oneshot(
-                Request::builder()
-                    .method(Method::GET)
-                    .uri("/events")
-                    .header("authorization", format!("Bearer {token}"))
-                    .body(Body::empty())
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
-        assert_eq!(
-            resp.status(),
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "valid token reaches the scoped read (lazy pool maps to 500)"
-        );
-
-        // A token WITHOUT the company claim is rejected 401 by the middleware.
-        let claims_no_company = serde_json::json!({
-            "sub": user.to_string(),
-            "exp": 4102444800i64,
-        });
-        let token_no_company = jsonwebtoken::encode(
-            &jsonwebtoken::Header::default(),
-            &claims_no_company,
-            &jsonwebtoken::EncodingKey::from_secret(b"probe-secret"),
-        )
-        .expect("mint token");
-        let app =
-            lazy_router().route_layer(middleware::from_fn_with_state(verifier, company_auth));
-        let resp = app
-            .oneshot(
-                Request::builder()
-                    .method(Method::GET)
-                    .uri("/events")
-                    .header("authorization", format!("Bearer {token_no_company}"))
-                    .body(Body::empty())
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
-        assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
-    }
-
-    /// Standalone create through the HTTP surface. This reports the exact
-    /// engine state on the branch: with the engine implemented it must be a
-    /// 201 with a persisted row and the organizer auto-attached as an
-    /// accepted attendee; while the engine is still the cross-track stub it
-    /// surfaces the stub's honest validation error. The result is printed
-    /// LOUDLY so a reviewer sees which state held.
-    #[tokio::test]
-    async fn standalone_create_through_http_maps_engine_state() {
-        let Some(pool) = probe_pool().await else { return };
-        let company = Uuid::new_v4();
-        let user_a = Uuid::new_v4();
-        let app = as_caller(
-            probe_router(&pool),
-            &tenant_of(company, user_a),
-            Some(auth_with(&[event_permissions::CREATE, event_permissions::READ])),
-        );
-        let resp = app
-            .clone()
-            .oneshot(
-                Request::builder()
-                    .method(Method::POST)
-                    .uri("/events")
-                    .header("content-type", "application/json")
-                    .body(Body::from(
-                        serde_json::json!({
-                            "title": "standalone-probe",
-                            "startAt": "2027-01-04T09:00:00Z",
-                            "stopAt": "2027-01-04T10:00:00Z",
-                            "privacy": "private"
-                        })
-                        .to_string(),
-                    ))
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
-        let status = resp.status();
-        let body = body_json(resp).await;
-        eprintln!(
-            "PROBE standalone_create_through_http: status={status}, body={body} \
-             (201 ⇒ engine live; 400 CALENDAR_EVENT_VALIDATION_ERROR ⇒ engine still the \
-             cross-track stub — the HTTP contract itself is proven by the map probes)"
-        );
-        match status {
-            StatusCode::CREATED => {
-                let id: Uuid = body["id"].as_str().unwrap().parse().unwrap();
-                // Row visible to the organizer (private + organizer).
-                let titles =
-                    list_titles_as(&pool, company, user_a, &[event_permissions::READ]).await;
-                assert!(titles.contains(&"standalone-probe".to_string()));
-                // Organizer auto-attendee, accepted. The verification read must
-                // pin the request GUCs too: under the probe role the RLS
-                // fences (correctly) hide every row from an unpinned query.
-                let mut tx = pool.begin().await.expect("verify tx");
-                pin_scope(&mut tx, &ScopeCtx {
-                    company_id: company,
-                    acting_user_id: user_a,
-                })
-                .await
-                .expect("verify scope");
-                let state: String = sqlx::query_scalar(
-                    "SELECT state::text FROM calendar.event_attendees \
-                     WHERE event_id = $1 AND user_id = $2",
-                )
-                .bind(id)
-                .bind(user_a)
-                .fetch_one(&mut *tx)
-                .await
-                .expect("organizer auto-attendee row");
-                assert_eq!(state, "accepted");
-            }
-            StatusCode::BAD_REQUEST => {
-                assert_eq!(
-                    body["error"], "CALENDAR_EVENT_VALIDATION_ERROR",
-                    "a 400 here must be the engine's validation surface, not a surface bug"
-                );
-            }
-            other => panic!("unexpected status {other} for standalone create: {body}"),
-        }
     }
 }

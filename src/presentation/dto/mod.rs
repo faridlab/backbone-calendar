@@ -5,13 +5,13 @@
 //! This module provides DTOs for the presentation layer,
 //! with validation and OpenAPI schema support.
 
-pub mod calendar_dto;
 pub mod calendar_branch_dto;
 pub mod calendar_department_dto;
+pub mod calendar_dto;
 pub mod calendar_employee_dto;
 pub mod calendar_employee_status_dto;
-pub mod calendar_event_dto;
 pub mod calendar_event_attendee_dto;
+pub mod calendar_event_dto;
 pub mod calendar_event_exception_dto;
 pub mod calendar_event_series_dto;
 pub mod calendar_level_dto;
@@ -19,101 +19,57 @@ pub mod calendar_position_dto;
 pub mod calendar_religion_dto;
 
 // Re-exports
-pub use calendar_dto::{
-    CreateCalendarDto,
-    UpdateCalendarDto,
-    PatchCalendarDto,
-    CalendarResponseDto,
-    CalendarListResponseDto,
-    CalendarSummaryDto,
-};
 pub use calendar_branch_dto::{
-    CreateCalendarBranchDto,
-    UpdateCalendarBranchDto,
-    PatchCalendarBranchDto,
-    CalendarBranchResponseDto,
-    CalendarBranchListResponseDto,
-    CalendarBranchSummaryDto,
+    CalendarBranchListResponseDto, CalendarBranchResponseDto, CalendarBranchSummaryDto,
+    CreateCalendarBranchDto, PatchCalendarBranchDto, UpdateCalendarBranchDto,
 };
 pub use calendar_department_dto::{
-    CreateCalendarDepartmentDto,
-    UpdateCalendarDepartmentDto,
-    PatchCalendarDepartmentDto,
-    CalendarDepartmentResponseDto,
-    CalendarDepartmentListResponseDto,
-    CalendarDepartmentSummaryDto,
+    CalendarDepartmentListResponseDto, CalendarDepartmentResponseDto, CalendarDepartmentSummaryDto,
+    CreateCalendarDepartmentDto, PatchCalendarDepartmentDto, UpdateCalendarDepartmentDto,
+};
+pub use calendar_dto::{
+    CalendarListResponseDto, CalendarResponseDto, CalendarSummaryDto, CreateCalendarDto,
+    PatchCalendarDto, UpdateCalendarDto,
 };
 pub use calendar_employee_dto::{
-    CreateCalendarEmployeeDto,
-    UpdateCalendarEmployeeDto,
-    PatchCalendarEmployeeDto,
-    CalendarEmployeeResponseDto,
-    CalendarEmployeeListResponseDto,
-    CalendarEmployeeSummaryDto,
+    CalendarEmployeeListResponseDto, CalendarEmployeeResponseDto, CalendarEmployeeSummaryDto,
+    CreateCalendarEmployeeDto, PatchCalendarEmployeeDto, UpdateCalendarEmployeeDto,
 };
 pub use calendar_employee_status_dto::{
-    CreateCalendarEmployeeStatusDto,
-    UpdateCalendarEmployeeStatusDto,
-    PatchCalendarEmployeeStatusDto,
-    CalendarEmployeeStatusResponseDto,
-    CalendarEmployeeStatusListResponseDto,
-    CalendarEmployeeStatusSummaryDto,
-};
-pub use calendar_event_dto::{
-    CreateCalendarEventDto,
-    UpdateCalendarEventDto,
-    PatchCalendarEventDto,
-    CalendarEventResponseDto,
-    CalendarEventListResponseDto,
-    CalendarEventSummaryDto,
+    CalendarEmployeeStatusListResponseDto, CalendarEmployeeStatusResponseDto,
+    CalendarEmployeeStatusSummaryDto, CreateCalendarEmployeeStatusDto,
+    PatchCalendarEmployeeStatusDto, UpdateCalendarEmployeeStatusDto,
 };
 pub use calendar_event_attendee_dto::{
-    CreateCalendarEventAttendeeDto,
+    CalendarEventAttendeeListResponseDto, CalendarEventAttendeeResponseDto,
+    CalendarEventAttendeeSummaryDto, CreateCalendarEventAttendeeDto, PatchCalendarEventAttendeeDto,
     UpdateCalendarEventAttendeeDto,
-    PatchCalendarEventAttendeeDto,
-    CalendarEventAttendeeResponseDto,
-    CalendarEventAttendeeListResponseDto,
-    CalendarEventAttendeeSummaryDto,
+};
+pub use calendar_event_dto::{
+    CalendarEventListResponseDto, CalendarEventResponseDto, CalendarEventSummaryDto,
+    CreateCalendarEventDto, PatchCalendarEventDto, UpdateCalendarEventDto,
 };
 pub use calendar_event_exception_dto::{
-    CreateCalendarEventExceptionDto,
-    UpdateCalendarEventExceptionDto,
-    PatchCalendarEventExceptionDto,
-    CalendarEventExceptionResponseDto,
-    CalendarEventExceptionListResponseDto,
-    CalendarEventExceptionSummaryDto,
+    CalendarEventExceptionListResponseDto, CalendarEventExceptionResponseDto,
+    CalendarEventExceptionSummaryDto, CreateCalendarEventExceptionDto,
+    PatchCalendarEventExceptionDto, UpdateCalendarEventExceptionDto,
 };
 pub use calendar_event_series_dto::{
-    CreateCalendarEventSeriesDto,
+    CalendarEventSeriesListResponseDto, CalendarEventSeriesResponseDto,
+    CalendarEventSeriesSummaryDto, CreateCalendarEventSeriesDto, PatchCalendarEventSeriesDto,
     UpdateCalendarEventSeriesDto,
-    PatchCalendarEventSeriesDto,
-    CalendarEventSeriesResponseDto,
-    CalendarEventSeriesListResponseDto,
-    CalendarEventSeriesSummaryDto,
 };
 pub use calendar_level_dto::{
-    CreateCalendarLevelDto,
-    UpdateCalendarLevelDto,
-    PatchCalendarLevelDto,
-    CalendarLevelResponseDto,
-    CalendarLevelListResponseDto,
-    CalendarLevelSummaryDto,
+    CalendarLevelListResponseDto, CalendarLevelResponseDto, CalendarLevelSummaryDto,
+    CreateCalendarLevelDto, PatchCalendarLevelDto, UpdateCalendarLevelDto,
 };
 pub use calendar_position_dto::{
-    CreateCalendarPositionDto,
-    UpdateCalendarPositionDto,
-    PatchCalendarPositionDto,
-    CalendarPositionResponseDto,
-    CalendarPositionListResponseDto,
-    CalendarPositionSummaryDto,
+    CalendarPositionListResponseDto, CalendarPositionResponseDto, CalendarPositionSummaryDto,
+    CreateCalendarPositionDto, PatchCalendarPositionDto, UpdateCalendarPositionDto,
 };
 pub use calendar_religion_dto::{
-    CreateCalendarReligionDto,
-    UpdateCalendarReligionDto,
-    PatchCalendarReligionDto,
-    CalendarReligionResponseDto,
-    CalendarReligionListResponseDto,
-    CalendarReligionSummaryDto,
+    CalendarReligionListResponseDto, CalendarReligionResponseDto, CalendarReligionSummaryDto,
+    CreateCalendarReligionDto, PatchCalendarReligionDto, UpdateCalendarReligionDto,
 };
 
 // Common pagination types
@@ -139,8 +95,12 @@ pub struct PaginationParams {
     pub sort_order: Option<String>,
 }
 
-fn default_page() -> u32 { 1 }
-fn default_per_page() -> u32 { 20 }
+fn default_page() -> u32 {
+    1
+}
+fn default_per_page() -> u32 {
+    20
+}
 
 /// API response wrapper
 #[derive(Debug, Clone, Serialize)]
@@ -165,7 +125,11 @@ pub struct ApiError {
 
 impl<T> ApiResponse<T> {
     pub fn ok(data: T) -> Self {
-        Self { success: true, data: Some(data), error: None }
+        Self {
+            success: true,
+            data: Some(data),
+            error: None,
+        }
     }
 
     pub fn err(code: impl Into<String>, message: impl Into<String>) -> Self {

@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
-use crate::presentation::dto::{CreateCalendarReligionDto, UpdateCalendarReligionDto};
 use crate::domain::entity::CalendarReligion;
 use crate::infrastructure::persistence::CalendarReligionRepository;
+use crate::presentation::dto::{CreateCalendarReligionDto, UpdateCalendarReligionDto};
 
 /// Application service for CalendarReligion entities.
 ///

@@ -5,10 +5,10 @@
 //! These DTOs are the ONLY types other modules should use.
 //! They are decoupled from internal domain entities.
 
+use crate::domain::entity::*;
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{DateTime, Utc, NaiveDate};
-use crate::domain::entity::*;
 
 // ============================================================================
 // CALENDAR TYPES
@@ -48,7 +48,6 @@ impl From<CalendarId> for Uuid {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CalendarDto {
     pub id: CalendarId,
-    pub company_id: Uuid,
     pub name: String,
     pub date_start: NaiveDate,
     pub date_end: NaiveDate,
@@ -110,7 +109,6 @@ impl From<CalendarBranchId> for Uuid {
 pub struct CalendarBranchDto {
     pub id: CalendarBranchId,
     pub calendar_id: Uuid,
-    pub company_id: Uuid,
     pub branch_id: Uuid,
     pub metadata: serde_json::Value,
 }
@@ -330,7 +328,6 @@ impl From<CalendarEventId> for Uuid {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CalendarEventDto {
     pub id: CalendarEventId,
-    pub company_id: Uuid,
     pub series_id: Option<Uuid>,
     pub title: String,
     pub description: Option<String>,
@@ -393,7 +390,6 @@ impl From<CalendarEventAttendeeId> for Uuid {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CalendarEventAttendeeDto {
     pub id: CalendarEventAttendeeId,
-    pub company_id: Uuid,
     pub event_id: Uuid,
     pub user_id: Uuid,
     pub state: EventAttendeeState,
@@ -451,7 +447,6 @@ impl From<CalendarEventExceptionId> for Uuid {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CalendarEventExceptionDto {
     pub id: CalendarEventExceptionId,
-    pub company_id: Uuid,
     pub series_id: Uuid,
     pub event_id: Uuid,
     pub slot_start_at: DateTime<Utc>,
@@ -510,7 +505,6 @@ impl From<CalendarEventSeriesId> for Uuid {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CalendarEventSeriesDto {
     pub id: CalendarEventSeriesId,
-    pub company_id: Uuid,
     pub name: Option<String>,
     pub freq: EventRecurrenceFreq,
     pub interval: i32,

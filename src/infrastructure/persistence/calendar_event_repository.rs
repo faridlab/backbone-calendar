@@ -1,27 +1,33 @@
 //! Repository for CalendarEvent entities
 //!
 //! Hand-written (user-owned). Starts as the same thin newtype the generator
-//! emits for the other entities; extended with the RLS-scoped transaction
-//! reads/writes the event-family engine needs (every query must run on a
-//! connection that has pinned `app.company_id` / `app.user_id` via
-//! `set_config(..., true)` so the company fence and the privacy read fence
-//! evaluate per request).
+//! emits for the other entities; extended with the transaction-scoped
+//! reads/writes the event-family engine needs.
+//!
+//! Tenancy (ADR-0029): the module is tenant-agnostic — the SQL here carries no
+//! tenant key. Org isolation is owned by the COMPOSING service: when it mounts
+//! these routes under an auth layer that binds a request org scope
+//! (`with_org_request_scope`), that scope's fence variables govern the
+//! database's row-level security. [`CalendarEventRepository::begin_scope`]
+//! relays the ambient request scope onto its transaction when one is bound and
+//! pins `app.user_id` transaction-locally for the DOMAIN privacy read fence on
+//! `calendar.events` (public, or organizer, or a live attendee) — a pin a
+//! composing scope does not provide. Because the pins are transaction-local,
+//! they can never leak onto a pooled connection reused by the next request.
 //!
 //! NOTE (event-family fence): nothing in the event family may consult
-//! `CalendarRepository::working_days` — that read-port answers with a
-//! company-wide Mon–Fri-minus-holidays simplification (with known unresolved
+//! `CalendarRepository::working_days` — that read-port answers with an
+//! org-wide Mon–Fri-minus-holidays simplification (with known unresolved
 //! scope junctions) that is working-time-family only. Event availability math
 //! is out of scope this wave; when it arrives it must not silently inherit
 //! that simplification.
 //!
 //! Scoping contract: the custom methods below all take an `impl Executor`
 //! that the caller obtained from [`CalendarEventRepository::begin_scope`] — a
-//! transaction whose connection has `app.company_id` and `app.user_id` pinned
-//! transaction-locally. Because the pin is transaction-local, it can never
-//! leak onto a pooled connection reused by the next request; because every
-//! statement runs inside that transaction, row-level security (company
-//! isolation + the event privacy read fence) evaluates every row the engine
-//! touches.
+//! transaction carrying the relayed request scope and the acting-user pin.
+//! Because every statement runs inside that transaction, row-level security
+//! (the composing decorator's org fence + the event privacy read fence)
+//! evaluates every row the engine touches.
 
 use chrono::{DateTime, Utc};
 use sqlx::{PgPool, Postgres};
@@ -44,7 +50,9 @@ pub struct CalendarEventRepository(
 
 impl std::ops::Deref for CalendarEventRepository {
     type Target = backbone_orm::GenericCrudRepository<CalendarEvent, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 impl CalendarEventRepository {
@@ -57,47 +65,51 @@ impl CalendarEventRepository {
 /// Hand-written event-family SQL. Lives here (not in the series engine) per the
 /// module's 4-layer rule: services orchestrate, repositories hold the SQL.
 impl CalendarEventRepository {
-    /// Open a scoped transaction: a pooled connection with `app.company_id`
-    /// and `app.user_id` pinned via `set_config(..., is_local = true)`.
+    /// Open a scoped transaction.
     ///
-    /// The transaction-local pin is what makes both RLS fences real for every
-    /// statement the engine runs on the returned transaction: the permissive
-    /// company-isolation policies on all four event-family tables, and the
-    /// restrictive privacy read policy on `calendar.events`. A transaction-local
-    /// setting is reset automatically at COMMIT/ROLLBACK, so a pooled connection
-    /// can never carry one request's scope into the next.
+    /// Two transaction-local pins (`set_config(..., is_local = true)`), in order:
     ///
-    /// An unset `app.user_id` (which this helper never leaves — it always pins
-    /// both variables) would fail the privacy fence closed to public rows only;
-    /// callers that need private reads must pass the acting user they act for.
+    /// 1. The AMBIENT REQUEST SCOPE, when the composing service bound one —
+    ///    relayed verbatim via `backbone_orm::org_scope::bind_org_scope_on`.
+    ///    This is the module's whole tenancy posture: the composing scope's
+    ///    fence variables (org units, legacy twin) drive the row-level-security
+    ///    fence the decorator installed. Unfenced deployments have no ambient
+    ///    scope and skip this entirely.
+    /// 2. `app.user_id` = the acting user — the DOMAIN privacy read fence on
+    ///    `calendar.events` reads it (public, or organizer, or a live
+    ///    attendee); a composing org scope does not carry the acting user, so
+    ///    the module pins it itself.
+    ///
+    /// A transaction-local setting is reset automatically at COMMIT/ROLLBACK,
+    /// so a pooled connection can never carry one request's scope into the
+    /// next.
     pub async fn begin_scope(
         &self,
         pool: &PgPool,
-        company_id: Uuid,
         acting_user_id: Uuid,
     ) -> Result<sqlx::Transaction<'static, Postgres>, sqlx::Error> {
         let mut tx = pool.begin().await?;
-        sqlx::query(
-            "SELECT set_config('app.company_id', $1, true), set_config('app.user_id', $2, true)",
-        )
-        .bind(company_id.to_string())
-        .bind(acting_user_id.to_string())
-        .execute(&mut *tx)
-        .await?;
+        if let Some(scope) = backbone_orm::org_scope::current_org_scope() {
+            backbone_orm::org_scope::bind_org_scope_on(&mut tx, &scope).await?;
+        }
+        sqlx::query("SELECT set_config('app.user_id', $1, true)")
+            .bind(acting_user_id.to_string())
+            .execute(&mut *tx)
+            .await?;
         Ok(tx)
     }
 
-    /// Fetch one event by id on a scoped executor. Invisible rows (wrong
-    /// company per the strict fence, or non-public without the acting user as
-    /// organizer/attendee per the privacy fence) simply do not exist to this
-    /// query — the caller maps `None` to not-found.
+    /// Fetch one event by id on a scoped executor. Invisible rows (org-fenced
+    /// out by the composing decorator's policy, or non-public without the
+    /// acting user as organizer/attendee per the privacy fence) simply do not
+    /// exist to this query — the caller maps `None` to not-found.
     pub async fn find_by_id_scoped(
         &self,
         exec: impl sqlx::Executor<'_, Database = Postgres>,
         id: Uuid,
     ) -> Result<Option<CalendarEvent>, sqlx::Error> {
         sqlx::query_as::<_, CalendarEvent>(
-            r#"SELECT id, company_id, series_id, title, description,
+            r#"SELECT id, series_id, title, description,
                       start_at, stop_at, privacy, organizer_user_id, location, metadata
                FROM calendar.events
                WHERE id = $1"#,
@@ -136,7 +148,6 @@ impl CalendarEventRepository {
     pub async fn insert_event_scoped(
         &self,
         exec: impl sqlx::Executor<'_, Database = Postgres>,
-        company_id: Uuid,
         series_id: Option<Uuid>,
         title: &str,
         description: Option<&str>,
@@ -148,14 +159,13 @@ impl CalendarEventRepository {
     ) -> Result<Uuid, sqlx::Error> {
         let id: Uuid = sqlx::query_scalar(
             r#"INSERT INTO calendar.events
-                   (company_id, series_id, title, description, start_at, stop_at,
+                   (series_id, title, description, start_at, stop_at,
                     privacy, organizer_user_id, location, metadata)
-               VALUES ($1, $2, $3, $4, $5, $6,
-                       $7::event_privacy, $8, $9,
-                       jsonb_build_object('created_by', $8::text))
+               VALUES ($1, $2, $3, $4, $5,
+                       $6::event_privacy, $7, $8,
+                       jsonb_build_object('created_by', $7::text))
                RETURNING id"#,
         )
-        .bind(company_id)
         .bind(series_id)
         .bind(title)
         .bind(description)
@@ -184,7 +194,6 @@ impl CalendarEventRepository {
     pub async fn bulk_insert_members_scoped(
         &self,
         exec: impl sqlx::Executor<'_, Database = Postgres>,
-        company_id: Uuid,
         series_id: Uuid,
         title: &str,
         description: Option<&str>,
@@ -203,19 +212,18 @@ impl CalendarEventRepository {
 
         let ids: Vec<Uuid> = sqlx::query_scalar(
             r#"INSERT INTO calendar.events
-                   (company_id, series_id, title, description, start_at, stop_at,
+                   (series_id, title, description, start_at, stop_at,
                     privacy, organizer_user_id, location, metadata)
-               SELECT company_id, series_id, title, description, start_at, stop_at,
+               SELECT series_id, title, description, start_at, stop_at,
                       privacy::event_privacy, organizer_user_id, location,
                       jsonb_build_object('created_by', organizer_user_id::text)
-               FROM UNNEST($1::uuid[], $2::uuid[], $3::text[], $4::text[],
-                           $5::timestamptz[], $6::timestamptz[], $7::text[],
-                           $8::uuid[], $9::text[])
-                    AS u(company_id, series_id, title, description, start_at,
+               FROM UNNEST($1::uuid[], $2::text[], $3::text[],
+                           $4::timestamptz[], $5::timestamptz[], $6::text[],
+                           $7::uuid[], $8::text[])
+                    AS u(series_id, title, description, start_at,
                          stop_at, privacy, organizer_user_id, location)
                RETURNING id"#,
         )
-        .bind(vec![company_id; n])
         .bind(vec![series_id; n])
         .bind(titles)
         .bind(descriptions)
@@ -363,14 +371,14 @@ impl CalendarEventRepository {
 /// (Rust permits the impl block anywhere in the same crate; the generated file
 /// itself stays untouched). Same scoping contract as the event methods above.
 impl CalendarEventSeriesRepository {
-    /// Fetch one series row by id on a scoped executor (company fence applies).
+    /// Fetch one series row by id on a scoped executor.
     pub async fn find_series_scoped(
         &self,
         exec: impl sqlx::Executor<'_, Database = Postgres>,
         id: Uuid,
     ) -> Result<Option<crate::domain::entity::CalendarEventSeries>, sqlx::Error> {
         sqlx::query_as::<_, crate::domain::entity::CalendarEventSeries>(
-            r#"SELECT id, company_id, name, freq, interval, by_weekday, by_monthday,
+            r#"SELECT id, name, freq, interval, by_weekday, by_monthday,
                       until, count, base_event_id, metadata
                FROM calendar.event_series
                WHERE id = $1"#,
@@ -393,7 +401,6 @@ impl CalendarEventSeriesRepository {
         &self,
         exec: impl sqlx::Executor<'_, Database = Postgres>,
         id: Uuid,
-        company_id: Uuid,
         name: Option<&str>,
         freq: &str,
         interval: i32,
@@ -406,14 +413,13 @@ impl CalendarEventSeriesRepository {
     ) -> Result<Uuid, sqlx::Error> {
         let id: Uuid = sqlx::query_scalar(
             r#"INSERT INTO calendar.event_series
-                   (id, company_id, name, freq, interval, by_weekday, by_monthday,
+                   (id, name, freq, interval, by_weekday, by_monthday,
                     until, count, base_event_id, metadata)
-               VALUES ($1, $2, $3, $4::event_recurrence_freq, $5, $6, $7,
-                       $8, $9, $10, jsonb_build_object('created_by', $11::text))
+               VALUES ($1, $2, $3::event_recurrence_freq, $4, $5, $6,
+                       $7, $8, $9, jsonb_build_object('created_by', $10::text))
                RETURNING id"#,
         )
         .bind(id)
-        .bind(company_id)
         .bind(name)
         .bind(freq)
         .bind(interval)

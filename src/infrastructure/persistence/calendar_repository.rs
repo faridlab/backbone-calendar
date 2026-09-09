@@ -5,6 +5,12 @@
 //! below hold the hand-written Calendar read SQL (4-layer rule: services orchestrate, repos hold
 //! SQL).
 //!
+//! Tenancy (ADR-0029): the module is tenant-agnostic — this SQL carries no tenant key beyond the
+//! org-unit parameter its port hands it. Org isolation is owned by the COMPOSING service: when the
+//! request carries an org scope (`with_org_request_scope`), holiday reads run inside a transaction
+//! with that scope relayed (`bind_org_scope_on`), so the decorator's row-level fence applies;
+//! unfenced deployments read the pool plain.
+//!
 //! Thin newtype over `backbone_orm::GenericCrudRepository<Calendar, backbone_orm::SoftDelete>`.
 //! All standard CRUD methods are available via `Deref`.
 
@@ -14,7 +20,7 @@ use uuid::Uuid;
 
 use std::collections::HashSet;
 
-use backbone_orm::company_scope;
+use backbone_orm::org_scope;
 
 use crate::domain::entity::Calendar;
 
@@ -31,7 +37,9 @@ pub struct CalendarRepository(
 
 impl std::ops::Deref for CalendarRepository {
     type Target = backbone_orm::GenericCrudRepository<Calendar, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 impl CalendarRepository {
@@ -44,73 +52,80 @@ impl CalendarRepository {
 /// Hand-written Calendar read SQL. Lives here (not in the query service) per the module's 4-layer
 /// rule: services orchestrate, repositories hold the SQL.
 impl CalendarRepository {
-    /// The individual dates in `[from, to]` (inclusive) that fall on a company holiday — i.e. every
-    /// day covered by a `Calendar` row whose `is_holiday = true`. Each holiday calendar's
+    /// The individual dates in `[from, to]` (inclusive) that fall on an org-unit holiday — i.e.
+    /// every day covered by a `Calendar` row whose `is_holiday = true`. Each holiday calendar's
     /// `[date_start, date_end]` is clamped to `[from, to]` and expanded into individual days in SQL
     /// via `generate_series` (single round trip; no Rust-side date iteration). `DISTINCT` collapses
     /// overlaps so a day covered by two holiday calendars is returned once.
     ///
-    /// Read-only, company-scoped: takes the pool and runs `fetch_all_scoped` so the RLS fence
-    /// (ADR-0008) applies. The caller wraps this in `with_company_scope(Some(company_id))` (or the
-    /// HTTP composition root's `with_request_scope`) — otherwise it fails closed (0 rows).
+    /// Tenancy (ADR-0029): `org_unit_id` keys the predicate; when the request carries an ambient
+    /// org scope the read additionally runs inside a transaction with that scope relayed
+    /// (`bind_org_scope_on`), so the composing decorator's row-level fence applies. Unfenced
+    /// deployments read the pool plain. (backbone_orm's org scope offers no fetch-all helper, so
+    /// the scoped path is a short read-only transaction here.)
     ///
     /// Soft-delete lives in the `metadata` JSONB column (`deleted_at` key); the
     /// `(metadata->>'deleted_at') IS NULL` predicate mirrors every other non-deleted read.
     pub async fn holiday_dates(
         &self,
         pool: &PgPool,
-        company_id: Uuid,
+        org_unit_id: Uuid,
         from: NaiveDate,
         to: NaiveDate,
     ) -> Result<Vec<NaiveDate>, sqlx::Error> {
-        // No `fetch_all_scalar_scoped` exists in backbone_orm, so decode the single DATE column as a
-        // 1-tuple row via `fetch_all_scoped` and unwrap the tuple — the documented shape for a
-        // single-column typed read (mirrors `AttendanceRepository::present_days` and
+        // Decode the single DATE column as a 1-tuple row and unwrap the tuple — the documented
+        // shape for a single-column typed read (mirrors `AttendanceRepository::present_days` and
         // `TimeoffRequestRepository::paid_leave_days`).
-        let rows: Vec<(NaiveDate,)> = company_scope::fetch_all_scoped(
-            pool,
-            sqlx::query_as(
-                r#"SELECT DISTINCT d.day::date AS day
-                   FROM calendar.calendars c
-                   CROSS JOIN LATERAL generate_series(
-                       GREATEST(c.date_start, $2)::timestamp,
-                       LEAST(c.date_end, $3)::timestamp,
-                       '1 day'::interval
-                   ) AS d(day)
-                   WHERE c.company_id = $1
-                     AND c.is_holiday = true
-                     AND c.date_start <= $3
-                     AND c.date_end >= $2
-                     AND (c.metadata->>'deleted_at') IS NULL
-                   ORDER BY day"#,
-            )
-            .bind(company_id)
-            .bind(from)
-            .bind(to),
+        let query = sqlx::query_as::<_, (NaiveDate,)>(
+            r#"SELECT DISTINCT d.day::date AS day
+               FROM calendar.calendars c
+               CROSS JOIN LATERAL generate_series(
+                   GREATEST(c.date_start, $2)::timestamp,
+                   LEAST(c.date_end, $3)::timestamp,
+                   '1 day'::interval
+               ) AS d(day)
+               WHERE c.org_unit_id = $1
+                 AND c.is_holiday = true
+                 AND c.date_start <= $3
+                 AND c.date_end >= $2
+                 AND (c.metadata->>'deleted_at') IS NULL
+               ORDER BY day"#,
         )
-        .await?;
+        .bind(org_unit_id)
+        .bind(from)
+        .bind(to);
+
+        let rows: Vec<(NaiveDate,)> = if let Some(scope) = org_scope::current_org_scope() {
+            let mut tx = pool.begin().await?;
+            org_scope::bind_org_scope_on(&mut tx, &scope).await?;
+            let rows = query.fetch_all(&mut *tx).await?;
+            tx.commit().await?; // read-only: nothing but the relayed scope to close out
+            rows
+        } else {
+            query.fetch_all(pool).await?
+        };
         Ok(rows.into_iter().map(|(d,)| d).collect())
     }
 
-    /// Count of **Mon–Fri** days in `[from, to]` (inclusive) **minus** company holidays — the
+    /// Count of **Mon–Fri** days in `[from, to]` (inclusive) **minus** org-unit holidays — the
     /// denominator every per-day metric (attendance %, leave accrual) divides by.
     ///
-    /// First-cut (decoupled): company-wide Mon–Fri minus company-wide holidays. The 7 scope junctions
+    /// First-cut (decoupled): org-wide Mon–Fri minus org-wide holidays. The 7 scope junctions
     /// (branch/department/level/position/employee/religion/employment-status membership in
     /// `calendar_*` join tables) and schedule-defined weekdays are intentionally deferred —
-    /// `working_days` currently assumes a Mon–Fri workweek for the whole company regardless of any
-    /// calendar's membership rows. TODO: refine once the scope junction shape is settled.
+    /// `working_days` currently assumes a Mon–Fri workweek for the whole org unit regardless of
+    /// any calendar's membership rows. TODO: refine once the scope junction shape is settled.
     ///
     /// The day-by-day weekday filter runs in Rust (cheap: at most ~31 days/month, ~366/year) over
     /// the holiday set fetched once from [`Self::holiday_dates`].
     pub async fn working_days(
         &self,
         pool: &PgPool,
-        company_id: Uuid,
+        org_unit_id: Uuid,
         from: NaiveDate,
         to: NaiveDate,
     ) -> Result<u32, sqlx::Error> {
-        let holidays = self.holiday_dates(pool, company_id, from, to).await?;
+        let holidays = self.holiday_dates(pool, org_unit_id, from, to).await?;
         let holiday_set: HashSet<NaiveDate> = holidays.into_iter().collect();
 
         let mut count = 0u32;

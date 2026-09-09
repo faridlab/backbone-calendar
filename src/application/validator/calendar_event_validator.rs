@@ -5,9 +5,9 @@
 //! Returns an `EntityValidator<CalendarEvent>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
-use backbone_core::{OptionalNotBlank, RequiredString};
 use crate::domain::entity::CalendarEvent;
+use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
+use backbone_core::{OptionalNotBlank, RequiredString};
 
 /// Validator type alias for CalendarEvent entities.
 pub type CalendarEventValidator = EntityValidator<CalendarEvent>;
@@ -16,8 +16,12 @@ pub type CalendarEventValidator = EntityValidator<CalendarEvent>;
 pub fn calendar_event_validator() -> CalendarEventValidator {
     EntityValidator::new()
         .rule(RequiredString::new("title", |e: &CalendarEvent| &e.title))
-        .rule(OptionalNotBlank::new("description", |e: &CalendarEvent| e.description.as_deref()))
-        .rule(OptionalNotBlank::new("location", |e: &CalendarEvent| e.location.as_deref()))
+        .rule(OptionalNotBlank::new("description", |e: &CalendarEvent| {
+            e.description.as_deref()
+        }))
+        .rule(OptionalNotBlank::new("location", |e: &CalendarEvent| {
+            e.location.as_deref()
+        }))
     // <<< CUSTOM RULES
     // END CUSTOM RULES
 }

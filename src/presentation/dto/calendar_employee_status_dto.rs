@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::CalendarEmployeeStatus;
 use crate::domain::entity::AuditMetadata;
+use crate::domain::entity::CalendarEmployeeStatus;
 use crate::domain::entity::EmploymentStatus;
 
 // =============================================================================
@@ -33,7 +33,10 @@ use crate::domain::entity::EmploymentStatus;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateCalendarEmployeeStatusDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(alias = "calendar_id")]
     pub calendar_id: Uuid,
     #[serde(alias = "employment_status")]
@@ -53,7 +56,10 @@ pub struct CreateCalendarEmployeeStatusDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCalendarEmployeeStatusDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(alias = "calendar_id")]
     pub calendar_id: Uuid,
     #[serde(alias = "employment_status")]
@@ -73,7 +79,10 @@ pub struct UpdateCalendarEmployeeStatusDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchCalendarEmployeeStatusDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     #[serde(skip_serializing_if = "Option::is_none", alias = "calendar_id")]
     pub calendar_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "employment_status")]
@@ -99,9 +108,15 @@ impl PatchCalendarEmployeeStatusDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct CalendarEmployeeStatusResponseDto {
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     pub id: Uuid,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
+    #[cfg_attr(
+        feature = "openapi",
+        schema(example = "550e8400-e29b-41d4-a716-446655440000")
+    )]
     pub calendar_id: Uuid,
     pub employment_status: EmploymentStatus,
     pub metadata: AuditMetadata,
@@ -137,7 +152,12 @@ pub struct CalendarEmployeeStatusListResponseDto {
 
 impl CalendarEmployeeStatusListResponseDto {
     /// Create a new list response from items and pagination info
-    pub fn new(items: Vec<CalendarEmployeeStatusResponseDto>, total: u64, page: u32, per_page: u32) -> Self {
+    pub fn new(
+        items: Vec<CalendarEmployeeStatusResponseDto>,
+        total: u64,
+        page: u32,
+        per_page: u32,
+    ) -> Self {
         let total_pages = if per_page > 0 {
             ((total as f64) / (per_page as f64)).ceil() as u32
         } else {
@@ -222,7 +242,10 @@ impl backbone_core::FromCreateDto<CreateCalendarEmployeeStatusDto> for CalendarE
 }
 
 impl backbone_core::ApplyUpdateDto<UpdateCalendarEmployeeStatusDto> for CalendarEmployeeStatus {
-    fn apply_update(mut self, dto: UpdateCalendarEmployeeStatusDto) -> backbone_core::ServiceResult<Self> {
+    fn apply_update(
+        mut self,
+        dto: UpdateCalendarEmployeeStatusDto,
+    ) -> backbone_core::ServiceResult<Self> {
         self.calendar_id = dto.calendar_id;
         self.employment_status = dto.employment_status;
         Ok(self)

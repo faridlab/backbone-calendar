@@ -7,41 +7,40 @@
 pub mod error;
 pub use error::{ServiceError, ServiceResult};
 
-pub mod calendar_service;
 pub mod calendar_branch_service;
 pub mod calendar_department_service;
 pub mod calendar_employee_service;
 pub mod calendar_employee_status_service;
-pub mod calendar_event_service;
 pub mod calendar_event_attendee_service;
 pub mod calendar_event_exception_service;
 pub mod calendar_event_series_service;
+pub mod calendar_event_service;
 pub mod calendar_level_service;
 pub mod calendar_position_service;
 pub mod calendar_religion_service;
+pub mod calendar_service;
 
 // <<< CUSTOM
-pub mod calendar_query_service;
 pub mod calendar_event_series_service_custom;
+pub mod calendar_query_service;
 // END CUSTOM
 
-pub use calendar_service::CalendarService;
 pub use calendar_branch_service::CalendarBranchService;
 pub use calendar_department_service::CalendarDepartmentService;
 pub use calendar_employee_service::CalendarEmployeeService;
 pub use calendar_employee_status_service::CalendarEmployeeStatusService;
-pub use calendar_event_service::CalendarEventService;
 pub use calendar_event_attendee_service::CalendarEventAttendeeService;
 pub use calendar_event_exception_service::CalendarEventExceptionService;
 pub use calendar_event_series_service::CalendarEventSeriesService;
+pub use calendar_event_service::CalendarEventService;
 pub use calendar_level_service::CalendarLevelService;
 pub use calendar_position_service::CalendarPositionService;
 pub use calendar_religion_service::CalendarReligionService;
+pub use calendar_service::CalendarService;
 // <<< CUSTOM
 // Event family engine surface (eager materialization, (start,stop)-identity
 // rewrites, exception ledger, attendee writes) — the cross-track interface.
 pub use calendar_event_series_service_custom::{
-    CalendarEventSeriesEngine, EventFamilyError, ScopeCtx,
-    MAX_OCCURRENCES, UNBOUNDED_HORIZON_YEARS,
+    CalendarEventSeriesEngine, EventFamilyError, ScopeCtx, MAX_OCCURRENCES, UNBOUNDED_HORIZON_YEARS,
 };
 // END CUSTOM

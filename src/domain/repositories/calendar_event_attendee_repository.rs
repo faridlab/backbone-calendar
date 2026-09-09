@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the CalendarEventAttendee aggregate.
 //! Implementation is in the infrastructure layer.
 
-use async_trait::async_trait;
 use anyhow::Result;
+use async_trait::async_trait;
 use uuid::Uuid;
 
 use crate::domain::entity::{CalendarEventAttendee, EventAttendeeState};
@@ -44,7 +44,6 @@ pub struct CalendarEventAttendeePaginatedResult {
 /// Filter parameters for list queries
 #[derive(Debug, Clone, Default)]
 pub struct CalendarEventAttendeeFilter {
-    pub company_id: Option<Uuid>,
     pub event_id: Option<Uuid>,
     pub user_id: Option<Uuid>,
     pub state: Option<EventAttendeeState>,
@@ -54,7 +53,10 @@ pub struct CalendarEventAttendeeFilter {
 impl CalendarEventAttendeeFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.company_id.is_some() || self.event_id.is_some() || self.user_id.is_some() || self.state.is_some() || self.access_token.is_some()
+        self.event_id.is_some()
+            || self.user_id.is_some()
+            || self.state.is_some()
+            || self.access_token.is_some()
     }
 }
 
@@ -64,7 +66,6 @@ impl CalendarEventAttendeeFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait CalendarEventAttendeeRepository: Send + Sync {
-
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -79,7 +80,11 @@ pub trait CalendarEventAttendeeRepository: Send + Sync {
     async fn find_all(&self) -> Result<Vec<CalendarEventAttendee>>;
 
     /// Update calendar_event_attendee by ID
-    async fn update(&self, id: &str, entity: &CalendarEventAttendee) -> Result<Option<CalendarEventAttendee>>;
+    async fn update(
+        &self,
+        id: &str,
+        entity: &CalendarEventAttendee,
+    ) -> Result<Option<CalendarEventAttendee>>;
 
     /// Delete calendar_event_attendee by ID
     async fn delete(&self, id: &str) -> Result<bool>;
@@ -89,10 +94,17 @@ pub trait CalendarEventAttendeeRepository: Send + Sync {
     // =========================================================================
 
     /// List calendar_event_attendee with pagination
-    async fn list(&self, params: CalendarEventAttendeePaginationParams) -> Result<CalendarEventAttendeePaginatedResult>;
+    async fn list(
+        &self,
+        params: CalendarEventAttendeePaginationParams,
+    ) -> Result<CalendarEventAttendeePaginatedResult>;
 
     /// List calendar_event_attendee with pagination and filters
-    async fn list_with_filters(&self, params: CalendarEventAttendeePaginationParams, filters: CalendarEventAttendeeFilter) -> Result<CalendarEventAttendeePaginatedResult>;
+    async fn list_with_filters(
+        &self,
+        params: CalendarEventAttendeePaginationParams,
+        filters: CalendarEventAttendeeFilter,
+    ) -> Result<CalendarEventAttendeePaginatedResult>;
 
     /// Count all calendar_event_attendee entities
     async fn count(&self) -> Result<u64>;
@@ -114,7 +126,10 @@ pub trait CalendarEventAttendeeRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<CalendarEventAttendee>>;
 
     /// List soft-deleted calendar_event_attendee entities
-    async fn list_deleted(&self, params: CalendarEventAttendeePaginationParams) -> Result<CalendarEventAttendeePaginatedResult>;
+    async fn list_deleted(
+        &self,
+        params: CalendarEventAttendeePaginationParams,
+    ) -> Result<CalendarEventAttendeePaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;
@@ -124,7 +139,10 @@ pub trait CalendarEventAttendeeRepository: Send + Sync {
     // =========================================================================
 
     /// Bulk save calendar_event_attendee entities
-    async fn bulk_save(&self, entities: &[CalendarEventAttendee]) -> Result<Vec<CalendarEventAttendee>>;
+    async fn bulk_save(
+        &self,
+        entities: &[CalendarEventAttendee],
+    ) -> Result<Vec<CalendarEventAttendee>>;
 
     /// Bulk delete by IDs
     async fn bulk_delete(&self, ids: &[&str]) -> Result<u64>;

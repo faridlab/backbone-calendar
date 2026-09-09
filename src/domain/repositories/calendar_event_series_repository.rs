@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the CalendarEventSeries aggregate.
 //! Implementation is in the infrastructure layer.
 
-use async_trait::async_trait;
 use anyhow::Result;
+use async_trait::async_trait;
 use uuid::Uuid;
 
 use crate::domain::entity::{CalendarEventSeries, EventRecurrenceFreq};
@@ -44,7 +44,6 @@ pub struct CalendarEventSeriesPaginatedResult {
 /// Filter parameters for list queries
 #[derive(Debug, Clone, Default)]
 pub struct CalendarEventSeriesFilter {
-    pub company_id: Option<Uuid>,
     pub name: Option<String>,
     pub freq: Option<EventRecurrenceFreq>,
     pub by_weekday: Option<String>,
@@ -55,7 +54,11 @@ pub struct CalendarEventSeriesFilter {
 impl CalendarEventSeriesFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.company_id.is_some() || self.name.is_some() || self.freq.is_some() || self.by_weekday.is_some() || self.by_monthday.is_some() || self.base_event_id.is_some()
+        self.name.is_some()
+            || self.freq.is_some()
+            || self.by_weekday.is_some()
+            || self.by_monthday.is_some()
+            || self.base_event_id.is_some()
     }
 }
 
@@ -65,7 +68,6 @@ impl CalendarEventSeriesFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait CalendarEventSeriesRepository: Send + Sync {
-
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -80,7 +82,11 @@ pub trait CalendarEventSeriesRepository: Send + Sync {
     async fn find_all(&self) -> Result<Vec<CalendarEventSeries>>;
 
     /// Update calendar_event_series by ID
-    async fn update(&self, id: &str, entity: &CalendarEventSeries) -> Result<Option<CalendarEventSeries>>;
+    async fn update(
+        &self,
+        id: &str,
+        entity: &CalendarEventSeries,
+    ) -> Result<Option<CalendarEventSeries>>;
 
     /// Delete calendar_event_series by ID
     async fn delete(&self, id: &str) -> Result<bool>;
@@ -90,10 +96,17 @@ pub trait CalendarEventSeriesRepository: Send + Sync {
     // =========================================================================
 
     /// List calendar_event_series with pagination
-    async fn list(&self, params: CalendarEventSeriesPaginationParams) -> Result<CalendarEventSeriesPaginatedResult>;
+    async fn list(
+        &self,
+        params: CalendarEventSeriesPaginationParams,
+    ) -> Result<CalendarEventSeriesPaginatedResult>;
 
     /// List calendar_event_series with pagination and filters
-    async fn list_with_filters(&self, params: CalendarEventSeriesPaginationParams, filters: CalendarEventSeriesFilter) -> Result<CalendarEventSeriesPaginatedResult>;
+    async fn list_with_filters(
+        &self,
+        params: CalendarEventSeriesPaginationParams,
+        filters: CalendarEventSeriesFilter,
+    ) -> Result<CalendarEventSeriesPaginatedResult>;
 
     /// Count all calendar_event_series entities
     async fn count(&self) -> Result<u64>;
@@ -115,7 +128,10 @@ pub trait CalendarEventSeriesRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<CalendarEventSeries>>;
 
     /// List soft-deleted calendar_event_series entities
-    async fn list_deleted(&self, params: CalendarEventSeriesPaginationParams) -> Result<CalendarEventSeriesPaginatedResult>;
+    async fn list_deleted(
+        &self,
+        params: CalendarEventSeriesPaginationParams,
+    ) -> Result<CalendarEventSeriesPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;
@@ -125,7 +141,8 @@ pub trait CalendarEventSeriesRepository: Send + Sync {
     // =========================================================================
 
     /// Bulk save calendar_event_series entities
-    async fn bulk_save(&self, entities: &[CalendarEventSeries]) -> Result<Vec<CalendarEventSeries>>;
+    async fn bulk_save(&self, entities: &[CalendarEventSeries])
+        -> Result<Vec<CalendarEventSeries>>;
 
     /// Bulk delete by IDs
     async fn bulk_delete(&self, ids: &[&str]) -> Result<u64>;

@@ -21,12 +21,14 @@ use backbone_auth::middleware::AuthContext;
 use backbone_auth::AuthMiddleware;
 
 // Domain imports
-use crate::domain::entity::*;
 use crate::application::service::{CalendarEmployeeStatusService, ServiceError};
+use crate::domain::entity::*;
 
 // DTO imports
-use crate::presentation::dto::{CreateCalendarEmployeeStatusDto, UpdateCalendarEmployeeStatusDto, PatchCalendarEmployeeStatusDto, CalendarEmployeeStatusResponseDto};
-
+use crate::presentation::dto::{
+    CalendarEmployeeStatusResponseDto, CreateCalendarEmployeeStatusDto,
+    PatchCalendarEmployeeStatusDto, UpdateCalendarEmployeeStatusDto,
+};
 
 /// Application error type
 #[derive(Debug, thiserror::Error)]
@@ -60,9 +62,18 @@ impl axum::response::IntoResponse for CalendarEmployeeStatusError {
 
         let (status, code) = match &self {
             Self::NotFound(_) => (StatusCode::NOT_FOUND, "CALENDAREMPLOYEESTATUS_NOT_FOUND"),
-            Self::Validation(_) => (StatusCode::BAD_REQUEST, "CALENDAREMPLOYEESTATUS_VALIDATION_ERROR"),
-            Self::Database(_) => (StatusCode::INTERNAL_SERVER_ERROR, "CALENDAREMPLOYEESTATUS_DATABASE_ERROR"),
-            Self::Internal(_) => (StatusCode::INTERNAL_SERVER_ERROR, "CALENDAREMPLOYEESTATUS_INTERNAL_ERROR"),
+            Self::Validation(_) => (
+                StatusCode::BAD_REQUEST,
+                "CALENDAREMPLOYEESTATUS_VALIDATION_ERROR",
+            ),
+            Self::Database(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "CALENDAREMPLOYEESTATUS_DATABASE_ERROR",
+            ),
+            Self::Internal(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "CALENDAREMPLOYEESTATUS_INTERNAL_ERROR",
+            ),
         };
 
         let body = serde_json::json!({
@@ -107,11 +118,16 @@ impl axum::response::IntoResponse for CalendarEmployeeStatusError {
 /// let service = Arc::new(CalendarEmployeeStatusService::with_repository(repository));
 /// let router = create_calendar_employee_status_routes(service);
 /// ```
-pub fn create_calendar_employee_status_routes(service: Arc<CalendarEmployeeStatusService>) -> Router {
-    BackboneCrudHandler::<CalendarEmployeeStatusService, CalendarEmployeeStatus, CreateCalendarEmployeeStatusDto, UpdateCalendarEmployeeStatusDto, CalendarEmployeeStatusResponseDto>::routes(
-        service,
-        "/calendar_employee_statuses",
-    )
+pub fn create_calendar_employee_status_routes(
+    service: Arc<CalendarEmployeeStatusService>,
+) -> Router {
+    BackboneCrudHandler::<
+        CalendarEmployeeStatusService,
+        CalendarEmployeeStatus,
+        CreateCalendarEmployeeStatusDto,
+        UpdateCalendarEmployeeStatusDto,
+        CalendarEmployeeStatusResponseDto,
+    >::routes(service, "/calendar_employee_statuses")
 }
 
 /// Create Axum router with only the read (GET) endpoints for CalendarEmployeeStatus.
@@ -119,11 +135,16 @@ pub fn create_calendar_employee_status_routes(service: Arc<CalendarEmployeeStatu
 /// Safe for public, unauthenticated exposure (e.g., reference data).
 /// Mutations must be served separately via `create_calendar_employee_status_write_routes`,
 /// typically wrapped in an auth middleware layer.
-pub fn create_calendar_employee_status_read_routes(service: Arc<CalendarEmployeeStatusService>) -> Router {
-    BackboneCrudHandler::<CalendarEmployeeStatusService, CalendarEmployeeStatus, CreateCalendarEmployeeStatusDto, UpdateCalendarEmployeeStatusDto, CalendarEmployeeStatusResponseDto>::read_routes(
-        service,
-        "/calendar_employee_statuses",
-    )
+pub fn create_calendar_employee_status_read_routes(
+    service: Arc<CalendarEmployeeStatusService>,
+) -> Router {
+    BackboneCrudHandler::<
+        CalendarEmployeeStatusService,
+        CalendarEmployeeStatus,
+        CreateCalendarEmployeeStatusDto,
+        UpdateCalendarEmployeeStatusDto,
+        CalendarEmployeeStatusResponseDto,
+    >::read_routes(service, "/calendar_employee_statuses")
 }
 
 /// Create Axum router with only the write (mutation) endpoints for CalendarEmployeeStatus.
@@ -137,11 +158,16 @@ pub fn create_calendar_employee_status_read_routes(service: Arc<CalendarEmployee
 /// they bypass all business invariants. If the module exposes a validated write
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
-pub fn create_calendar_employee_status_write_routes(service: Arc<CalendarEmployeeStatusService>) -> Router {
-    BackboneCrudHandler::<CalendarEmployeeStatusService, CalendarEmployeeStatus, CreateCalendarEmployeeStatusDto, UpdateCalendarEmployeeStatusDto, CalendarEmployeeStatusResponseDto>::write_routes(
-        service,
-        "/calendar_employee_statuses",
-    )
+pub fn create_calendar_employee_status_write_routes(
+    service: Arc<CalendarEmployeeStatusService>,
+) -> Router {
+    BackboneCrudHandler::<
+        CalendarEmployeeStatusService,
+        CalendarEmployeeStatus,
+        CreateCalendarEmployeeStatusDto,
+        UpdateCalendarEmployeeStatusDto,
+        CalendarEmployeeStatusResponseDto,
+    >::write_routes(service, "/calendar_employee_statuses")
 }
 
 /// Create authenticated routes with auth middleware.
@@ -150,7 +176,9 @@ pub fn create_calendar_employee_status_write_routes(service: Arc<CalendarEmploye
 /// is responsible for extracting and validating tokens, then providing
 /// an `AuthContext` via request extensions.
 #[cfg(feature = "auth")]
-pub fn create_protected_calendar_employee_status_routes<A: AuthMiddleware + Send + Sync + 'static>(
+pub fn create_protected_calendar_employee_status_routes<
+    A: AuthMiddleware + Send + Sync + 'static,
+>(
     service: Arc<CalendarEmployeeStatusService>,
     auth: Arc<A>,
 ) -> Router {
@@ -158,30 +186,35 @@ pub fn create_protected_calendar_employee_status_routes<A: AuthMiddleware + Send
     use axum::response::IntoResponse;
 
     let auth_layer = auth.clone();
-    create_calendar_employee_status_routes(service)
-        .layer(middleware::from_fn(move |mut req: axum::extract::Request, next: axum::middleware::Next| {
+    create_calendar_employee_status_routes(service).layer(middleware::from_fn(
+        move |mut req: axum::extract::Request, next: axum::middleware::Next| {
             let auth = auth_layer.clone();
             async move {
-                let token = req.headers()
+                let token = req
+                    .headers()
                     .get(axum::http::header::AUTHORIZATION)
                     .and_then(|h| h.to_str().ok())
-                    .and_then(|raw| raw.strip_prefix("Bearer ").or_else(|| raw.strip_prefix("bearer ")))
+                    .and_then(|raw| {
+                        raw.strip_prefix("Bearer ")
+                            .or_else(|| raw.strip_prefix("bearer "))
+                    })
                     .unwrap_or("");
                 match auth.authenticate(token).await {
                     Ok(ctx) => {
                         req.extensions_mut().insert(ctx);
                         next.run(req).await
                     }
-                    Err(_) => {
-                        (axum::http::StatusCode::UNAUTHORIZED,
-                         axum::Json(serde_json::json!({
-                             "success": false,
-                             "error": "unauthorized",
-                             "message": "Authentication required"
-                         }))
-                        ).into_response()
-                    }
+                    Err(_) => (
+                        axum::http::StatusCode::UNAUTHORIZED,
+                        axum::Json(serde_json::json!({
+                            "success": false,
+                            "error": "unauthorized",
+                            "message": "Authentication required"
+                        })),
+                    )
+                        .into_response(),
                 }
             }
-        }))
+        },
+    ))
 }

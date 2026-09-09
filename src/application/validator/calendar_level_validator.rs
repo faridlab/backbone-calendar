@@ -5,8 +5,8 @@
 //! Returns an `EntityValidator<CalendarLevel>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
 use crate::domain::entity::CalendarLevel;
+use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for CalendarLevel entities.
 pub type CalendarLevelValidator = EntityValidator<CalendarLevel>;
@@ -16,7 +16,7 @@ pub fn calendar_level_validator() -> CalendarLevelValidator {
     EntityValidator::new()
     // <<< CUSTOM RULES
     // END CUSTOM RULES
-        // No schema-derived rules — add custom rules above.
+    // No schema-derived rules — add custom rules above.
 }
 
 // <<< CUSTOM

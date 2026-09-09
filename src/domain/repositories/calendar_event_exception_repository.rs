@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the CalendarEventException aggregate.
 //! Implementation is in the infrastructure layer.
 
-use async_trait::async_trait;
 use anyhow::Result;
+use async_trait::async_trait;
 use uuid::Uuid;
 
 use crate::domain::entity::{CalendarEventException, EventExceptionKind};
@@ -44,7 +44,6 @@ pub struct CalendarEventExceptionPaginatedResult {
 /// Filter parameters for list queries
 #[derive(Debug, Clone, Default)]
 pub struct CalendarEventExceptionFilter {
-    pub company_id: Option<Uuid>,
     pub series_id: Option<Uuid>,
     pub event_id: Option<Uuid>,
     pub kind: Option<EventExceptionKind>,
@@ -53,7 +52,7 @@ pub struct CalendarEventExceptionFilter {
 impl CalendarEventExceptionFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.company_id.is_some() || self.series_id.is_some() || self.event_id.is_some() || self.kind.is_some()
+        self.series_id.is_some() || self.event_id.is_some() || self.kind.is_some()
     }
 }
 
@@ -63,7 +62,6 @@ impl CalendarEventExceptionFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait CalendarEventExceptionRepository: Send + Sync {
-
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -78,7 +76,11 @@ pub trait CalendarEventExceptionRepository: Send + Sync {
     async fn find_all(&self) -> Result<Vec<CalendarEventException>>;
 
     /// Update calendar_event_exception by ID
-    async fn update(&self, id: &str, entity: &CalendarEventException) -> Result<Option<CalendarEventException>>;
+    async fn update(
+        &self,
+        id: &str,
+        entity: &CalendarEventException,
+    ) -> Result<Option<CalendarEventException>>;
 
     /// Delete calendar_event_exception by ID
     async fn delete(&self, id: &str) -> Result<bool>;
@@ -88,10 +90,17 @@ pub trait CalendarEventExceptionRepository: Send + Sync {
     // =========================================================================
 
     /// List calendar_event_exception with pagination
-    async fn list(&self, params: CalendarEventExceptionPaginationParams) -> Result<CalendarEventExceptionPaginatedResult>;
+    async fn list(
+        &self,
+        params: CalendarEventExceptionPaginationParams,
+    ) -> Result<CalendarEventExceptionPaginatedResult>;
 
     /// List calendar_event_exception with pagination and filters
-    async fn list_with_filters(&self, params: CalendarEventExceptionPaginationParams, filters: CalendarEventExceptionFilter) -> Result<CalendarEventExceptionPaginatedResult>;
+    async fn list_with_filters(
+        &self,
+        params: CalendarEventExceptionPaginationParams,
+        filters: CalendarEventExceptionFilter,
+    ) -> Result<CalendarEventExceptionPaginatedResult>;
 
     /// Count all calendar_event_exception entities
     async fn count(&self) -> Result<u64>;
@@ -113,7 +122,10 @@ pub trait CalendarEventExceptionRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<CalendarEventException>>;
 
     /// List soft-deleted calendar_event_exception entities
-    async fn list_deleted(&self, params: CalendarEventExceptionPaginationParams) -> Result<CalendarEventExceptionPaginatedResult>;
+    async fn list_deleted(
+        &self,
+        params: CalendarEventExceptionPaginationParams,
+    ) -> Result<CalendarEventExceptionPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;
@@ -123,7 +135,10 @@ pub trait CalendarEventExceptionRepository: Send + Sync {
     // =========================================================================
 
     /// Bulk save calendar_event_exception entities
-    async fn bulk_save(&self, entities: &[CalendarEventException]) -> Result<Vec<CalendarEventException>>;
+    async fn bulk_save(
+        &self,
+        entities: &[CalendarEventException],
+    ) -> Result<Vec<CalendarEventException>>;
 
     /// Bulk delete by IDs
     async fn bulk_delete(&self, ids: &[&str]) -> Result<u64>;

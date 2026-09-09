@@ -1,10 +1,10 @@
-use chrono::{DateTime, Utc, NaiveDate};
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::EventRecurrenceFreq;
 use super::AuditMetadata;
+use super::EventRecurrenceFreq;
 
 /// Strongly-typed ID for CalendarEventSeries
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -12,9 +12,15 @@ use super::AuditMetadata;
 pub struct CalendarEventSeriesId(pub Uuid);
 
 impl CalendarEventSeriesId {
-    pub fn new(id: Uuid) -> Self { Self(id) }
-    pub fn generate() -> Self { Self(Uuid::new_v4()) }
-    pub fn into_inner(self) -> Uuid { self.0 }
+    pub fn new(id: Uuid) -> Self {
+        Self(id)
+    }
+    pub fn generate() -> Self {
+        Self(Uuid::new_v4())
+    }
+    pub fn into_inner(self) -> Uuid {
+        self.0
+    }
 }
 
 impl std::fmt::Display for CalendarEventSeriesId {
@@ -31,26 +37,33 @@ impl std::str::FromStr for CalendarEventSeriesId {
 }
 
 impl From<Uuid> for CalendarEventSeriesId {
-    fn from(id: Uuid) -> Self { Self(id) }
+    fn from(id: Uuid) -> Self {
+        Self(id)
+    }
 }
 
 impl From<CalendarEventSeriesId> for Uuid {
-    fn from(id: CalendarEventSeriesId) -> Self { id.0 }
+    fn from(id: CalendarEventSeriesId) -> Self {
+        id.0
+    }
 }
 
 impl AsRef<Uuid> for CalendarEventSeriesId {
-    fn as_ref(&self) -> &Uuid { &self.0 }
+    fn as_ref(&self) -> &Uuid {
+        &self.0
+    }
 }
 
 impl std::ops::Deref for CalendarEventSeriesId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct CalendarEventSeries {
     pub id: Uuid,
-    pub company_id: Uuid,
     pub name: Option<String>,
     pub freq: EventRecurrenceFreq,
     pub interval: i32,
@@ -71,10 +84,9 @@ impl CalendarEventSeries {
     }
 
     /// Create a new CalendarEventSeries with required fields
-    pub fn new(company_id: Uuid, freq: EventRecurrenceFreq, interval: i32, base_event_id: Uuid) -> Self {
+    pub fn new(freq: EventRecurrenceFreq, interval: i32, base_event_id: Uuid) -> Self {
         Self {
             id: Uuid::new_v4(),
-            company_id,
             name: None,
             freq,
             interval,
@@ -137,7 +149,6 @@ impl CalendarEventSeries {
         self.metadata.deleted_by.as_ref()
     }
 
-
     // ==========================================================
     // Fluent Setters (with_* for optional fields)
     // ==========================================================
@@ -180,32 +191,45 @@ impl CalendarEventSeries {
     pub fn apply_patch(&mut self, fields: std::collections::HashMap<String, serde_json::Value>) {
         for (key, value) in fields {
             match key.as_str() {
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.company_id = v; }
-                }
                 "name" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.name = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.name = v;
+                    }
                 }
                 "freq" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.freq = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.freq = v;
+                    }
                 }
                 "interval" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.interval = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.interval = v;
+                    }
                 }
                 "by_weekday" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.by_weekday = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.by_weekday = v;
+                    }
                 }
                 "by_monthday" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.by_monthday = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.by_monthday = v;
+                    }
                 }
                 "until" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.until = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.until = v;
+                    }
                 }
                 "count" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.count = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.count = v;
+                    }
                 }
                 "base_event_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.base_event_id = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.base_event_id = v;
+                    }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -261,16 +285,12 @@ impl backbone_orm::EntityRepoMeta for CalendarEventSeries {
     fn column_types() -> std::collections::HashMap<String, String> {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m.insert("base_event_id".to_string(), "uuid".to_string());
         m.insert("freq".to_string(), "event_recurrence_freq".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &[]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
 }
 
@@ -280,7 +300,6 @@ impl backbone_orm::EntityRepoMeta for CalendarEventSeries {
 /// System fields (id, metadata, timestamps) are auto-initialized.
 #[derive(Debug, Clone, Default)]
 pub struct CalendarEventSeriesBuilder {
-    company_id: Option<Uuid>,
     name: Option<String>,
     freq: Option<EventRecurrenceFreq>,
     interval: Option<i32>,
@@ -292,12 +311,6 @@ pub struct CalendarEventSeriesBuilder {
 }
 
 impl CalendarEventSeriesBuilder {
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
-        self
-    }
-
     /// Set the name field (optional)
     pub fn name(mut self, value: String) -> Self {
         self.name = Some(value);
@@ -350,13 +363,13 @@ impl CalendarEventSeriesBuilder {
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<CalendarEventSeries, String> {
-        let company_id = self.company_id.ok_or_else(|| "company_id is required".to_string())?;
         let freq = self.freq.ok_or_else(|| "freq is required".to_string())?;
-        let base_event_id = self.base_event_id.ok_or_else(|| "base_event_id is required".to_string())?;
+        let base_event_id = self
+            .base_event_id
+            .ok_or_else(|| "base_event_id is required".to_string())?;
 
         Ok(CalendarEventSeries {
             id: Uuid::new_v4(),
-            company_id,
             name: self.name,
             freq,
             interval: self.interval.unwrap_or(1),

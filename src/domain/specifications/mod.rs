@@ -4,20 +4,20 @@
 //!
 //! Combinators (AND/OR/NOT) come from `backbone_core::Specification`.
 
-pub use backbone_core::{Specification, AndSpecification, OrSpecification, NotSpecification};
+pub use backbone_core::{AndSpecification, NotSpecification, OrSpecification, Specification};
 
-pub mod calendar_specification;
 pub mod calendar_branch_specification;
 pub mod calendar_department_specification;
 pub mod calendar_employee_specification;
 pub mod calendar_employee_status_specification;
-pub mod calendar_event_specification;
 pub mod calendar_event_attendee_specification;
 pub mod calendar_event_exception_specification;
 pub mod calendar_event_series_specification;
+pub mod calendar_event_specification;
 pub mod calendar_level_specification;
 pub mod calendar_position_specification;
 pub mod calendar_religion_specification;
+pub mod calendar_specification;
 
 // <<< CUSTOM
 // END CUSTOM

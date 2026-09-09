@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
-use crate::presentation::dto::{CreateCalendarDto, UpdateCalendarDto};
 use crate::domain::entity::Calendar;
 use crate::infrastructure::persistence::CalendarRepository;
+use crate::presentation::dto::{CreateCalendarDto, UpdateCalendarDto};
 
 /// Application service for Calendar entities.
 ///
@@ -25,12 +25,8 @@ use crate::infrastructure::persistence::CalendarRepository;
 ///     // add domain-specific dependencies here
 /// }
 /// ```
-pub type CalendarService = GenericCrudService<
-    Calendar,
-    CreateCalendarDto,
-    UpdateCalendarDto,
-    CalendarRepository,
->;
+pub type CalendarService =
+    GenericCrudService<Calendar, CreateCalendarDto, UpdateCalendarDto, CalendarRepository>;
 
 // <<< CUSTOM
 // END CUSTOM

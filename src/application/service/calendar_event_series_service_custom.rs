@@ -41,8 +41,8 @@
 //! ## FENCE — working_days non-inheritance (loud, by declaration)
 //!
 //! This engine MUST NOT consult `CalendarRepository::working_days` (or
-//! `holiday_dates`) for ANY computation. That read-port answers with a
-//! company-wide Mon–Fri-minus-holidays simplification carrying known
+//! `holiday_dates`) for ANY computation. That read-port answers with an
+//! org-wide Mon–Fri-minus-holidays simplification carrying known
 //! unresolved scope junctions (branch/department/level/position/employee/
 //! religion/employment-status), and it belongs to the WORKING-TIME family
 //! only. The event family does NO availability math this wave; when
@@ -53,16 +53,16 @@
 //!
 //! ## Scoping: one transaction per operation, pinned before any query
 //!
-//! Every operation opens ONE transaction whose connection pins
-//! `app.company_id` and `app.user_id` via `set_config(..., true)` (see
-//! [`CalendarEventRepository::begin_scope`]), then runs all its statements on
-//! that transaction. Row-level security therefore evaluates every row: the
-//! strict company fence on all four event-family tables, and the restrictive
-//! privacy read fence on `calendar.events` (public, or organizer, or a live
-//! attendee). An acting user that cannot see a row cannot edit, delete, or
-//! attach to it — it maps to `NotFound`. The transaction-local pin resets at
-//! COMMIT/ROLLBACK, so a pooled connection never carries one request's scope
-//! into the next.
+//! Every operation opens ONE transaction that
+//! [`CalendarEventRepository::begin_scope`] prepares (see there), then runs
+//! all its statements on that transaction. Row-level security therefore
+//! evaluates every row: the org fence the composing service's decorator
+//! installed (fed by the relayed ambient request scope) on all four
+//! event-family tables, and the restrictive privacy read fence on
+//! `calendar.events` (public, or organizer, or a live attendee). An acting
+//! user that cannot see a row cannot edit, delete, or attach to it — it maps
+//! to `NotFound`. The transaction-local pins reset at COMMIT/ROLLBACK, so a
+//! pooled connection never carries one request's scope into the next.
 
 use std::collections::{HashMap, HashSet};
 
@@ -92,11 +92,13 @@ pub const UNBOUNDED_HORIZON_YEARS: i32 = 15;
 /// validation error, never a silent truncation.
 const MAX_SCAN_PERIODS: u64 = 200_000;
 
-/// Request scoping for the RLS fences: the company the series lives in and
-/// the user the engine acts as (privacy reads fail closed without one).
+/// Request scoping for the engine: the user it acts as (privacy reads fail
+/// closed without one). The org identity is deliberately NOT carried here —
+/// it rides the ambient request scope the composing service bound, which the
+/// repositories relay onto each transaction (ADR-0029: the module carries no
+/// tenant).
 #[derive(Debug, Clone, Copy)]
 pub struct ScopeCtx {
-    pub company_id: Uuid,
     pub acting_user_id: Uuid,
 }
 
@@ -264,14 +266,20 @@ pub fn expand_occurrences(
 
     let count = rule.count.map(|c| c as usize);
     let mut slots: Vec<OccurrenceSlot> = Vec::new();
-    slots.push(OccurrenceSlot { start_at: first_start, stop_at: first_stop });
+    slots.push(OccurrenceSlot {
+        start_at: first_start,
+        stop_at: first_stop,
+    });
 
     let push_slot = |slots: &mut Vec<OccurrenceSlot>, date: NaiveDate| {
         let start = NaiveDateTime::new(date, anchor_time).and_utc();
         let Some(stop) = start.checked_add_signed(duration) else {
             return None;
         };
-        slots.push(OccurrenceSlot { start_at: start, stop_at: stop });
+        slots.push(OccurrenceSlot {
+            start_at: start,
+            stop_at: stop,
+        });
         Some(())
     };
 
@@ -289,22 +297,30 @@ pub fn expand_occurrences(
         let mut candidates: Vec<NaiveDate> = match rule.freq {
             EventRecurrenceFreq::Daily => vec![anchor_date
                 .checked_add_days(Days::new(k.saturating_mul(rule.interval as u64)))
-                .ok_or_else(|| EventFamilyError::Validation("recurrence date out of range".into()))?],
+                .ok_or_else(|| {
+                    EventFamilyError::Validation("recurrence date out of range".into())
+                })?],
             EventRecurrenceFreq::Weekly => {
                 if rule.by_weekday.is_empty() {
                     vec![anchor_date
                         .checked_add_days(Days::new(k.saturating_mul((rule.interval * 7) as u64)))
-                        .ok_or_else(|| EventFamilyError::Validation("recurrence date out of range".into()))?]
+                        .ok_or_else(|| {
+                            EventFamilyError::Validation("recurrence date out of range".into())
+                        })?]
                 } else {
                     // Week 0 is the ISO week containing the anchor; weekday
                     // offsets are 1 = Monday .. 7 = Sunday.
                     let iso_wd = (anchor_date.weekday().num_days_from_monday() + 1) as u64;
                     let week_start = anchor_date
                         .checked_sub_days(Days::new(iso_wd - 1))
-                        .ok_or_else(|| EventFamilyError::Validation("recurrence date out of range".into()))?;
+                        .ok_or_else(|| {
+                            EventFamilyError::Validation("recurrence date out of range".into())
+                        })?;
                     let week_k = week_start
                         .checked_add_days(Days::new(k.saturating_mul((rule.interval * 7) as u64)))
-                        .ok_or_else(|| EventFamilyError::Validation("recurrence date out of range".into()))?;
+                        .ok_or_else(|| {
+                            EventFamilyError::Validation("recurrence date out of range".into())
+                        })?;
                     let mut days: Vec<NaiveDate> = rule
                         .by_weekday
                         .iter()
@@ -316,7 +332,8 @@ pub fn expand_occurrences(
                 }
             }
             EventRecurrenceFreq::Monthly => {
-                let total = anchor_date.year() as i64 * 12 + (anchor_date.month() as i64 - 1)
+                let total = anchor_date.year() as i64 * 12
+                    + (anchor_date.month() as i64 - 1)
                     + (k as i64) * (rule.interval as i64);
                 let year = total.div_euclid(12) as i32;
                 let month = (total.rem_euclid(12) + 1) as u32;
@@ -340,8 +357,9 @@ pub fn expand_occurrences(
                 match anchor_date
                     .year()
                     .checked_add((k as i32).checked_mul(rule.interval).unwrap_or(i32::MAX))
-                    .and_then(|y| NaiveDate::from_ymd_opt(y, anchor_date.month(), anchor_date.day()))
-                {
+                    .and_then(|y| {
+                        NaiveDate::from_ymd_opt(y, anchor_date.month(), anchor_date.day())
+                    }) {
                     Some(d) => vec![d],
                     None => Vec::new(),
                 }
@@ -420,7 +438,13 @@ impl CalendarEventSeriesEngine {
         exceptions: std::sync::Arc<CalendarEventExceptionRepository>,
         attendees: std::sync::Arc<CalendarEventAttendeeRepository>,
     ) -> Self {
-        Self { pool, events, series, exceptions, attendees }
+        Self {
+            pool,
+            events,
+            series,
+            exceptions,
+            attendees,
+        }
     }
 
     /// Create a series: expand + cap-check the rule (BEFORE any database
@@ -454,7 +478,7 @@ impl CalendarEventSeriesEngine {
 
         let mut tx = self
             .events
-            .begin_scope(&self.pool, scope.company_id, scope.acting_user_id)
+            .begin_scope(&self.pool, scope.acting_user_id)
             .await?;
 
         let series_id = Uuid::new_v4();
@@ -462,7 +486,6 @@ impl CalendarEventSeriesEngine {
             .events
             .insert_event_scoped(
                 &mut *tx,
-                scope.company_id,
                 Some(series_id),
                 &cmd.title,
                 cmd.description.as_deref(),
@@ -482,7 +505,6 @@ impl CalendarEventSeriesEngine {
                 .events
                 .bulk_insert_members_scoped(
                     &mut *tx,
-                    scope.company_id,
                     series_id,
                     &cmd.title,
                     cmd.description.as_deref(),
@@ -500,7 +522,6 @@ impl CalendarEventSeriesEngine {
             .insert_series_scoped(
                 &mut *tx,
                 series_id,
-                scope.company_id,
                 cmd.name.as_deref(),
                 &cmd.freq.to_string(),
                 cmd.interval,
@@ -513,19 +534,11 @@ impl CalendarEventSeriesEngine {
             )
             .await?;
 
-        let attendee_set = Self::attendee_set_with_organizer(
-            scope.acting_user_id,
-            &cmd.attendee_user_ids,
-        );
+        let attendee_set =
+            Self::attendee_set_with_organizer(scope.acting_user_id, &cmd.attendee_user_ids);
         if !attendee_set.is_empty() {
             self.attendees
-                .bulk_insert_scoped(
-                    &mut *tx,
-                    scope.company_id,
-                    &event_ids,
-                    &attendee_set,
-                    scope.acting_user_id,
-                )
+                .bulk_insert_scoped(&mut *tx, &event_ids, &attendee_set, scope.acting_user_id)
                 .await
                 .map_err(Self::map_attendee_violation)?;
         }
@@ -566,10 +579,14 @@ impl CalendarEventSeriesEngine {
 
         let mut tx = self
             .events
-            .begin_scope(&self.pool, scope.company_id, scope.acting_user_id)
+            .begin_scope(&self.pool, scope.acting_user_id)
             .await?;
 
-        let Some(series) = self.series.find_series_scoped(&mut *tx, cmd.series_id).await? else {
+        let Some(series) = self
+            .series
+            .find_series_scoped(&mut *tx, cmd.series_id)
+            .await?
+        else {
             return Err(EventFamilyError::NotFound);
         };
 
@@ -599,8 +616,12 @@ impl CalendarEventSeriesEngine {
                 .collect();
         }
 
-        let claimed: HashSet<(DateTime<Utc>, DateTime<Utc>)> =
-            self.exceptions.alive_slots_scoped(&mut *tx, series.id).await?.into_iter().collect();
+        let claimed: HashSet<(DateTime<Utc>, DateTime<Utc>)> = self
+            .exceptions
+            .alive_slots_scoped(&mut *tx, series.id)
+            .await?
+            .into_iter()
+            .collect();
         let by_slot: HashMap<(DateTime<Utc>, DateTime<Utc>), Uuid> =
             members.iter().map(|m| ((m.1, m.2), m.0)).collect();
         let grid: HashSet<(DateTime<Utc>, DateTime<Utc>)> =
@@ -638,7 +659,6 @@ impl CalendarEventSeriesEngine {
                 .events
                 .bulk_insert_members_scoped(
                     &mut *tx,
-                    scope.company_id,
                     series.id,
                     &cmd.title,
                     cmd.description.as_deref(),
@@ -658,16 +678,9 @@ impl CalendarEventSeriesEngine {
             } else {
                 template_attendees.clone()
             };
-            let borrowed: Vec<(Uuid, &str)> =
-                pairs.iter().map(|(u, s)| (*u, s.as_str())).collect();
+            let borrowed: Vec<(Uuid, &str)> = pairs.iter().map(|(u, s)| (*u, s.as_str())).collect();
             self.attendees
-                .bulk_insert_scoped(
-                    &mut *tx,
-                    scope.company_id,
-                    &new_ids,
-                    &borrowed,
-                    scope.acting_user_id,
-                )
+                .bulk_insert_scoped(&mut *tx, &new_ids, &borrowed, scope.acting_user_id)
                 .await?;
         }
 
@@ -678,7 +691,6 @@ impl CalendarEventSeriesEngine {
                 self.exceptions
                     .claim_slot_scoped(
                         &mut *tx,
-                        scope.company_id,
                         series.id,
                         m.0,
                         m.1,
@@ -701,7 +713,9 @@ impl CalendarEventSeriesEngine {
         if !claimed.contains(&slot0) {
             if let Some(id) = by_slot.get(&slot0) {
                 new_base = *id;
-            } else if let Some(pos) = missing.iter().position(|s| (s.start_at, s.stop_at) == slot0)
+            } else if let Some(pos) = missing
+                .iter()
+                .position(|s| (s.start_at, s.stop_at) == slot0)
             {
                 new_base = new_ids[pos];
             }
@@ -745,10 +759,14 @@ impl CalendarEventSeriesEngine {
 
         let mut tx = self
             .events
-            .begin_scope(&self.pool, scope.company_id, scope.acting_user_id)
+            .begin_scope(&self.pool, scope.acting_user_id)
             .await?;
 
-        let Some(event) = self.events.find_by_id_scoped(&mut *tx, cmd.event_id).await? else {
+        let Some(event) = self
+            .events
+            .find_by_id_scoped(&mut *tx, cmd.event_id)
+            .await?
+        else {
             return Err(EventFamilyError::NotFound);
         };
 
@@ -758,7 +776,6 @@ impl CalendarEventSeriesEngine {
                     self.exceptions
                         .claim_slot_scoped(
                             &mut *tx,
-                            scope.company_id,
                             series_id,
                             event.id,
                             event.start_at,
@@ -806,7 +823,6 @@ impl CalendarEventSeriesEngine {
                         self.exceptions
                             .claim_slot_scoped(
                                 &mut *tx,
-                                scope.company_id,
                                 series_id,
                                 m.0,
                                 m.1,
@@ -843,9 +859,9 @@ impl CalendarEventSeriesEngine {
                 // Trim the rule to the day BEFORE the split slot (inclusive
                 // `until` semantics: the day before is in, the split day out).
                 let split_date = event.start_at.date_naive();
-                let trimmed_until = split_date
-                    .checked_sub_days(Days::new(1))
-                    .ok_or_else(|| EventFamilyError::Validation("split date out of range".into()))?;
+                let trimmed_until = split_date.checked_sub_days(Days::new(1)).ok_or_else(|| {
+                    EventFamilyError::Validation("split date out of range".into())
+                })?;
                 self.series
                     .trim_series_until_scoped(&mut *tx, series_id, trimmed_until)
                     .await?;
@@ -866,7 +882,7 @@ impl CalendarEventSeriesEngine {
     ) -> Result<(), EventFamilyError> {
         let mut tx = self
             .events
-            .begin_scope(&self.pool, scope.company_id, scope.acting_user_id)
+            .begin_scope(&self.pool, scope.acting_user_id)
             .await?;
 
         let Some(event) = self.events.find_by_id_scoped(&mut *tx, event_id).await? else {
@@ -877,7 +893,6 @@ impl CalendarEventSeriesEngine {
             self.exceptions
                 .claim_slot_scoped(
                     &mut *tx,
-                    scope.company_id,
                     series_id,
                     event.id,
                     event.start_at,
@@ -915,10 +930,14 @@ impl CalendarEventSeriesEngine {
     ) -> Result<(), EventFamilyError> {
         let mut tx = self
             .events
-            .begin_scope(&self.pool, scope.company_id, scope.acting_user_id)
+            .begin_scope(&self.pool, scope.acting_user_id)
             .await?;
 
-        let Some(event) = self.events.find_by_id_scoped(&mut *tx, cmd.event_id).await? else {
+        let Some(event) = self
+            .events
+            .find_by_id_scoped(&mut *tx, cmd.event_id)
+            .await?
+        else {
             return Err(EventFamilyError::NotFound);
         };
 
@@ -935,23 +954,20 @@ impl CalendarEventSeriesEngine {
         }
 
         let target_event_ids: Vec<Uuid> = match event.series_id {
-            Some(series_id) => {
-                self.events.member_rows_scoped(&mut *tx, series_id).await?.into_iter().map(|m| m.0).collect()
-            }
+            Some(series_id) => self
+                .events
+                .member_rows_scoped(&mut *tx, series_id)
+                .await?
+                .into_iter()
+                .map(|m| m.0)
+                .collect(),
             None => vec![event.id],
         };
 
         if !invited.is_empty() && !target_event_ids.is_empty() {
-            let states: Vec<(Uuid, &str)> =
-                invited.iter().map(|u| (*u, "needs_action")).collect();
+            let states: Vec<(Uuid, &str)> = invited.iter().map(|u| (*u, "needs_action")).collect();
             self.attendees
-                .bulk_insert_scoped(
-                    &mut *tx,
-                    scope.company_id,
-                    &target_event_ids,
-                    &states,
-                    scope.acting_user_id,
-                )
+                .bulk_insert_scoped(&mut *tx, &target_event_ids, &states, scope.acting_user_id)
                 .await
                 .map_err(Self::map_attendee_violation)?;
         }
@@ -972,12 +988,17 @@ impl CalendarEventSeriesEngine {
     ) -> Result<(), EventFamilyError> {
         let mut tx = self
             .events
-            .begin_scope(&self.pool, scope.company_id, scope.acting_user_id)
+            .begin_scope(&self.pool, scope.acting_user_id)
             .await?;
 
         let rows = self
             .attendees
-            .set_state_scoped(&mut *tx, cmd.attendee_id, &cmd.state.to_string(), scope.acting_user_id)
+            .set_state_scoped(
+                &mut *tx,
+                cmd.attendee_id,
+                &cmd.state.to_string(),
+                scope.acting_user_id,
+            )
             .await?;
         if rows == 0 {
             return Err(EventFamilyError::NotFound);
@@ -996,19 +1017,20 @@ impl CalendarEventSeriesEngine {
     ) -> Result<Uuid, EventFamilyError> {
         Self::validate_title(&cmd.title)?;
         if cmd.stop_at <= cmd.start_at {
-            return Err(EventFamilyError::Validation("stop_at must be after start_at".into()));
+            return Err(EventFamilyError::Validation(
+                "stop_at must be after start_at".into(),
+            ));
         }
 
         let mut tx = self
             .events
-            .begin_scope(&self.pool, scope.company_id, scope.acting_user_id)
+            .begin_scope(&self.pool, scope.acting_user_id)
             .await?;
 
         let event_id = self
             .events
             .insert_event_scoped(
                 &mut *tx,
-                scope.company_id,
                 None,
                 &cmd.title,
                 cmd.description.as_deref(),
@@ -1024,13 +1046,7 @@ impl CalendarEventSeriesEngine {
             Self::attendee_set_with_organizer(scope.acting_user_id, &cmd.attendee_user_ids);
         if !attendee_set.is_empty() {
             self.attendees
-                .bulk_insert_scoped(
-                    &mut *tx,
-                    scope.company_id,
-                    &[event_id],
-                    &attendee_set,
-                    scope.acting_user_id,
-                )
+                .bulk_insert_scoped(&mut *tx, &[event_id], &attendee_set, scope.acting_user_id)
                 .await
                 .map_err(Self::map_attendee_violation)?;
         }
@@ -1085,13 +1101,22 @@ impl CalendarEventSeriesEngine {
         }
         let weekdays = parse_day_list(by_weekday, 1, 7, "by_weekday (ISO 1=Mon..7=Sun)")?;
         let monthdays = parse_day_list(by_monthday, 1, 31, "by_monthday (1..=31)")?;
-        Ok(RecurrenceRule { freq, interval, by_weekday: weekdays, by_monthday: monthdays, until, count })
+        Ok(RecurrenceRule {
+            freq,
+            interval,
+            by_weekday: weekdays,
+            by_monthday: monthdays,
+            until,
+            count,
+        })
     }
 
     fn validate_title(title: &str) -> Result<(), EventFamilyError> {
         let trimmed = title.trim();
         if trimmed.is_empty() {
-            return Err(EventFamilyError::Validation("title must not be empty".into()));
+            return Err(EventFamilyError::Validation(
+                "title must not be empty".into(),
+            ));
         }
         if trimmed.len() > 200 {
             return Err(EventFamilyError::Validation(
@@ -1112,10 +1137,7 @@ impl CalendarEventSeriesEngine {
     /// The attendee set for a fresh event: the organizer first with state
     /// `accepted` (the reference create() auto-accepts the organizer), every
     /// invited user once with `needs_action`. First-wins dedup.
-    fn attendee_set_with_organizer(
-        organizer: Uuid,
-        invited: &[Uuid],
-    ) -> Vec<(Uuid, &'static str)> {
+    fn attendee_set_with_organizer(organizer: Uuid, invited: &[Uuid]) -> Vec<(Uuid, &'static str)> {
         let mut seen = HashSet::from([organizer]);
         let mut set = vec![(organizer, "accepted")];
         for user_id in invited {
@@ -1132,8 +1154,9 @@ impl CalendarEventSeriesEngine {
     /// surfaced as the raw database error.
     fn map_attendee_violation(err: sqlx::Error) -> EventFamilyError {
         if let Some(db) = err.as_database_error() {
-            let attendee_backstop =
-                db.constraint().is_some_and(|c| c == "uq_calendar_event_attendees_event_user");
+            let attendee_backstop = db
+                .constraint()
+                .is_some_and(|c| c == "uq_calendar_event_attendees_event_user");
             if attendee_backstop && db.code().as_deref() == Some("23505") {
                 let user_id = db
                     .as_error()
@@ -1156,7 +1179,9 @@ fn parse_day_list(
     max: u8,
     what: &str,
 ) -> Result<Vec<u8>, EventFamilyError> {
-    let Some(raw) = raw else { return Ok(Vec::new()) };
+    let Some(raw) = raw else {
+        return Ok(Vec::new());
+    };
     if raw.trim().is_empty() {
         return Ok(Vec::new());
     }
@@ -1169,7 +1194,9 @@ fn parse_day_list(
             )));
         }
         let value: u8 = token.parse().map_err(|_| {
-            EventFamilyError::Validation(format!("{what} must be a comma list of numbers, got `{raw}`"))
+            EventFamilyError::Validation(format!(
+                "{what} must be a comma list of numbers, got `{raw}`"
+            ))
         })?;
         if !(min..=max).contains(&value) {
             return Err(EventFamilyError::Validation(format!(
@@ -1216,14 +1243,24 @@ mod tests {
     }
 
     fn rule(freq: EventRecurrenceFreq) -> RecurrenceRule {
-        RecurrenceRule { freq, interval: 1, by_weekday: Vec::new(), by_monthday: Vec::new(), until: None, count: None }
+        RecurrenceRule {
+            freq,
+            interval: 1,
+            by_weekday: Vec::new(),
+            by_monthday: Vec::new(),
+            until: None,
+            count: None,
+        }
     }
 
     #[test]
     fn daily_count_720_is_exactly_at_the_cap() {
         // 720 projected slots: at the cap, NOT over it — succeeds.
         let start = utc(2026, 1, 5, 9, 0);
-        let r = RecurrenceRule { count: Some(720), ..rule(EventRecurrenceFreq::Daily) };
+        let r = RecurrenceRule {
+            count: Some(720),
+            ..rule(EventRecurrenceFreq::Daily)
+        };
         let slots = expand_occurrences(&r, start, start + chrono::Duration::hours(1)).unwrap();
         assert_eq!(slots.len(), MAX_OCCURRENCES);
         // Base event is slot 0 verbatim; the last is day 719.
@@ -1237,7 +1274,10 @@ mod tests {
     #[test]
     fn daily_count_721_hits_the_cap_loudly() {
         let start = utc(2026, 1, 5, 9, 0);
-        let r = RecurrenceRule { count: Some(721), ..rule(EventRecurrenceFreq::Daily) };
+        let r = RecurrenceRule {
+            count: Some(721),
+            ..rule(EventRecurrenceFreq::Daily)
+        };
         match expand_occurrences(&r, start, start + chrono::Duration::hours(1)) {
             Err(EventFamilyError::RecurrenceCap { projected, cap }) => {
                 assert_eq!(projected, 721);
@@ -1255,7 +1295,10 @@ mod tests {
             Err(EventFamilyError::RecurrenceCap { projected, cap }) => {
                 assert_eq!(cap, 720);
                 // 15 years of daily slots: 2026..2041 incl. leap days.
-                assert!(projected > 5400, "projected {projected} should be ~15y of days");
+                assert!(
+                    projected > 5400,
+                    "projected {projected} should be ~15y of days"
+                );
             }
             other => panic!("expected RecurrenceCap, got {other:?}"),
         }
@@ -1269,13 +1312,19 @@ mod tests {
         let slots = expand_occurrences(&r, start, start + chrono::Duration::hours(2)).unwrap();
         assert_eq!(slots.len(), 16);
         assert_eq!(slots[15].start_at, utc(2041, 6, 1, 9, 0));
-        assert_eq!(slots[15].stop_at - slots[15].start_at, chrono::Duration::hours(2));
+        assert_eq!(
+            slots[15].stop_at - slots[15].start_at,
+            chrono::Duration::hours(2)
+        );
     }
 
     #[test]
     fn weekly_ten_materializes_ten_ordered_slots() {
         let start = utc(2026, 1, 5, 9, 30); // a Monday
-        let r = RecurrenceRule { count: Some(10), ..rule(EventRecurrenceFreq::Weekly) };
+        let r = RecurrenceRule {
+            count: Some(10),
+            ..rule(EventRecurrenceFreq::Weekly)
+        };
         let slots = expand_occurrences(&r, start, start + chrono::Duration::minutes(90)).unwrap();
         assert_eq!(slots.len(), 10);
         for (i, s) in slots.iter().enumerate() {
@@ -1316,9 +1365,18 @@ mod tests {
         };
         let slots = expand_occurrences(&r, start, start + chrono::Duration::hours(1)).unwrap();
         assert_eq!(slots.len(), 3);
-        assert_eq!(slots[0].start_at.date_naive(), NaiveDate::from_ymd_opt(2026, 1, 31).unwrap());
-        assert_eq!(slots[1].start_at.date_naive(), NaiveDate::from_ymd_opt(2026, 3, 31).unwrap());
-        assert_eq!(slots[2].start_at.date_naive(), NaiveDate::from_ymd_opt(2026, 5, 31).unwrap());
+        assert_eq!(
+            slots[0].start_at.date_naive(),
+            NaiveDate::from_ymd_opt(2026, 1, 31).unwrap()
+        );
+        assert_eq!(
+            slots[1].start_at.date_naive(),
+            NaiveDate::from_ymd_opt(2026, 3, 31).unwrap()
+        );
+        assert_eq!(
+            slots[2].start_at.date_naive(),
+            NaiveDate::from_ymd_opt(2026, 5, 31).unwrap()
+        );
     }
 
     #[test]
@@ -1331,19 +1389,37 @@ mod tests {
         };
         let slots = expand_occurrences(&r, start, start + chrono::Duration::hours(1)).unwrap();
         assert_eq!(slots.len(), 4);
-        assert_eq!(slots[1].start_at.date_naive(), NaiveDate::from_ymd_opt(2026, 1, 15).unwrap());
-        assert_eq!(slots[2].start_at.date_naive(), NaiveDate::from_ymd_opt(2026, 2, 1).unwrap());
-        assert_eq!(slots[3].start_at.date_naive(), NaiveDate::from_ymd_opt(2026, 2, 15).unwrap());
+        assert_eq!(
+            slots[1].start_at.date_naive(),
+            NaiveDate::from_ymd_opt(2026, 1, 15).unwrap()
+        );
+        assert_eq!(
+            slots[2].start_at.date_naive(),
+            NaiveDate::from_ymd_opt(2026, 2, 1).unwrap()
+        );
+        assert_eq!(
+            slots[3].start_at.date_naive(),
+            NaiveDate::from_ymd_opt(2026, 2, 15).unwrap()
+        );
     }
 
     #[test]
     fn yearly_feb29_skips_non_leap_years() {
         let start = utc(2028, 2, 29, 9, 0);
-        let r = RecurrenceRule { count: Some(3), ..rule(EventRecurrenceFreq::Yearly) };
+        let r = RecurrenceRule {
+            count: Some(3),
+            ..rule(EventRecurrenceFreq::Yearly)
+        };
         let slots = expand_occurrences(&r, start, start + chrono::Duration::hours(1)).unwrap();
         assert_eq!(slots.len(), 3);
-        assert_eq!(slots[1].start_at.date_naive(), NaiveDate::from_ymd_opt(2032, 2, 29).unwrap());
-        assert_eq!(slots[2].start_at.date_naive(), NaiveDate::from_ymd_opt(2036, 2, 29).unwrap());
+        assert_eq!(
+            slots[1].start_at.date_naive(),
+            NaiveDate::from_ymd_opt(2032, 2, 29).unwrap()
+        );
+        assert_eq!(
+            slots[2].start_at.date_naive(),
+            NaiveDate::from_ymd_opt(2036, 2, 29).unwrap()
+        );
     }
 
     #[test]
@@ -1356,7 +1432,10 @@ mod tests {
         let slots = expand_occurrences(&r, start, start + chrono::Duration::hours(1)).unwrap();
         // Jan 5, 12, 19 — the 19th is included (inclusive until).
         assert_eq!(slots.len(), 3);
-        assert_eq!(slots[2].start_at.date_naive(), NaiveDate::from_ymd_opt(2026, 1, 19).unwrap());
+        assert_eq!(
+            slots[2].start_at.date_naive(),
+            NaiveDate::from_ymd_opt(2026, 1, 19).unwrap()
+        );
     }
 
     #[test]
@@ -1376,7 +1455,10 @@ mod tests {
     #[test]
     fn count_one_is_the_base_event_alone() {
         let start = utc(2026, 1, 5, 9, 0);
-        let r = RecurrenceRule { count: Some(1), ..rule(EventRecurrenceFreq::Daily) };
+        let r = RecurrenceRule {
+            count: Some(1),
+            ..rule(EventRecurrenceFreq::Daily)
+        };
         let slots = expand_occurrences(&r, start, start + chrono::Duration::hours(1)).unwrap();
         assert_eq!(slots.len(), 1);
         assert_eq!(slots[0].start_at, start);
@@ -1387,10 +1469,16 @@ mod tests {
         // Every-other-day forever still caps loudly, with roughly half the
         // daily projection.
         let start = utc(2026, 1, 5, 9, 0);
-        let r = RecurrenceRule { interval: 2, ..rule(EventRecurrenceFreq::Daily) };
+        let r = RecurrenceRule {
+            interval: 2,
+            ..rule(EventRecurrenceFreq::Daily)
+        };
         match expand_occurrences(&r, start, start + chrono::Duration::hours(1)) {
             Err(EventFamilyError::RecurrenceCap { projected, .. }) => {
-                assert!(projected > 2700 && projected < 2800, "projected {projected}");
+                assert!(
+                    projected > 2700 && projected < 2800,
+                    "projected {projected}"
+                );
             }
             other => panic!("expected RecurrenceCap, got {other:?}"),
         }
@@ -1491,7 +1579,10 @@ mod tests {
     #[test]
     fn slot_helper_and_duration_preservation() {
         let start = utc(2026, 3, 30, 14, 15);
-        let r = RecurrenceRule { count: Some(4), ..rule(EventRecurrenceFreq::Weekly) };
+        let r = RecurrenceRule {
+            count: Some(4),
+            ..rule(EventRecurrenceFreq::Weekly)
+        };
         let s = slot(2, &r, start);
         assert_eq!(s.start_at, start + chrono::Duration::weeks(2));
         assert_eq!(s.stop_at, s.start_at + chrono::Duration::hours(1));

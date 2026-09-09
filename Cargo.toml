@@ -19,11 +19,17 @@ path = "src/lib.rs"
 # -----------------------------------------------------------------------------
 backbone-core = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.17", features = ["postgres"] }
 backbone-orm = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.17" }
-# `axum` gates backbone-auth's company tenant guard (CompanyContext / company_auth) —
+# `axum` gates backbone-auth's request-extractor surface (OrgContext et al.) —
 # the identity extractor the guarded event-family composition and its in-process
 # probes mount, same as backbone-attendance / backbone-selling.
 backbone-auth = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.17", features = ["axum"] }
 backbone-messaging = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.17" }
+
+# OpenAPI schema derive. The schema generator emits ungated `use utoipa::ToSchema;`
+# in every entity and DTO file, so the dep is unconditional even though the
+# `derive(ToSchema)` itself is feature-gated to `openapi`.
+utoipa = { version = "5", features = ["chrono", "uuid"] }
+
 
 # Core async runtime and serialization
 tokio = { version = "1.0", features = ["full"] }

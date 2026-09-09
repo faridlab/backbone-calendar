@@ -5,8 +5,8 @@
 //! Returns an `EntityValidator<CalendarPosition>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
 use crate::domain::entity::CalendarPosition;
+use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for CalendarPosition entities.
 pub type CalendarPositionValidator = EntityValidator<CalendarPosition>;
@@ -16,7 +16,7 @@ pub fn calendar_position_validator() -> CalendarPositionValidator {
     EntityValidator::new()
     // <<< CUSTOM RULES
     // END CUSTOM RULES
-        // No schema-derived rules — add custom rules above.
+    // No schema-derived rules — add custom rules above.
 }
 
 // <<< CUSTOM

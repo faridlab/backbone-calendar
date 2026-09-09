@@ -35,34 +35,55 @@ pub trait CalendarQueryService: Send + Sync {
     async fn get_calendar_branch(&self, id: CalendarBranchId) -> Result<Option<CalendarBranchDto>>;
 
     /// Get CalendarBranch summary by ID
-    async fn get_calendar_branch_summary(&self, id: CalendarBranchId) -> Result<Option<CalendarBranchSummary>>;
+    async fn get_calendar_branch_summary(
+        &self,
+        id: CalendarBranchId,
+    ) -> Result<Option<CalendarBranchSummary>>;
 
     /// Check if CalendarBranch exists
     async fn calendar_branch_exists(&self, id: CalendarBranchId) -> Result<bool>;
 
     /// Get CalendarDepartment by ID
-    async fn get_calendar_department(&self, id: CalendarDepartmentId) -> Result<Option<CalendarDepartmentDto>>;
+    async fn get_calendar_department(
+        &self,
+        id: CalendarDepartmentId,
+    ) -> Result<Option<CalendarDepartmentDto>>;
 
     /// Get CalendarDepartment summary by ID
-    async fn get_calendar_department_summary(&self, id: CalendarDepartmentId) -> Result<Option<CalendarDepartmentSummary>>;
+    async fn get_calendar_department_summary(
+        &self,
+        id: CalendarDepartmentId,
+    ) -> Result<Option<CalendarDepartmentSummary>>;
 
     /// Check if CalendarDepartment exists
     async fn calendar_department_exists(&self, id: CalendarDepartmentId) -> Result<bool>;
 
     /// Get CalendarEmployee by ID
-    async fn get_calendar_employee(&self, id: CalendarEmployeeId) -> Result<Option<CalendarEmployeeDto>>;
+    async fn get_calendar_employee(
+        &self,
+        id: CalendarEmployeeId,
+    ) -> Result<Option<CalendarEmployeeDto>>;
 
     /// Get CalendarEmployee summary by ID
-    async fn get_calendar_employee_summary(&self, id: CalendarEmployeeId) -> Result<Option<CalendarEmployeeSummary>>;
+    async fn get_calendar_employee_summary(
+        &self,
+        id: CalendarEmployeeId,
+    ) -> Result<Option<CalendarEmployeeSummary>>;
 
     /// Check if CalendarEmployee exists
     async fn calendar_employee_exists(&self, id: CalendarEmployeeId) -> Result<bool>;
 
     /// Get CalendarEmployeeStatus by ID
-    async fn get_calendar_employee_status(&self, id: CalendarEmployeeStatusId) -> Result<Option<CalendarEmployeeStatusDto>>;
+    async fn get_calendar_employee_status(
+        &self,
+        id: CalendarEmployeeStatusId,
+    ) -> Result<Option<CalendarEmployeeStatusDto>>;
 
     /// Get CalendarEmployeeStatus summary by ID
-    async fn get_calendar_employee_status_summary(&self, id: CalendarEmployeeStatusId) -> Result<Option<CalendarEmployeeStatusSummary>>;
+    async fn get_calendar_employee_status_summary(
+        &self,
+        id: CalendarEmployeeStatusId,
+    ) -> Result<Option<CalendarEmployeeStatusSummary>>;
 
     /// Check if CalendarEmployeeStatus exists
     async fn calendar_employee_status_exists(&self, id: CalendarEmployeeStatusId) -> Result<bool>;
@@ -71,44 +92,56 @@ pub trait CalendarQueryService: Send + Sync {
     async fn get_calendar_level(&self, id: CalendarLevelId) -> Result<Option<CalendarLevelDto>>;
 
     /// Get CalendarLevel summary by ID
-    async fn get_calendar_level_summary(&self, id: CalendarLevelId) -> Result<Option<CalendarLevelSummary>>;
+    async fn get_calendar_level_summary(
+        &self,
+        id: CalendarLevelId,
+    ) -> Result<Option<CalendarLevelSummary>>;
 
     /// Check if CalendarLevel exists
     async fn calendar_level_exists(&self, id: CalendarLevelId) -> Result<bool>;
 
     /// Get CalendarPosition by ID
-    async fn get_calendar_position(&self, id: CalendarPositionId) -> Result<Option<CalendarPositionDto>>;
+    async fn get_calendar_position(
+        &self,
+        id: CalendarPositionId,
+    ) -> Result<Option<CalendarPositionDto>>;
 
     /// Get CalendarPosition summary by ID
-    async fn get_calendar_position_summary(&self, id: CalendarPositionId) -> Result<Option<CalendarPositionSummary>>;
+    async fn get_calendar_position_summary(
+        &self,
+        id: CalendarPositionId,
+    ) -> Result<Option<CalendarPositionSummary>>;
 
     /// Check if CalendarPosition exists
     async fn calendar_position_exists(&self, id: CalendarPositionId) -> Result<bool>;
 
     /// Get CalendarReligion by ID
-    async fn get_calendar_religion(&self, id: CalendarReligionId) -> Result<Option<CalendarReligionDto>>;
+    async fn get_calendar_religion(
+        &self,
+        id: CalendarReligionId,
+    ) -> Result<Option<CalendarReligionDto>>;
 
     /// Get CalendarReligion summary by ID
-    async fn get_calendar_religion_summary(&self, id: CalendarReligionId) -> Result<Option<CalendarReligionSummary>>;
+    async fn get_calendar_religion_summary(
+        &self,
+        id: CalendarReligionId,
+    ) -> Result<Option<CalendarReligionSummary>>;
 
     /// Check if CalendarReligion exists
     async fn calendar_religion_exists(&self, id: CalendarReligionId) -> Result<bool>;
 
-    /// Count of **Mon–Fri** days in `[from, to]` (inclusive) **minus** company holidays — the
+    /// Count of **Mon–Fri** days in `[from, to]` (inclusive) **minus** org-unit holidays — the
     /// denominator every per-day metric (attendance %, leave accrual) divides by. Calendar owns
     /// "what is a working day": it expands every `Calendar` row with `is_holiday = true` (clamped to
     /// the range) and subtracts those days from the Mon–Fri count.
     ///
-    /// First-cut: company-wide Mon–Fri minus company-wide holidays. Scope junctions
+    /// `company_id` names the org unit whose days are counted — a company-kind org unit's id equals
+    /// its legacy company id, so callers holding a legacy company id keep passing it unchanged.
+    ///
+    /// First-cut: org-wide Mon–Fri minus org-wide holidays. Scope junctions
     /// (branch/department/level/position/employee/religion/employment-status) and schedule-defined
     /// weekdays are deferred — TODO.
-    async fn working_days(
-        &self,
-        company_id: Uuid,
-        from: NaiveDate,
-        to: NaiveDate,
-    ) -> Result<u32>;
-
+    async fn working_days(&self, company_id: Uuid, from: NaiveDate, to: NaiveDate) -> Result<u32>;
 }
 
 // ============================================================================

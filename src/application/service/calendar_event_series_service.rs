@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
-use crate::presentation::dto::{CreateCalendarEventSeriesDto, UpdateCalendarEventSeriesDto};
 use crate::domain::entity::CalendarEventSeries;
 use crate::infrastructure::persistence::CalendarEventSeriesRepository;
+use crate::presentation::dto::{CreateCalendarEventSeriesDto, UpdateCalendarEventSeriesDto};
 
 /// Application service for CalendarEventSeries entities.
 ///

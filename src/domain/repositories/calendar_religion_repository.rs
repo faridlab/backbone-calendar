@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the CalendarReligion aggregate.
 //! Implementation is in the infrastructure layer.
 
-use async_trait::async_trait;
 use anyhow::Result;
+use async_trait::async_trait;
 use uuid::Uuid;
 
 use crate::domain::entity::CalendarReligion;
@@ -61,7 +61,6 @@ impl CalendarReligionFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait CalendarReligionRepository: Send + Sync {
-
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -76,7 +75,8 @@ pub trait CalendarReligionRepository: Send + Sync {
     async fn find_all(&self) -> Result<Vec<CalendarReligion>>;
 
     /// Update calendar_religion by ID
-    async fn update(&self, id: &str, entity: &CalendarReligion) -> Result<Option<CalendarReligion>>;
+    async fn update(&self, id: &str, entity: &CalendarReligion)
+        -> Result<Option<CalendarReligion>>;
 
     /// Delete calendar_religion by ID
     async fn delete(&self, id: &str) -> Result<bool>;
@@ -86,10 +86,17 @@ pub trait CalendarReligionRepository: Send + Sync {
     // =========================================================================
 
     /// List calendar_religion with pagination
-    async fn list(&self, params: CalendarReligionPaginationParams) -> Result<CalendarReligionPaginatedResult>;
+    async fn list(
+        &self,
+        params: CalendarReligionPaginationParams,
+    ) -> Result<CalendarReligionPaginatedResult>;
 
     /// List calendar_religion with pagination and filters
-    async fn list_with_filters(&self, params: CalendarReligionPaginationParams, filters: CalendarReligionFilter) -> Result<CalendarReligionPaginatedResult>;
+    async fn list_with_filters(
+        &self,
+        params: CalendarReligionPaginationParams,
+        filters: CalendarReligionFilter,
+    ) -> Result<CalendarReligionPaginatedResult>;
 
     /// Count all calendar_religion entities
     async fn count(&self) -> Result<u64>;
@@ -111,7 +118,10 @@ pub trait CalendarReligionRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<CalendarReligion>>;
 
     /// List soft-deleted calendar_religion entities
-    async fn list_deleted(&self, params: CalendarReligionPaginationParams) -> Result<CalendarReligionPaginatedResult>;
+    async fn list_deleted(
+        &self,
+        params: CalendarReligionPaginationParams,
+    ) -> Result<CalendarReligionPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

@@ -5,8 +5,8 @@
 //! Returns an `EntityValidator<CalendarEventException>` pre-loaded with schema-derived
 //! field rules. Extend in the `// <<< CUSTOM` zone.
 
-use backbone_core::{EntityValidator, ValidationErrors, ValidationError};
 use crate::domain::entity::CalendarEventException;
+use backbone_core::{EntityValidator, ValidationError, ValidationErrors};
 
 /// Validator type alias for CalendarEventException entities.
 pub type CalendarEventExceptionValidator = EntityValidator<CalendarEventException>;
@@ -16,7 +16,7 @@ pub fn calendar_event_exception_validator() -> CalendarEventExceptionValidator {
     EntityValidator::new()
     // <<< CUSTOM RULES
     // END CUSTOM RULES
-        // No schema-derived rules — add custom rules above.
+    // No schema-derived rules — add custom rules above.
 }
 
 // <<< CUSTOM

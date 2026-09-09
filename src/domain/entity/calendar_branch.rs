@@ -1,8 +1,8 @@
+use super::AuditMetadata;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
-use super::AuditMetadata;
 
 /// Strongly-typed ID for CalendarBranch
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -10,9 +10,15 @@ use super::AuditMetadata;
 pub struct CalendarBranchId(pub Uuid);
 
 impl CalendarBranchId {
-    pub fn new(id: Uuid) -> Self { Self(id) }
-    pub fn generate() -> Self { Self(Uuid::new_v4()) }
-    pub fn into_inner(self) -> Uuid { self.0 }
+    pub fn new(id: Uuid) -> Self {
+        Self(id)
+    }
+    pub fn generate() -> Self {
+        Self(Uuid::new_v4())
+    }
+    pub fn into_inner(self) -> Uuid {
+        self.0
+    }
 }
 
 impl std::fmt::Display for CalendarBranchId {
@@ -29,27 +35,34 @@ impl std::str::FromStr for CalendarBranchId {
 }
 
 impl From<Uuid> for CalendarBranchId {
-    fn from(id: Uuid) -> Self { Self(id) }
+    fn from(id: Uuid) -> Self {
+        Self(id)
+    }
 }
 
 impl From<CalendarBranchId> for Uuid {
-    fn from(id: CalendarBranchId) -> Self { id.0 }
+    fn from(id: CalendarBranchId) -> Self {
+        id.0
+    }
 }
 
 impl AsRef<Uuid> for CalendarBranchId {
-    fn as_ref(&self) -> &Uuid { &self.0 }
+    fn as_ref(&self) -> &Uuid {
+        &self.0
+    }
 }
 
 impl std::ops::Deref for CalendarBranchId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct CalendarBranch {
     pub id: Uuid,
     pub calendar_id: Uuid,
-    pub company_id: Uuid,
     pub branch_id: Uuid,
     #[serde(default)]
     #[sqlx(json)]
@@ -63,11 +76,10 @@ impl CalendarBranch {
     }
 
     /// Create a new CalendarBranch with required fields
-    pub fn new(calendar_id: Uuid, company_id: Uuid, branch_id: Uuid) -> Self {
+    pub fn new(calendar_id: Uuid, branch_id: Uuid) -> Self {
         Self {
             id: Uuid::new_v4(),
             calendar_id,
-            company_id,
             branch_id,
             metadata: AuditMetadata::default(),
         }
@@ -123,7 +135,6 @@ impl CalendarBranch {
         self.metadata.deleted_by.as_ref()
     }
 
-
     // ==========================================================
     // Partial Update
     // ==========================================================
@@ -133,13 +144,14 @@ impl CalendarBranch {
         for (key, value) in fields {
             match key.as_str() {
                 "calendar_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.calendar_id = v; }
-                }
-                "company_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.company_id = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.calendar_id = v;
+                    }
                 }
                 "branch_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.branch_id = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.branch_id = v;
+                    }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -196,15 +208,11 @@ impl backbone_orm::EntityRepoMeta for CalendarBranch {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("calendar_id".to_string(), "uuid".to_string());
-        m.insert("company_id".to_string(), "uuid".to_string());
         m.insert("branch_id".to_string(), "uuid".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
         &[]
-    }
-    fn company_field() -> Option<&'static str> {
-        Some("company_id")
     }
 }
 
@@ -215,7 +223,6 @@ impl backbone_orm::EntityRepoMeta for CalendarBranch {
 #[derive(Debug, Clone, Default)]
 pub struct CalendarBranchBuilder {
     calendar_id: Option<Uuid>,
-    company_id: Option<Uuid>,
     branch_id: Option<Uuid>,
 }
 
@@ -223,12 +230,6 @@ impl CalendarBranchBuilder {
     /// Set the calendar_id field (required)
     pub fn calendar_id(mut self, value: Uuid) -> Self {
         self.calendar_id = Some(value);
-        self
-    }
-
-    /// Set the company_id field (required)
-    pub fn company_id(mut self, value: Uuid) -> Self {
-        self.company_id = Some(value);
         self
     }
 
@@ -242,14 +243,16 @@ impl CalendarBranchBuilder {
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<CalendarBranch, String> {
-        let calendar_id = self.calendar_id.ok_or_else(|| "calendar_id is required".to_string())?;
-        let company_id = self.company_id.ok_or_else(|| "company_id is required".to_string())?;
-        let branch_id = self.branch_id.ok_or_else(|| "branch_id is required".to_string())?;
+        let calendar_id = self
+            .calendar_id
+            .ok_or_else(|| "calendar_id is required".to_string())?;
+        let branch_id = self
+            .branch_id
+            .ok_or_else(|| "branch_id is required".to_string())?;
 
         Ok(CalendarBranch {
             id: Uuid::new_v4(),
             calendar_id,
-            company_id,
             branch_id,
             metadata: AuditMetadata::default(),
         })

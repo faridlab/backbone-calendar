@@ -7,9 +7,9 @@
 
 use backbone_core::GenericCrudService;
 
-use crate::presentation::dto::{CreateCalendarPositionDto, UpdateCalendarPositionDto};
 use crate::domain::entity::CalendarPosition;
 use crate::infrastructure::persistence::CalendarPositionRepository;
+use crate::presentation::dto::{CreateCalendarPositionDto, UpdateCalendarPositionDto};
 
 /// Application service for CalendarPosition entities.
 ///

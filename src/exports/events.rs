@@ -5,8 +5,8 @@
 //! These events are published by this module for other modules to subscribe to.
 //! Events are the primary mechanism for cross-module communication.
 
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 use super::types::*;
 

@@ -15,9 +15,9 @@ pub mod calendar_level;
 pub mod calendar_position;
 pub mod calendar_religion;
 pub mod employment_status;
-pub mod event_privacy;
 pub mod event_attendee_state;
 pub mod event_exception_kind;
+pub mod event_privacy;
 pub mod event_recurrence_freq;
 
 // Re-exports
@@ -58,9 +58,9 @@ pub use calendar_religion::CalendarReligion;
 pub use calendar_religion::CalendarReligionBuilder;
 pub use calendar_religion::CalendarReligionId;
 pub use employment_status::EmploymentStatus;
-pub use event_privacy::EventPrivacy;
 pub use event_attendee_state::EventAttendeeState;
 pub use event_exception_kind::EventExceptionKind;
+pub use event_privacy::EventPrivacy;
 pub use event_recurrence_freq::EventRecurrenceFreq;
 
 // ==========================================================================
@@ -90,9 +90,9 @@ pub trait Entity: Debug + Clone {
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 #[cfg(feature = "openapi")]
 use utoipa::ToSchema;
+use uuid::Uuid;
 
 /// Audit metadata stored as JSONB in the database
 ///

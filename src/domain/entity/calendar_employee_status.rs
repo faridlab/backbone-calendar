@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::EmploymentStatus;
 use super::AuditMetadata;
+use super::EmploymentStatus;
 
 /// Strongly-typed ID for CalendarEmployeeStatus
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -12,9 +12,15 @@ use super::AuditMetadata;
 pub struct CalendarEmployeeStatusId(pub Uuid);
 
 impl CalendarEmployeeStatusId {
-    pub fn new(id: Uuid) -> Self { Self(id) }
-    pub fn generate() -> Self { Self(Uuid::new_v4()) }
-    pub fn into_inner(self) -> Uuid { self.0 }
+    pub fn new(id: Uuid) -> Self {
+        Self(id)
+    }
+    pub fn generate() -> Self {
+        Self(Uuid::new_v4())
+    }
+    pub fn into_inner(self) -> Uuid {
+        self.0
+    }
 }
 
 impl std::fmt::Display for CalendarEmployeeStatusId {
@@ -31,20 +37,28 @@ impl std::str::FromStr for CalendarEmployeeStatusId {
 }
 
 impl From<Uuid> for CalendarEmployeeStatusId {
-    fn from(id: Uuid) -> Self { Self(id) }
+    fn from(id: Uuid) -> Self {
+        Self(id)
+    }
 }
 
 impl From<CalendarEmployeeStatusId> for Uuid {
-    fn from(id: CalendarEmployeeStatusId) -> Self { id.0 }
+    fn from(id: CalendarEmployeeStatusId) -> Self {
+        id.0
+    }
 }
 
 impl AsRef<Uuid> for CalendarEmployeeStatusId {
-    fn as_ref(&self) -> &Uuid { &self.0 }
+    fn as_ref(&self) -> &Uuid {
+        &self.0
+    }
 }
 
 impl std::ops::Deref for CalendarEmployeeStatusId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -123,7 +137,6 @@ impl CalendarEmployeeStatus {
         self.metadata.deleted_by.as_ref()
     }
 
-
     // ==========================================================
     // Partial Update
     // ==========================================================
@@ -133,10 +146,14 @@ impl CalendarEmployeeStatus {
         for (key, value) in fields {
             match key.as_str() {
                 "calendar_id" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.calendar_id = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.calendar_id = v;
+                    }
                 }
                 "employment_status" => {
-                    if let Ok(v) = serde_json::from_value(value) { self.employment_status = v; }
+                    if let Ok(v) = serde_json::from_value(value) {
+                        self.employment_status = v;
+                    }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -193,7 +210,10 @@ impl backbone_orm::EntityRepoMeta for CalendarEmployeeStatus {
         let mut m = std::collections::HashMap::new();
         m.insert("id".to_string(), "uuid".to_string());
         m.insert("calendar_id".to_string(), "uuid".to_string());
-        m.insert("employment_status".to_string(), "employment_status".to_string());
+        m.insert(
+            "employment_status".to_string(),
+            "employment_status".to_string(),
+        );
         m
     }
     fn search_fields() -> &'static [&'static str] {
@@ -228,7 +248,9 @@ impl CalendarEmployeeStatusBuilder {
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<CalendarEmployeeStatus, String> {
-        let calendar_id = self.calendar_id.ok_or_else(|| "calendar_id is required".to_string())?;
+        let calendar_id = self
+            .calendar_id
+            .ok_or_else(|| "calendar_id is required".to_string())?;
 
         Ok(CalendarEmployeeStatus {
             id: Uuid::new_v4(),
