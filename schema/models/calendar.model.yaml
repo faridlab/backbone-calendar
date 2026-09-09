@@ -2,7 +2,6 @@
 # Domain: calendar
 # Entity: Calendar
 # Description: A holiday or working-day window scoped to org dimensions.
-#              Company-scoped (company_id logical FK organization.Company.id).
 #              Scope junctions (CalendarBranch/Religion/Department/Level/
 #              Position/EmployeeStatus/Employee) express "which employees this
 #              applies to".
@@ -18,11 +17,6 @@ models:
         type: uuid
         attributes: ["@id", "@default(uuid)"]
         description: "Unique calendar id"
-
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check"]
-        description: "Org owner # logical FK organization.Company.id"
 
       name:
         type: string
@@ -59,6 +53,6 @@ models:
         attributes: ["@audit_metadata"]
         description: "Audit metadata"
 
-    indexes:
-      - type: index
-        fields: [company_id, date_start]
+    # No tenancy indexes (ADR-0029): the module is tenant-agnostic. The timeline scan
+    # index and any per-unit uniques are installed by the composing service's tenancy
+    # decorator, not declared here.

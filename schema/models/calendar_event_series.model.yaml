@@ -22,11 +22,6 @@ models:
         attributes: ["@id", "@default(uuid)"]
         description: "Unique series id"
 
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check"]
-        description: "Org owner # logical FK organization.Company.id"
-
       name:
         type: string?
         attributes: ["@length(max=120)"]
@@ -71,9 +66,8 @@ models:
         description: "Audit metadata"
 
     indexes:
-      - type: index
-        fields: [company_id]
-        description: "Company series listings"
+      # No tenancy indexes (ADR-0029): the series-listing index is installed by the
+      # composing service's tenancy decorator, not declared here.
       - type: index
         fields: [base_event_id]
         description: "Template event lookup"

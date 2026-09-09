@@ -20,11 +20,6 @@ models:
         attributes: ["@id", "@default(uuid)"]
         description: "Unique event id"
 
-      company_id:
-        type: uuid
-        attributes: ["@required", "@exclude_from_foreign_key_check"]
-        description: "Org owner # logical FK organization.Company.id"
-
       series_id:
         type: uuid?
         attributes: ["@foreign_key(CalendarEventSeries.id)"]
@@ -71,9 +66,8 @@ models:
         description: "Audit metadata"
 
     indexes:
-      - type: index
-        fields: [company_id, start_at]
-        description: "Company timeline scans"
+      # No tenancy indexes (ADR-0029): the tenant-scoped timeline index is installed by
+      # the composing service's tenancy decorator, not declared here.
       - type: index
         fields: [series_id, start_at]
         description: "Series occurrence lookups"
@@ -86,7 +80,7 @@ enums:
     description: "Event visibility (declared read fence; both private and confidential are row-invisible to non-participants)"
     variants:
       - name: public
-        description: "Visible to everyone inside the company fence"
+        description: "Visible to every user in the deployment"
         default: true
       - name: private
         description: "Visible to organizer and attendees only"

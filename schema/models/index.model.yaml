@@ -12,11 +12,11 @@
 module: calendar
 version: 2
 schema: calendar
-
-# ADR-0014 company fence (Wave 1 P0 sweep, 2026-08-16): calendars and the branch overlay carry company_id; the org-unit / employee /
-# religion overlays carry none — they are scoped via their calendar_id and stay
-# intentionally unfenced under any declaration.
-company_fence: strict
+# Tenancy: none, by design (ADR-0029). The module is tenant-agnostic and reusable —
+# it ships no scoping column and no fence declaration. A composing backend-service
+# that wants these tables org-scoped declares them in its tenancy.yaml; the
+# decorator installs org_unit_id, the RLS policy, the kind guard, and per-unit
+# uniques at composition time.
 description: "org-scoped holiday / working-day reference"
 
 config:
