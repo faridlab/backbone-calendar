@@ -17,11 +17,19 @@ pub struct TestResult {
 
 impl TestResult {
     pub fn success(test_name: impl Into<String>, details: impl Into<String>) -> Self {
-        Self { test_name: test_name.into(), success: true, details: details.into() }
+        Self {
+            test_name: test_name.into(),
+            success: true,
+            details: details.into(),
+        }
     }
 
     pub fn failure(test_name: impl Into<String>, details: impl Into<String>) -> Self {
-        Self { test_name: test_name.into(), success: false, details: details.into() }
+        Self {
+            test_name: test_name.into(),
+            success: false,
+            details: details.into(),
+        }
     }
 }
 
@@ -79,24 +87,50 @@ impl ApiTest {
         Ok(ApiResponse { status_code, body })
     }
 
-    pub async fn get(&self, path: &str, headers: Option<HashMap<String, String>>) -> Result<ApiResponse, reqwest::Error> {
+    pub async fn get(
+        &self,
+        path: &str,
+        headers: Option<HashMap<String, String>>,
+    ) -> Result<ApiResponse, reqwest::Error> {
         self.send(self.client.get(self.url(path)), headers).await
     }
 
-    pub async fn post(&self, path: &str, body: &Value, headers: Option<HashMap<String, String>>) -> Result<ApiResponse, reqwest::Error> {
-        self.send(self.client.post(self.url(path)).json(body), headers).await
+    pub async fn post(
+        &self,
+        path: &str,
+        body: &Value,
+        headers: Option<HashMap<String, String>>,
+    ) -> Result<ApiResponse, reqwest::Error> {
+        self.send(self.client.post(self.url(path)).json(body), headers)
+            .await
     }
 
-    pub async fn put(&self, path: &str, body: &Value, headers: Option<HashMap<String, String>>) -> Result<ApiResponse, reqwest::Error> {
-        self.send(self.client.put(self.url(path)).json(body), headers).await
+    pub async fn put(
+        &self,
+        path: &str,
+        body: &Value,
+        headers: Option<HashMap<String, String>>,
+    ) -> Result<ApiResponse, reqwest::Error> {
+        self.send(self.client.put(self.url(path)).json(body), headers)
+            .await
     }
 
-    pub async fn delete(&self, path: &str, headers: Option<HashMap<String, String>>) -> Result<ApiResponse, reqwest::Error> {
+    pub async fn delete(
+        &self,
+        path: &str,
+        headers: Option<HashMap<String, String>>,
+    ) -> Result<ApiResponse, reqwest::Error> {
         self.send(self.client.delete(self.url(path)), headers).await
     }
 
     /// Build a `TestResult` by asserting the response status equals `expected_status`.
-    pub fn create_result(&self, test_name: &str, response: &ApiResponse, expected_status: u16, success_msg: &str) -> TestResult {
+    pub fn create_result(
+        &self,
+        test_name: &str,
+        response: &ApiResponse,
+        expected_status: u16,
+        success_msg: &str,
+    ) -> TestResult {
         if response.status_code == expected_status {
             TestResult::success(test_name, success_msg)
         } else {

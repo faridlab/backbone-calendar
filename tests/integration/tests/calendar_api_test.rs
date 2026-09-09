@@ -24,7 +24,6 @@ impl TestDataGenerator for CalendarTestData {
         let now = Utc::now().to_rfc3339();
         json!({
             "id": Uuid::new_v4().to_string(),
-            "company_id": Uuid::new_v4().to_string(),
             "name": format!("Test {}", Uuid::new_v4().to_string().split('-').next().unwrap()),
             "date_start": Utc::now().format("%Y-%m-%d").to_string(),
             "date_end": Utc::now().format("%Y-%m-%d").to_string(),
@@ -39,7 +38,6 @@ impl TestDataGenerator for CalendarTestData {
         let now = Utc::now().to_rfc3339();
         json!({
             "id": id,
-            "company_id": Uuid::new_v4().to_string(),
             "name": format!("Test {}", Uuid::new_v4().to_string().split('-').next().unwrap()),
             "date_start": Utc::now().format("%Y-%m-%d").to_string(),
             "date_end": Utc::now().format("%Y-%m-%d").to_string(),

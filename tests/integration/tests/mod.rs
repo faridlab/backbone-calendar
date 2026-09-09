@@ -20,7 +20,6 @@ pub mod calendar_position_api_test;
 pub mod calendar_religion_api_test;
 
 // Re-exports for convenience
-pub use crud_test_base::*;
 pub use calendar_api_test::*;
 pub use calendar_branch_api_test::*;
 pub use calendar_department_api_test::*;
@@ -33,3 +32,4 @@ pub use calendar_event_series_api_test::*;
 pub use calendar_level_api_test::*;
 pub use calendar_position_api_test::*;
 pub use calendar_religion_api_test::*;
+pub use crud_test_base::*;

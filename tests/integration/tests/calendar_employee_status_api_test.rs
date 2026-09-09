@@ -48,7 +48,13 @@ impl TestDataGenerator for CalendarEmployeeStatusTestData {
 
     async fn seed_dependencies(&self, api: &ApiTest) -> Vec<(String, String)> {
         let mut deps: Vec<(String, String)> = Vec::new();
-        if let Some(id) = super::crud_test_base::create_and_get_id(api, "/api/v1/calendars", &super::calendar_api_test::CalendarTestData).await {
+        if let Some(id) = super::crud_test_base::create_and_get_id(
+            api,
+            "/api/v1/calendars",
+            &super::calendar_api_test::CalendarTestData,
+        )
+        .await
+        {
             deps.push(("calendar_id".to_string(), id));
         }
         deps
@@ -66,7 +72,10 @@ pub struct CalendarEmployeeStatusApiTest {
 
 impl CalendarEmployeeStatusApiTest {
     pub fn new() -> Self {
-        let mut config = CrudTestConfig::new("/api/v1/calendar_employee_statuses", "CalendarEmployeeStatus");
+        let mut config = CrudTestConfig::new(
+            "/api/v1/calendar_employee_statuses",
+            "CalendarEmployeeStatus",
+        );
         config.supports_soft_delete = true;
         Self {
             inner: GenericCrudTest::new(config, CalendarEmployeeStatusTestData),
