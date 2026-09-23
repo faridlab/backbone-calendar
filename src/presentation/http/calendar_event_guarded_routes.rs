@@ -126,6 +126,13 @@ mod event_permissions {
 /// available to the composing host for the trusted/admin surface
 /// (`all_crud_routes`).
 #[derive(Clone)]
+/// The caller-named pool when the tenant router attached one (the pool law:
+/// module verbs transact on the request's tenant-dedicated pool, never the
+/// boot pool the composition captured at build time), else the state's own.
+fn request_pool(st: &EventFamilyState, ext: &Option<axum::Extension<sqlx::PgPool>>) -> sqlx::PgPool {
+    ext.as_ref().map(|e| e.0.clone()).unwrap_or_else(|| st.pool.clone())
+}
+
 struct EventFamilyState {
     engine: Arc<CalendarEventSeriesEngine>,
     #[allow(dead_code)]
@@ -670,6 +677,7 @@ fn edit_scope_token(raw: &str) -> Result<EditScopeToken, axum::response::Respons
 /// and ordering.
 async fn list_events(
     State(st): State<EventFamilyState>,
+    tenant_pool: Option<axum::Extension<sqlx::PgPool>>,
     org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Query(q): Query<ListEventsQuery>,
@@ -680,7 +688,7 @@ async fn list_events(
     };
     let limit = q.limit.unwrap_or(1000).clamp(1, 5000);
 
-    let mut tx = match st.pool.begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -719,6 +727,7 @@ async fn list_events(
 /// accepted attendee by the engine.
 async fn create_standalone_event(
     State(st): State<EventFamilyState>,
+    tenant_pool: Option<axum::Extension<sqlx::PgPool>>,
     org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     axum::Json(b): axum::Json<CreateStandaloneBody>,
@@ -758,6 +767,7 @@ async fn create_standalone_event(
 /// indistinguishable from a missing one (404) by design.
 async fn get_event(
     State(st): State<EventFamilyState>,
+    tenant_pool: Option<axum::Extension<sqlx::PgPool>>,
     org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
@@ -766,7 +776,7 @@ async fn get_event(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match st.pool.begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -843,7 +853,7 @@ async fn apply_event_edit(
         }
     }
 
-    let mut tx = match st.pool.begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -971,6 +981,7 @@ async fn apply_event_edit(
 /// `PATCH /events/:id` — partial edit, `edit_scope` defaults to `this`.
 async fn edit_event(
     State(st): State<EventFamilyState>,
+    tenant_pool: Option<axum::Extension<sqlx::PgPool>>,
     org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
@@ -986,6 +997,7 @@ async fn edit_event(
 /// `PUT /events/:id` — replace edit, `edit_scope` defaults to `all`.
 async fn replace_event(
     State(st): State<EventFamilyState>,
+    tenant_pool: Option<axum::Extension<sqlx::PgPool>>,
     org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
@@ -1004,6 +1016,7 @@ async fn replace_event(
 /// soft-deleted in place with the house metadata shape.
 async fn delete_event(
     State(st): State<EventFamilyState>,
+    tenant_pool: Option<axum::Extension<sqlx::PgPool>>,
     org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
@@ -1012,7 +1025,7 @@ async fn delete_event(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match st.pool.begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -1057,6 +1070,7 @@ async fn delete_event(
 /// `uq_calendar_event_attendees_event_user` backstops it (409 on conflict).
 async fn attach_attendees(
     State(st): State<EventFamilyState>,
+    tenant_pool: Option<axum::Extension<sqlx::PgPool>>,
     org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
@@ -1090,6 +1104,7 @@ async fn attach_attendees(
 /// the privacy fence is declared on `calendar.events`).
 async fn list_series(
     State(st): State<EventFamilyState>,
+    tenant_pool: Option<axum::Extension<sqlx::PgPool>>,
     org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
 ) -> axum::response::Response {
@@ -1097,7 +1112,7 @@ async fn list_series(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match st.pool.begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -1140,6 +1155,7 @@ async fn list_series(
 /// adds no second, quieter one.
 async fn create_series_handler(
     State(st): State<EventFamilyState>,
+    tenant_pool: Option<axum::Extension<sqlx::PgPool>>,
     org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     axum::Json(b): axum::Json<CreateSeriesBody>,
@@ -1188,6 +1204,7 @@ async fn create_series_handler(
 /// `GET /event-series/:id`.
 async fn get_series(
     State(st): State<EventFamilyState>,
+    tenant_pool: Option<axum::Extension<sqlx::PgPool>>,
     org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
@@ -1196,7 +1213,7 @@ async fn get_series(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match st.pool.begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -1216,6 +1233,7 @@ async fn get_series(
 /// the exception ledger — which is what makes single edits and deletes stick.
 async fn rewrite_series_handler(
     State(st): State<EventFamilyState>,
+    tenant_pool: Option<axum::Extension<sqlx::PgPool>>,
     org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
@@ -1269,6 +1287,7 @@ async fn rewrite_series_handler(
 /// runs as one scoped transaction here.
 async fn delete_series(
     State(st): State<EventFamilyState>,
+    tenant_pool: Option<axum::Extension<sqlx::PgPool>>,
     org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
@@ -1277,7 +1296,7 @@ async fn delete_series(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match st.pool.begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -1333,6 +1352,7 @@ async fn delete_series(
 /// (edited) occurrences no longer appear here: they became standalone events.
 async fn series_occurrences(
     State(st): State<EventFamilyState>,
+    tenant_pool: Option<axum::Extension<sqlx::PgPool>>,
     org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
@@ -1341,7 +1361,7 @@ async fn series_occurrences(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match st.pool.begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -1393,6 +1413,7 @@ async fn series_occurrences(
 /// enum, faithful to the ported state machine.
 async fn set_attendee_state_handler(
     State(st): State<EventFamilyState>,
+    tenant_pool: Option<axum::Extension<sqlx::PgPool>>,
     org: OrgContext,
     auth: Option<axum::Extension<AuthContext>>,
     Path(id): Path<Uuid>,
