@@ -742,9 +742,9 @@ async fn create_standalone_event(
     if let Err(resp) = validate_window(b.start_at, b.stop_at) {
         return resp;
     }
-    match st
-        .engine
+    match st.engine
         .create_standalone(
+            &request_pool(&st, &tenant_pool),
             engine_surface::CreateStandaloneCmd {
                 title: b.title,
                 description: b.description,
@@ -881,7 +881,8 @@ async fn apply_event_edit(
                 privacy: b.privacy,
                 location: b.location,
             };
-            match st.engine.edit_occurrence(cmd, *scope).await {
+            match st.engine.edit_occurrence(
+            &request_pool(&st, &tenant_pool),cmd, *scope).await {
                 Ok(()) => StatusCode::NO_CONTENT.into_response(),
                 Err(e) => event_family_error_response(e),
             }
@@ -898,7 +899,8 @@ async fn apply_event_edit(
                 privacy: b.privacy,
                 location: b.location,
             };
-            match st.engine.edit_occurrence(cmd, *scope).await {
+            match st.engine.edit_occurrence(
+            &request_pool(&st, &tenant_pool),cmd, *scope).await {
                 Ok(()) => StatusCode::NO_CONTENT.into_response(),
                 Err(e) => event_family_error_response(e),
             }
@@ -934,7 +936,8 @@ async fn apply_event_edit(
                 privacy: b.privacy.unwrap_or(base_privacy),
                 location: b.location.or(base.location),
             };
-            match st.engine.rewrite_series(cmd, *scope).await {
+            match st.engine.rewrite_series(
+            &request_pool(&st, &tenant_pool),cmd, *scope).await {
                 Ok(()) => StatusCode::NO_CONTENT.into_response(),
                 Err(e) => event_family_error_response(e),
             }
@@ -1041,7 +1044,8 @@ async fn delete_event(
     if row.series_id.is_some() {
         // The engine claims the slot as `cancelled` in its own transaction.
         drop(tx);
-        return match st.engine.delete_occurrence(id, scope).await {
+        return match st.engine.delete_occurrence(
+            &request_pool(&st, &tenant_pool),id, scope).await {
             Ok(()) => StatusCode::NO_CONTENT.into_response(),
             Err(e) => event_family_error_response(e),
         };
@@ -1081,9 +1085,9 @@ async fn attach_attendees(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    match st
-        .engine
+    match st.engine
         .attach_attendees(
+            &request_pool(&st, &tenant_pool),
             engine_surface::AttachAttendeesCmd {
                 event_id: id,
                 attendee_user_ids: b.attendee_user_ids,
@@ -1174,9 +1178,9 @@ async fn create_series_handler(
     if let Err(resp) = validate_rule(b.interval, &b.by_weekday, &b.by_monthday, b.count) {
         return resp;
     }
-    match st
-        .engine
+    match st.engine
         .create_series(
+            &request_pool(&st, &tenant_pool),
             engine_surface::CreateSeriesCmd {
                 name: b.name,
                 freq: b.freq,
@@ -1253,9 +1257,9 @@ async fn rewrite_series_handler(
     if let Err(resp) = validate_rule(b.interval, &b.by_weekday, &b.by_monthday, b.count) {
         return resp;
     }
-    match st
-        .engine
+    match st.engine
         .rewrite_series(
+            &request_pool(&st, &tenant_pool),
             engine_surface::RewriteSeriesCmd {
                 series_id: id,
                 name: b.name,
@@ -1424,9 +1428,9 @@ async fn set_attendee_state_handler(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    match st
-        .engine
+    match st.engine
         .set_attendee_state(
+            &request_pool(&st, &tenant_pool),
             engine_surface::SetAttendeeStateCmd {
                 attendee_id: id,
                 state: b.state,

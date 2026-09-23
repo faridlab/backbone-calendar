@@ -457,6 +457,7 @@ impl CalendarEventSeriesEngine {
     /// backstops every other write path with 23505 → `DuplicateAttendee`.
     pub async fn create_series(
         &self,
+        pool: &PgPool,
         cmd: CreateSeriesCmd,
         scope: ScopeCtx,
     ) -> Result<Uuid, EventFamilyError> {
@@ -478,7 +479,7 @@ impl CalendarEventSeriesEngine {
 
         let mut tx = self
             .events
-            .begin_scope(&self.pool, scope.acting_user_id)
+            .begin_scope(pool, scope.acting_user_id)
             .await?;
 
         let series_id = Uuid::new_v4();
@@ -558,6 +559,7 @@ impl CalendarEventSeriesEngine {
     /// and points `base_event_id` at whatever row now sits on slot 0.
     pub async fn rewrite_series(
         &self,
+        pool: &PgPool,
         cmd: RewriteSeriesCmd,
         scope: ScopeCtx,
     ) -> Result<(), EventFamilyError> {
@@ -579,7 +581,7 @@ impl CalendarEventSeriesEngine {
 
         let mut tx = self
             .events
-            .begin_scope(&self.pool, scope.acting_user_id)
+            .begin_scope(pool, scope.acting_user_id)
             .await?;
 
         let Some(series) = self
@@ -750,6 +752,7 @@ impl CalendarEventSeriesEngine {
     /// regenerated (the tail became standalone rows).
     pub async fn edit_occurrence(
         &self,
+        pool: &PgPool,
         cmd: EditOccurrenceCmd,
         scope: ScopeCtx,
     ) -> Result<(), EventFamilyError> {
@@ -759,7 +762,7 @@ impl CalendarEventSeriesEngine {
 
         let mut tx = self
             .events
-            .begin_scope(&self.pool, scope.acting_user_id)
+            .begin_scope(pool, scope.acting_user_id)
             .await?;
 
         let Some(event) = self
@@ -877,12 +880,13 @@ impl CalendarEventSeriesEngine {
     /// soft-deletes (no series to claim against).
     pub async fn delete_occurrence(
         &self,
+        pool: &PgPool,
         event_id: Uuid,
         scope: ScopeCtx,
     ) -> Result<(), EventFamilyError> {
         let mut tx = self
             .events
-            .begin_scope(&self.pool, scope.acting_user_id)
+            .begin_scope(pool, scope.acting_user_id)
             .await?;
 
         let Some(event) = self.events.find_by_id_scoped(&mut *tx, event_id).await? else {
@@ -925,12 +929,13 @@ impl CalendarEventSeriesEngine {
     /// participant as an attendee of each occurrence they can now see.
     pub async fn attach_attendees(
         &self,
+        pool: &PgPool,
         cmd: AttachAttendeesCmd,
         scope: ScopeCtx,
     ) -> Result<(), EventFamilyError> {
         let mut tx = self
             .events
-            .begin_scope(&self.pool, scope.acting_user_id)
+            .begin_scope(pool, scope.acting_user_id)
             .await?;
 
         let Some(event) = self
@@ -983,12 +988,13 @@ impl CalendarEventSeriesEngine {
     /// that fan a response across a series are a later wave.
     pub async fn set_attendee_state(
         &self,
+        pool: &PgPool,
         cmd: SetAttendeeStateCmd,
         scope: ScopeCtx,
     ) -> Result<(), EventFamilyError> {
         let mut tx = self
             .events
-            .begin_scope(&self.pool, scope.acting_user_id)
+            .begin_scope(pool, scope.acting_user_id)
             .await?;
 
         let rows = self
@@ -1012,6 +1018,7 @@ impl CalendarEventSeriesEngine {
     /// accepted, optional attendees deduped.
     pub async fn create_standalone(
         &self,
+        pool: &PgPool,
         cmd: CreateStandaloneCmd,
         scope: ScopeCtx,
     ) -> Result<Uuid, EventFamilyError> {
@@ -1024,7 +1031,7 @@ impl CalendarEventSeriesEngine {
 
         let mut tx = self
             .events
-            .begin_scope(&self.pool, scope.acting_user_id)
+            .begin_scope(pool, scope.acting_user_id)
             .await?;
 
         let event_id = self
