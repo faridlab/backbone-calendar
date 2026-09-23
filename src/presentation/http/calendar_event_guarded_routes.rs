@@ -688,7 +688,7 @@ async fn list_events(
     };
     let limit = q.limit.unwrap_or(1000).clamp(1, 5000);
 
-    let mut tx = match request_pool(st, tenant_pool).begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -776,7 +776,7 @@ async fn get_event(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match request_pool(st, tenant_pool).begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -854,7 +854,7 @@ async fn apply_event_edit(
         }
     }
 
-    let mut tx = match request_pool(st, tenant_pool).begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -1026,7 +1026,7 @@ async fn delete_event(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match request_pool(st, tenant_pool).begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -1113,7 +1113,7 @@ async fn list_series(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match request_pool(st, tenant_pool).begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -1214,7 +1214,7 @@ async fn get_series(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match request_pool(st, tenant_pool).begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -1297,7 +1297,7 @@ async fn delete_series(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match request_pool(st, tenant_pool).begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -1362,7 +1362,7 @@ async fn series_occurrences(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match request_pool(st, tenant_pool).begin().await {
+    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
