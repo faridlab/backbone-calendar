@@ -125,7 +125,6 @@ mod event_permissions {
 /// so under the installed row-level fences it would see zero rows. It remains
 /// available to the composing host for the trusted/admin surface
 /// (`all_crud_routes`).
-#[derive(Clone)]
 /// The caller-named pool when the tenant router attached one (the pool law:
 /// module verbs transact on the request's tenant-dedicated pool, never the
 /// boot pool the composition captured at build time), else the state's own.
@@ -133,6 +132,7 @@ fn request_pool(st: &EventFamilyState, ext: &Option<axum::Extension<sqlx::PgPool
     ext.as_ref().map(|e| e.0.clone()).unwrap_or_else(|| st.pool.clone())
 }
 
+#[derive(Clone)]
 struct EventFamilyState {
     engine: Arc<CalendarEventSeriesEngine>,
     #[allow(dead_code)]
