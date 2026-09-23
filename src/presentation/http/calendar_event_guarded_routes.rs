@@ -206,7 +206,14 @@ fn gate(
         )
             .into_response());
     };
-    if !auth.permissions.iter().any(|p| p == permission) {
+    // A wildcard grant matches every permission string: the estate's
+    // god-permission holder would otherwise be refused by an exact-match
+    // gate no permission row can satisfy unless every string is seeded.
+    if !auth
+        .permissions
+        .iter()
+        .any(|p| p == permission || p == "*:*")
+    {
         return Err((
             StatusCode::FORBIDDEN,
             Json(ErrorBody {
