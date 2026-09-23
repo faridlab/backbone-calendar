@@ -688,7 +688,7 @@ async fn list_events(
     };
     let limit = q.limit.unwrap_or(1000).clamp(1, 5000);
 
-    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
+    let mut tx = match request_pool(st, tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -776,7 +776,7 @@ async fn get_event(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
+    let mut tx = match request_pool(st, tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -832,6 +832,7 @@ async fn fetch_series(
 ///   validation error.
 async fn apply_event_edit(
     st: &EventFamilyState,
+    tenant_pool: &Option<axum::Extension<sqlx::PgPool>>,
     scope: &ScopeCtx,
     id: Uuid,
     b: EventEditBody,
@@ -853,7 +854,7 @@ async fn apply_event_edit(
         }
     }
 
-    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
+    let mut tx = match request_pool(st, tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -991,7 +992,7 @@ async fn edit_event(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    apply_event_edit(&st, &scope, id, b, default_edit_scope).await
+    apply_event_edit(&st, &tenant_pool, &scope, id, b, default_edit_scope).await
 }
 
 /// `PUT /events/:id` — replace edit, `edit_scope` defaults to `all`.
@@ -1007,7 +1008,7 @@ async fn replace_event(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    apply_event_edit(&st, &scope, id, b, default_replace_scope).await
+    apply_event_edit(&st, &tenant_pool, &scope, id, b, default_replace_scope).await
 }
 
 /// `DELETE /events/:id` — soft-delete. On a series member this runs through
@@ -1025,7 +1026,7 @@ async fn delete_event(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
+    let mut tx = match request_pool(st, tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -1112,7 +1113,7 @@ async fn list_series(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
+    let mut tx = match request_pool(st, tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -1213,7 +1214,7 @@ async fn get_series(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
+    let mut tx = match request_pool(st, tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -1296,7 +1297,7 @@ async fn delete_series(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
+    let mut tx = match request_pool(st, tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
@@ -1361,7 +1362,7 @@ async fn series_occurrences(
         Ok(s) => s,
         Err(resp) => return resp,
     };
-    let mut tx = match request_pool(&st, &tenant_pool).begin().await {
+    let mut tx = match request_pool(st, tenant_pool).begin().await {
         Ok(tx) => tx,
         Err(e) => return db_error_response(e),
     };
