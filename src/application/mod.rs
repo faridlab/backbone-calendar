@@ -18,4 +18,8 @@ pub mod workflows;
 // Re-exports
 pub use service::*;
 // <<< CUSTOM
+// The permission-vocabulary layer (application/auth/*): hand-written files
+// in the generated shape, user-owned per metaphor.codegen.yaml. The
+// declaration lives in the custom block so regeneration keeps it.
+pub mod auth;
 // END CUSTOM

@@ -235,7 +235,7 @@ dependencies = [
 
 [[package]]
 name = "backbone-calendar"
-version = "0.2.23"
+version = "0.2.25"
 dependencies = [
  "anyhow",
  "async-trait",

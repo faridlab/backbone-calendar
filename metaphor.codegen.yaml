@@ -37,6 +37,18 @@ user_owned:
   # Event-family permission policies, in the generated shape but hand-written:
   # the auth generator layer is opt-in (`layers: true`) and this module keeps it
   # off, so these vocabulary files are user-owned instead of regenerated.
+  # The nine generated-shape CRUD vocabulary files (auth/mod.rs carries
+  # its own custom block for the event family); wiring the pub mod auth
+  # declaration compiled them for the first time (#218).
+  - "src/application/auth/calendar_auth.rs"
+  - "src/application/auth/calendar_branch_auth.rs"
+  - "src/application/auth/calendar_department_auth.rs"
+  - "src/application/auth/calendar_employee_auth.rs"
+  - "src/application/auth/calendar_employee_status_auth.rs"
+  - "src/application/auth/calendar_level_auth.rs"
+  - "src/application/auth/calendar_position_auth.rs"
+  - "src/application/auth/calendar_religion_auth.rs"
+  - "src/application/auth/mod.rs"
   - "src/application/auth/calendar_event_auth.rs"
   - "src/application/auth/calendar_event_series_auth.rs"
   - "src/application/auth/calendar_event_exception_auth.rs"
