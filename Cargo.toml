@@ -1,9 +1,11 @@
 [package]
 name = "backbone-calendar"
-version = "0.2.26"
+version = "0.2.27"
 edition = "2021"
 description = "org-scoped holiday / working-day reference"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/faridlab/backbone-calendar"
+exclude = [".claude/", ".github/", "graphify-out/"]
 
 [lib]
 path = "src/lib.rs"
@@ -18,13 +20,13 @@ path = "src/lib.rs"
 # or `rev = "<commit-sha>"`. Cargo dedupes the git fetch — the repo is only
 # cloned once even though four crates reference it.
 # -----------------------------------------------------------------------------
-backbone-core = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.27", features = ["postgres"] }
-backbone-orm = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.27" }
+backbone-core = { version = "2.7.35", features = ["postgres"] }
+backbone-orm = { version = "2.7.35" }
 # `axum` gates backbone-auth's request-extractor surface (OrgContext et al.) —
 # the identity extractor the guarded event-family composition and its in-process
 # probes mount, same as backbone-attendance / backbone-selling.
-backbone-auth = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.27", features = ["axum"] }
-backbone-messaging = { git = "https://github.com/faridlab/backbone-framework", tag = "v2.7.27" }
+backbone-auth = { version = "2.7.35", features = ["axum"] }
+backbone-messaging = { version = "2.7.35" }
 
 # OpenAPI schema derive. The schema generator emits ungated `use utoipa::ToSchema;`
 # in every entity and DTO file, so the dep is unconditional even though the
