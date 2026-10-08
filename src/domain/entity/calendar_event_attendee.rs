@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::AuditMetadata;
 use super::EventAttendeeState;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for CalendarEventAttendee
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -12,15 +12,9 @@ use super::EventAttendeeState;
 pub struct CalendarEventAttendeeId(pub Uuid);
 
 impl CalendarEventAttendeeId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for CalendarEventAttendeeId {
@@ -37,28 +31,20 @@ impl std::str::FromStr for CalendarEventAttendeeId {
 }
 
 impl From<Uuid> for CalendarEventAttendeeId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<CalendarEventAttendeeId> for Uuid {
-    fn from(id: CalendarEventAttendeeId) -> Self {
-        id.0
-    }
+    fn from(id: CalendarEventAttendeeId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for CalendarEventAttendeeId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for CalendarEventAttendeeId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -80,12 +66,7 @@ impl CalendarEventAttendee {
     }
 
     /// Create a new CalendarEventAttendee with required fields
-    pub fn new(
-        event_id: Uuid,
-        user_id: Uuid,
-        state: EventAttendeeState,
-        access_token: Uuid,
-    ) -> Self {
+    pub fn new(event_id: Uuid, user_id: Uuid, state: EventAttendeeState, access_token: Uuid) -> Self {
         Self {
             id: Uuid::new_v4(),
             event_id,
@@ -146,6 +127,7 @@ impl CalendarEventAttendee {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Partial Update
     // ==========================================================
@@ -155,24 +137,16 @@ impl CalendarEventAttendee {
         for (key, value) in fields {
             match key.as_str() {
                 "event_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.event_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.event_id = v; }
                 }
                 "user_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.user_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.user_id = v; }
                 }
                 "state" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.state = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.state = v; }
                 }
                 "access_token" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.access_token = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.access_token = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -279,12 +253,8 @@ impl CalendarEventAttendeeBuilder {
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<CalendarEventAttendee, String> {
-        let event_id = self
-            .event_id
-            .ok_or_else(|| "event_id is required".to_string())?;
-        let user_id = self
-            .user_id
-            .ok_or_else(|| "user_id is required".to_string())?;
+        let event_id = self.event_id.ok_or_else(|| "event_id is required".to_string())?;
+        let user_id = self.user_id.ok_or_else(|| "user_id is required".to_string())?;
 
         Ok(CalendarEventAttendee {
             id: Uuid::new_v4(),

@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::CalendarEventAttendee;
+use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::EventAttendeeState;
 
 // =============================================================================
@@ -33,23 +33,14 @@ use crate::domain::entity::EventAttendeeState;
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct CreateCalendarEventAttendeeDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "event_id")]
     pub event_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "user_id")]
     pub user_id: Uuid,
     pub state: EventAttendeeState,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "access_token")]
     pub access_token: Uuid,
 }
@@ -67,23 +58,14 @@ pub struct CreateCalendarEventAttendeeDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCalendarEventAttendeeDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "event_id")]
     pub event_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "user_id")]
     pub user_id: Uuid,
     pub state: EventAttendeeState,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "access_token")]
     pub access_token: Uuid,
 }
@@ -101,24 +83,15 @@ pub struct UpdateCalendarEventAttendeeDto {
 #[cfg_attr(feature = "validation", derive(Validate))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchCalendarEventAttendeeDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "event_id")]
     pub event_id: Option<Uuid>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "user_id")]
     pub user_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub state: Option<EventAttendeeState>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "access_token")]
     pub access_token: Option<Uuid>,
 }
@@ -126,10 +99,7 @@ pub struct PatchCalendarEventAttendeeDto {
 impl PatchCalendarEventAttendeeDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.event_id.is_some()
-            || self.user_id.is_some()
-            || self.state.is_some()
-            || self.access_token.is_some()
+        self.event_id.is_some() || self.user_id.is_some() || self.state.is_some() || self.access_token.is_some()
     }
 }
 
@@ -145,26 +115,14 @@ impl PatchCalendarEventAttendeeDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct CalendarEventAttendeeResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub event_id: Uuid,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub user_id: Uuid,
     pub state: EventAttendeeState,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub access_token: Uuid,
     pub metadata: AuditMetadata,
 }
@@ -199,12 +157,7 @@ pub struct CalendarEventAttendeeListResponseDto {
 
 impl CalendarEventAttendeeListResponseDto {
     /// Create a new list response from items and pagination info
-    pub fn new(
-        items: Vec<CalendarEventAttendeeResponseDto>,
-        total: u64,
-        page: u32,
-        per_page: u32,
-    ) -> Self {
+    pub fn new(items: Vec<CalendarEventAttendeeResponseDto>, total: u64, page: u32, per_page: u32) -> Self {
         let total_pages = if per_page > 0 {
             ((total as f64) / (per_page as f64)).ceil() as u32
         } else {
@@ -297,10 +250,7 @@ impl backbone_core::FromCreateDto<CreateCalendarEventAttendeeDto> for CalendarEv
 }
 
 impl backbone_core::ApplyUpdateDto<UpdateCalendarEventAttendeeDto> for CalendarEventAttendee {
-    fn apply_update(
-        mut self,
-        dto: UpdateCalendarEventAttendeeDto,
-    ) -> backbone_core::ServiceResult<Self> {
+    fn apply_update(mut self, dto: UpdateCalendarEventAttendeeDto) -> backbone_core::ServiceResult<Self> {
         self.event_id = dto.event_id;
         self.user_id = dto.user_id;
         self.state = dto.state;

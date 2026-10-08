@@ -36,7 +36,7 @@ impl Seeder for SeedCalendarReligionSeeder {
     }
 
     fn order(&self) -> i32 {
-        12
+        8
     }
 
     async fn should_run(&self, pool: &PgPool) -> Result<bool> {

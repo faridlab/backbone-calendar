@@ -1,8 +1,8 @@
-use super::AuditMetadata;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for CalendarBranch
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -10,15 +10,9 @@ use uuid::Uuid;
 pub struct CalendarBranchId(pub Uuid);
 
 impl CalendarBranchId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for CalendarBranchId {
@@ -35,28 +29,20 @@ impl std::str::FromStr for CalendarBranchId {
 }
 
 impl From<Uuid> for CalendarBranchId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<CalendarBranchId> for Uuid {
-    fn from(id: CalendarBranchId) -> Self {
-        id.0
-    }
+    fn from(id: CalendarBranchId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for CalendarBranchId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for CalendarBranchId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -135,6 +121,7 @@ impl CalendarBranch {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Partial Update
     // ==========================================================
@@ -144,14 +131,10 @@ impl CalendarBranch {
         for (key, value) in fields {
             match key.as_str() {
                 "calendar_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.calendar_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.calendar_id = v; }
                 }
                 "branch_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.branch_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.branch_id = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -243,12 +226,8 @@ impl CalendarBranchBuilder {
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<CalendarBranch, String> {
-        let calendar_id = self
-            .calendar_id
-            .ok_or_else(|| "calendar_id is required".to_string())?;
-        let branch_id = self
-            .branch_id
-            .ok_or_else(|| "branch_id is required".to_string())?;
+        let calendar_id = self.calendar_id.ok_or_else(|| "calendar_id is required".to_string())?;
+        let branch_id = self.branch_id.ok_or_else(|| "branch_id is required".to_string())?;
 
         Ok(CalendarBranch {
             id: Uuid::new_v4(),

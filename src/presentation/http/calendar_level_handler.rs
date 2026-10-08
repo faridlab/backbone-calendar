@@ -21,13 +21,12 @@ use backbone_auth::middleware::AuthContext;
 use backbone_auth::AuthMiddleware;
 
 // Domain imports
-use crate::application::service::{CalendarLevelService, ServiceError};
 use crate::domain::entity::*;
+use crate::application::service::{CalendarLevelService, ServiceError};
 
 // DTO imports
-use crate::presentation::dto::{
-    CalendarLevelResponseDto, CreateCalendarLevelDto, PatchCalendarLevelDto, UpdateCalendarLevelDto,
-};
+use crate::presentation::dto::{CreateCalendarLevelDto, UpdateCalendarLevelDto, PatchCalendarLevelDto, CalendarLevelResponseDto};
+
 
 /// Application error type
 #[derive(Debug, thiserror::Error)]
@@ -50,6 +49,7 @@ impl From<ServiceError> for CalendarLevelError {
             ServiceError::AlreadyExists(ref msg) => Self::Validation(msg.clone()),
             ServiceError::Repository(ref e) => Self::Database(e.to_string()),
             ServiceError::Internal(ref msg) => Self::Internal(msg.clone()),
+            ServiceError::Violations(_) => Self::Validation(err.to_string()),
         }
     }
 }
@@ -62,14 +62,8 @@ impl axum::response::IntoResponse for CalendarLevelError {
         let (status, code) = match &self {
             Self::NotFound(_) => (StatusCode::NOT_FOUND, "CALENDARLEVEL_NOT_FOUND"),
             Self::Validation(_) => (StatusCode::BAD_REQUEST, "CALENDARLEVEL_VALIDATION_ERROR"),
-            Self::Database(_) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "CALENDARLEVEL_DATABASE_ERROR",
-            ),
-            Self::Internal(_) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "CALENDARLEVEL_INTERNAL_ERROR",
-            ),
+            Self::Database(_) => (StatusCode::INTERNAL_SERVER_ERROR, "CALENDARLEVEL_DATABASE_ERROR"),
+            Self::Internal(_) => (StatusCode::INTERNAL_SERVER_ERROR, "CALENDARLEVEL_INTERNAL_ERROR"),
         };
 
         let body = serde_json::json!({
@@ -115,13 +109,10 @@ impl axum::response::IntoResponse for CalendarLevelError {
 /// let router = create_calendar_level_routes(service);
 /// ```
 pub fn create_calendar_level_routes(service: Arc<CalendarLevelService>) -> Router {
-    BackboneCrudHandler::<
-        CalendarLevelService,
-        CalendarLevel,
-        CreateCalendarLevelDto,
-        UpdateCalendarLevelDto,
-        CalendarLevelResponseDto,
-    >::routes(service, "/calendar_levels")
+    BackboneCrudHandler::<CalendarLevelService, CalendarLevel, CreateCalendarLevelDto, UpdateCalendarLevelDto, CalendarLevelResponseDto>::routes(
+        service,
+        "/calendar_levels",
+    )
 }
 
 /// Create Axum router with only the read (GET) endpoints for CalendarLevel.
@@ -130,13 +121,10 @@ pub fn create_calendar_level_routes(service: Arc<CalendarLevelService>) -> Route
 /// Mutations must be served separately via `create_calendar_level_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_calendar_level_read_routes(service: Arc<CalendarLevelService>) -> Router {
-    BackboneCrudHandler::<
-        CalendarLevelService,
-        CalendarLevel,
-        CreateCalendarLevelDto,
-        UpdateCalendarLevelDto,
-        CalendarLevelResponseDto,
-    >::read_routes(service, "/calendar_levels")
+    BackboneCrudHandler::<CalendarLevelService, CalendarLevel, CreateCalendarLevelDto, UpdateCalendarLevelDto, CalendarLevelResponseDto>::read_routes(
+        service,
+        "/calendar_levels",
+    )
 }
 
 /// Create Axum router with only the write (mutation) endpoints for CalendarLevel.
@@ -151,13 +139,10 @@ pub fn create_calendar_level_read_routes(service: Arc<CalendarLevelService>) -> 
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_calendar_level_write_routes(service: Arc<CalendarLevelService>) -> Router {
-    BackboneCrudHandler::<
-        CalendarLevelService,
-        CalendarLevel,
-        CreateCalendarLevelDto,
-        UpdateCalendarLevelDto,
-        CalendarLevelResponseDto,
-    >::write_routes(service, "/calendar_levels")
+    BackboneCrudHandler::<CalendarLevelService, CalendarLevel, CreateCalendarLevelDto, UpdateCalendarLevelDto, CalendarLevelResponseDto>::write_routes(
+        service,
+        "/calendar_levels",
+    )
 }
 
 /// Create authenticated routes with auth middleware.
@@ -174,35 +159,30 @@ pub fn create_protected_calendar_level_routes<A: AuthMiddleware + Send + Sync + 
     use axum::response::IntoResponse;
 
     let auth_layer = auth.clone();
-    create_calendar_level_routes(service).layer(middleware::from_fn(
-        move |mut req: axum::extract::Request, next: axum::middleware::Next| {
+    create_calendar_level_routes(service)
+        .layer(middleware::from_fn(move |mut req: axum::extract::Request, next: axum::middleware::Next| {
             let auth = auth_layer.clone();
             async move {
-                let token = req
-                    .headers()
+                let token = req.headers()
                     .get(axum::http::header::AUTHORIZATION)
                     .and_then(|h| h.to_str().ok())
-                    .and_then(|raw| {
-                        raw.strip_prefix("Bearer ")
-                            .or_else(|| raw.strip_prefix("bearer "))
-                    })
+                    .and_then(|raw| raw.strip_prefix("Bearer ").or_else(|| raw.strip_prefix("bearer ")))
                     .unwrap_or("");
                 match auth.authenticate(token).await {
                     Ok(ctx) => {
                         req.extensions_mut().insert(ctx);
                         next.run(req).await
                     }
-                    Err(_) => (
-                        axum::http::StatusCode::UNAUTHORIZED,
-                        axum::Json(serde_json::json!({
-                            "success": false,
-                            "error": "unauthorized",
-                            "message": "Authentication required"
-                        })),
-                    )
-                        .into_response(),
+                    Err(_) => {
+                        (axum::http::StatusCode::UNAUTHORIZED,
+                         axum::Json(serde_json::json!({
+                             "success": false,
+                             "error": "unauthorized",
+                             "message": "Authentication required"
+                         }))
+                        ).into_response()
+                    }
                 }
             }
-        },
-    ))
+        }))
 }

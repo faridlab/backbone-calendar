@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-use super::AuditMetadata;
 use super::EventExceptionKind;
+use super::AuditMetadata;
 
 /// Strongly-typed ID for CalendarEventException
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -12,15 +12,9 @@ use super::EventExceptionKind;
 pub struct CalendarEventExceptionId(pub Uuid);
 
 impl CalendarEventExceptionId {
-    pub fn new(id: Uuid) -> Self {
-        Self(id)
-    }
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4())
-    }
-    pub fn into_inner(self) -> Uuid {
-        self.0
-    }
+    pub fn new(id: Uuid) -> Self { Self(id) }
+    pub fn generate() -> Self { Self(Uuid::new_v4()) }
+    pub fn into_inner(self) -> Uuid { self.0 }
 }
 
 impl std::fmt::Display for CalendarEventExceptionId {
@@ -37,28 +31,20 @@ impl std::str::FromStr for CalendarEventExceptionId {
 }
 
 impl From<Uuid> for CalendarEventExceptionId {
-    fn from(id: Uuid) -> Self {
-        Self(id)
-    }
+    fn from(id: Uuid) -> Self { Self(id) }
 }
 
 impl From<CalendarEventExceptionId> for Uuid {
-    fn from(id: CalendarEventExceptionId) -> Self {
-        id.0
-    }
+    fn from(id: CalendarEventExceptionId) -> Self { id.0 }
 }
 
 impl AsRef<Uuid> for CalendarEventExceptionId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
+    fn as_ref(&self) -> &Uuid { &self.0 }
 }
 
 impl std::ops::Deref for CalendarEventExceptionId {
     type Target = Uuid;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -81,13 +67,7 @@ impl CalendarEventException {
     }
 
     /// Create a new CalendarEventException with required fields
-    pub fn new(
-        series_id: Uuid,
-        event_id: Uuid,
-        slot_start_at: DateTime<Utc>,
-        slot_stop_at: DateTime<Utc>,
-        kind: EventExceptionKind,
-    ) -> Self {
+    pub fn new(series_id: Uuid, event_id: Uuid, slot_start_at: DateTime<Utc>, slot_stop_at: DateTime<Utc>, kind: EventExceptionKind) -> Self {
         Self {
             id: Uuid::new_v4(),
             series_id,
@@ -149,6 +129,7 @@ impl CalendarEventException {
         self.metadata.deleted_by.as_ref()
     }
 
+
     // ==========================================================
     // Partial Update
     // ==========================================================
@@ -158,29 +139,19 @@ impl CalendarEventException {
         for (key, value) in fields {
             match key.as_str() {
                 "series_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.series_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.series_id = v; }
                 }
                 "event_id" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.event_id = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.event_id = v; }
                 }
                 "slot_start_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.slot_start_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.slot_start_at = v; }
                 }
                 "slot_stop_at" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.slot_stop_at = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.slot_stop_at = v; }
                 }
                 "kind" => {
-                    if let Ok(v) = serde_json::from_value(value) {
-                        self.kind = v;
-                    }
+                    if let Ok(v) = serde_json::from_value(value) { self.kind = v; }
                 }
                 _ => {} // ignore unknown fields
             }
@@ -239,6 +210,8 @@ impl backbone_orm::EntityRepoMeta for CalendarEventException {
         m.insert("series_id".to_string(), "uuid".to_string());
         m.insert("event_id".to_string(), "uuid".to_string());
         m.insert("kind".to_string(), "event_exception_kind".to_string());
+        m.insert("slot_start_at".to_string(), "timestamptz".to_string());
+        m.insert("slot_stop_at".to_string(), "timestamptz".to_string());
         m
     }
     fn search_fields() -> &'static [&'static str] {
@@ -294,18 +267,10 @@ impl CalendarEventExceptionBuilder {
     ///
     /// Returns Err if any required field without a default is missing.
     pub fn build(self) -> Result<CalendarEventException, String> {
-        let series_id = self
-            .series_id
-            .ok_or_else(|| "series_id is required".to_string())?;
-        let event_id = self
-            .event_id
-            .ok_or_else(|| "event_id is required".to_string())?;
-        let slot_start_at = self
-            .slot_start_at
-            .ok_or_else(|| "slot_start_at is required".to_string())?;
-        let slot_stop_at = self
-            .slot_stop_at
-            .ok_or_else(|| "slot_stop_at is required".to_string())?;
+        let series_id = self.series_id.ok_or_else(|| "series_id is required".to_string())?;
+        let event_id = self.event_id.ok_or_else(|| "event_id is required".to_string())?;
+        let slot_start_at = self.slot_start_at.ok_or_else(|| "slot_start_at is required".to_string())?;
+        let slot_stop_at = self.slot_stop_at.ok_or_else(|| "slot_stop_at is required".to_string())?;
         let kind = self.kind.ok_or_else(|| "kind is required".to_string())?;
 
         Ok(CalendarEventException {

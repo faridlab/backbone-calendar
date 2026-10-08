@@ -5,10 +5,10 @@
 //! Replace with the business intent of your saga — what it creates/updates atomically,
 //! what it validates first, and what event it emits on success.
 
-use backbone_core::flow::{WorkflowContext, WorkflowStep};
-use chrono;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use chrono;
+use backbone_core::flow::{WorkflowStep, WorkflowContext};
 
 /// Error type for flow execution
 #[derive(Debug, Clone, thiserror::Error)]
@@ -110,9 +110,7 @@ impl ExampleSagaFlowInstance {
     pub fn is_complete(&self) -> bool {
         matches!(
             self.status,
-            ExampleSagaFlowStatus::Completed
-                | ExampleSagaFlowStatus::Failed
-                | ExampleSagaFlowStatus::Cancelled
+            ExampleSagaFlowStatus::Completed | ExampleSagaFlowStatus::Failed | ExampleSagaFlowStatus::Cancelled
         )
     }
 
@@ -147,9 +145,7 @@ impl ExampleSagaFlowInstance {
 // add `pub entity: ExampleSaga` in the // <<< CUSTOM section and remove the todo!.
 #[allow(unused_variables)]
 impl WorkflowContext<ExampleSagaFlowInstance> for ExampleSagaFlowInstance {
-    fn entity(&self) -> &ExampleSagaFlowInstance {
-        self
-    }
+    fn entity(&self) -> &ExampleSagaFlowInstance { self }
     fn set_var(&mut self, key: &str, value: serde_json::Value) {
         self.set_context(key, value);
     }
@@ -174,13 +170,17 @@ pub trait ExampleSagaStepHandler: Send + Sync {
     ) -> Result<Option<ExampleSagaFlowStep>, FlowError>;
 
     /// Handle terminal step done
-    async fn handle_done(&self, instance: &mut ExampleSagaFlowInstance) -> Result<(), FlowError>;
+    async fn handle_done(
+        &self,
+        instance: &mut ExampleSagaFlowInstance,
+    ) -> Result<(), FlowError>;
 
     /// Handle terminal step rejected
     async fn handle_rejected(
         &self,
         instance: &mut ExampleSagaFlowInstance,
     ) -> Result<(), FlowError>;
+
 }
 
 /// Executor for ExampleSaga flow
@@ -195,10 +195,7 @@ impl<H: ExampleSagaStepHandler> ExampleSagaFlowExecutor<H> {
     }
 
     /// Start a new flow instance
-    pub async fn start(
-        &self,
-        instance_id: impl Into<String>,
-    ) -> Result<ExampleSagaFlowInstance, FlowError> {
+    pub async fn start(&self, instance_id: impl Into<String>) -> Result<ExampleSagaFlowInstance, FlowError> {
         let mut instance = ExampleSagaFlowInstance::new(instance_id);
         instance.status = ExampleSagaFlowStatus::Running;
         instance.current_step = Some(ExampleSagaFlowStep::Validate);
@@ -206,17 +203,16 @@ impl<H: ExampleSagaStepHandler> ExampleSagaFlowExecutor<H> {
     }
 
     /// Execute the current step
-    pub async fn execute_step(
-        &self,
-        instance: &mut ExampleSagaFlowInstance,
-    ) -> Result<(), FlowError> {
+    pub async fn execute_step(&self, instance: &mut ExampleSagaFlowInstance) -> Result<(), FlowError> {
         let current_step = match instance.current_step {
             Some(step) => step,
             None => return Err(FlowError::NoCurrentStep),
         };
 
         let next_step = match current_step {
-            ExampleSagaFlowStep::Validate => self.handler.handle_validate(instance).await?,
+            ExampleSagaFlowStep::Validate => {
+                self.handler.handle_validate(instance).await?
+            }
             ExampleSagaFlowStep::WriteExample => {
                 self.handler.handle_write_example(instance).await?
             }

@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::CalendarEvent;
+use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::EventPrivacy;
 
 // =============================================================================
@@ -46,10 +46,7 @@ pub struct CreateCalendarEventDto {
     #[serde(alias = "stop_at")]
     pub stop_at: DateTime<Utc>,
     pub privacy: EventPrivacy,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "organizer_user_id")]
     pub organizer_user_id: Uuid,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -82,10 +79,7 @@ pub struct UpdateCalendarEventDto {
     #[serde(alias = "stop_at")]
     pub stop_at: DateTime<Utc>,
     pub privacy: EventPrivacy,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "organizer_user_id")]
     pub organizer_user_id: Uuid,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -120,10 +114,7 @@ pub struct PatchCalendarEventDto {
     pub stop_at: Option<DateTime<Utc>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub privacy: Option<EventPrivacy>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "organizer_user_id")]
     pub organizer_user_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -133,14 +124,7 @@ pub struct PatchCalendarEventDto {
 impl PatchCalendarEventDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.series_id.is_some()
-            || self.title.is_some()
-            || self.description.is_some()
-            || self.start_at.is_some()
-            || self.stop_at.is_some()
-            || self.privacy.is_some()
-            || self.organizer_user_id.is_some()
-            || self.location.is_some()
+        self.series_id.is_some() || self.title.is_some() || self.description.is_some() || self.start_at.is_some() || self.stop_at.is_some() || self.privacy.is_some() || self.organizer_user_id.is_some() || self.location.is_some()
     }
 }
 
@@ -156,10 +140,7 @@ impl PatchCalendarEventDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct CalendarEventResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
     pub series_id: Option<Uuid>,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
@@ -170,10 +151,7 @@ pub struct CalendarEventResponseDto {
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     pub stop_at: DateTime<Utc>,
     pub privacy: EventPrivacy,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub organizer_user_id: Uuid,
     pub location: Option<String>,
     pub metadata: AuditMetadata,

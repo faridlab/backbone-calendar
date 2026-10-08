@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc, NaiveDate};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::Calendar;
+use crate::domain::entity::AuditMetadata;
 
 // =============================================================================
 // Create DTO
@@ -116,12 +116,7 @@ pub struct PatchCalendarDto {
 impl PatchCalendarDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.name.is_some()
-            || self.date_start.is_some()
-            || self.date_end.is_some()
-            || self.is_holiday.is_some()
-            || self.can_everyone_view.is_some()
-            || self.note.is_some()
+        self.name.is_some() || self.date_start.is_some() || self.date_end.is_some() || self.is_holiday.is_some() || self.can_everyone_view.is_some() || self.note.is_some()
     }
 }
 
@@ -137,10 +132,7 @@ impl PatchCalendarDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct CalendarResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     pub name: String,

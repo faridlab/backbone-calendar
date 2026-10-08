@@ -5,11 +5,11 @@
 //! Tests the CalendarEventException CRUD API endpoints.
 
 use chrono::Utc;
+use crate::integration::framework::ApiTest;
 use serde_json::{json, Value};
 use uuid::Uuid;
 
 use super::crud_test_base::{CrudTestConfig, GenericCrudTest, TestDataGenerator};
-use crate::integration::framework::ApiTest;
 use crate::integration::helpers::CommonUtils;
 
 // ============================================================================
@@ -54,22 +54,10 @@ impl TestDataGenerator for CalendarEventExceptionTestData {
 
     async fn seed_dependencies(&self, api: &ApiTest) -> Vec<(String, String)> {
         let mut deps: Vec<(String, String)> = Vec::new();
-        if let Some(id) = super::crud_test_base::create_and_get_id(
-            api,
-            "/api/v1/event_series",
-            &super::calendar_event_series_api_test::CalendarEventSeriesTestData,
-        )
-        .await
-        {
+        if let Some(id) = super::crud_test_base::create_and_get_id(api, "/api/v1/event_series", &super::calendar_event_series_api_test::CalendarEventSeriesTestData).await {
             deps.push(("series_id".to_string(), id));
         }
-        if let Some(id) = super::crud_test_base::create_and_get_id(
-            api,
-            "/api/v1/events",
-            &super::calendar_event_api_test::CalendarEventTestData,
-        )
-        .await
-        {
+        if let Some(id) = super::crud_test_base::create_and_get_id(api, "/api/v1/events", &super::calendar_event_api_test::CalendarEventTestData).await {
             deps.push(("event_id".to_string(), id));
         }
         deps

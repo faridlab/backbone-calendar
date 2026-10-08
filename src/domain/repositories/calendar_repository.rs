@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the Calendar aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 
 use crate::domain::entity::Calendar;
 
@@ -52,10 +52,7 @@ pub struct CalendarFilter {
 impl CalendarFilter {
     /// Check if any filter is set
     pub fn has_filters(&self) -> bool {
-        self.name.is_some()
-            || self.is_holiday.is_some()
-            || self.can_everyone_view.is_some()
-            || self.note.is_some()
+        self.name.is_some() || self.is_holiday.is_some() || self.can_everyone_view.is_some() || self.note.is_some()
     }
 }
 
@@ -65,6 +62,7 @@ impl CalendarFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait CalendarRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -92,11 +90,7 @@ pub trait CalendarRepository: Send + Sync {
     async fn list(&self, params: CalendarPaginationParams) -> Result<CalendarPaginatedResult>;
 
     /// List calendar with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: CalendarPaginationParams,
-        filters: CalendarFilter,
-    ) -> Result<CalendarPaginatedResult>;
+    async fn list_with_filters(&self, params: CalendarPaginationParams, filters: CalendarFilter) -> Result<CalendarPaginatedResult>;
 
     /// Count all calendar entities
     async fn count(&self) -> Result<u64>;
@@ -118,10 +112,7 @@ pub trait CalendarRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<Calendar>>;
 
     /// List soft-deleted calendar entities
-    async fn list_deleted(
-        &self,
-        params: CalendarPaginationParams,
-    ) -> Result<CalendarPaginatedResult>;
+    async fn list_deleted(&self, params: CalendarPaginationParams) -> Result<CalendarPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;

@@ -32,4 +32,3 @@ pub use calendar_event_series_api_test::*;
 pub use calendar_level_api_test::*;
 pub use calendar_position_api_test::*;
 pub use calendar_religion_api_test::*;
-pub use crud_test_base::*;

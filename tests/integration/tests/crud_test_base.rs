@@ -5,7 +5,6 @@
 //! Provides reusable base for testing all 12 Backbone CRUD endpoints.
 
 use serde_json::{json, Value};
-use std::time::Instant;
 use uuid::Uuid;
 
 use crate::integration::framework::{ApiTest, TestResult};
@@ -21,7 +20,6 @@ pub struct CrudTestConfig {
     pub base_path: String,
     pub entity_name: String,
     pub supports_soft_delete: bool,
-    pub supports_bulk: bool,
 }
 
 impl CrudTestConfig {
@@ -30,7 +28,6 @@ impl CrudTestConfig {
             base_path: base_path.to_string(),
             entity_name: entity_name.to_string(),
             supports_soft_delete: true,
-            supports_bulk: true,
         }
     }
 }
@@ -76,11 +73,7 @@ pub async fn create_and_get_id<G: TestDataGenerator>(
     }
     let response = api.post(base_path, &payload, None).await.ok()?;
     let body = response.json_value().ok()?;
-    body.get("data")
-        .and_then(|d| d.get("id"))
-        .or_else(|| body.get("id"))
-        .and_then(|v| v.as_str())
-        .map(String::from)
+    body.get("data").and_then(|d| d.get("id")).or_else(|| body.get("id")).and_then(|v| v.as_str()).map(String::from)
 }
 
 // ============================================================================
@@ -98,8 +91,8 @@ pub struct GenericCrudTest<G: TestDataGenerator> {
 
 impl<G: TestDataGenerator> GenericCrudTest<G> {
     pub fn new(config: CrudTestConfig, generator: G) -> Self {
-        let api_base_url =
-            std::env::var("API_BASE_URL").unwrap_or_else(|_| "http://127.0.0.1:3000".to_string());
+        let api_base_url = std::env::var("API_BASE_URL")
+            .unwrap_or_else(|_| "http://127.0.0.1:3000".to_string());
 
         Self {
             api_test: ApiTest::new(&config.entity_name, &api_base_url),
@@ -140,13 +133,14 @@ impl<G: TestDataGenerator> GenericCrudTest<G> {
     /// Test: List entities (GET /collection)
     pub async fn test_list(&self) -> TestResult {
         let test_name = format!("{} - List", self.config.entity_name);
-        let start = Instant::now();
 
         match self.api_test.get(&self.endpoint(""), None).await {
-            Ok(response) => {
-                self.api_test
-                    .create_result(&test_name, &response, 200, "List endpoint works")
-            }
+            Ok(response) => self.api_test.create_result(
+                &test_name,
+                &response,
+                200,
+                "List endpoint works",
+            ),
             Err(e) => TestResult::failure(&test_name, e.to_string()),
         }
     }
@@ -168,8 +162,7 @@ impl<G: TestDataGenerator> GenericCrudTest<G> {
                         }
                     }
                 }
-                self.api_test
-                    .create_result(&test_name, &response, 201, "Create works")
+                self.api_test.create_result(&test_name, &response, 201, "Create works")
             }
             Err(e) => TestResult::failure(&test_name, e.to_string()),
         }
@@ -179,15 +172,8 @@ impl<G: TestDataGenerator> GenericCrudTest<G> {
     pub async fn test_get_by_id(&self, id: &str) -> TestResult {
         let test_name = format!("{} - Get by ID", self.config.entity_name);
 
-        match self
-            .api_test
-            .get(&self.endpoint(&format!("/{}", id)), None)
-            .await
-        {
-            Ok(response) => {
-                self.api_test
-                    .create_result(&test_name, &response, 200, "Get by ID works")
-            }
+        match self.api_test.get(&self.endpoint(&format!("/{}", id)), None).await {
+            Ok(response) => self.api_test.create_result(&test_name, &response, 200, "Get by ID works"),
             Err(e) => TestResult::failure(&test_name, e.to_string()),
         }
     }
@@ -200,14 +186,8 @@ impl<G: TestDataGenerator> GenericCrudTest<G> {
             payload[field.as_str()] = json!(pid);
         }
 
-        match self
-            .api_test
-            .put(&self.endpoint(&format!("/{}", id)), &payload, None)
-            .await
-        {
-            Ok(response) => self
-                .api_test
-                .create_result(&test_name, &response, 200, "Update works"),
+        match self.api_test.put(&self.endpoint(&format!("/{}", id)), &payload, None).await {
+            Ok(response) => self.api_test.create_result(&test_name, &response, 200, "Update works"),
             Err(e) => TestResult::failure(&test_name, e.to_string()),
         }
     }
@@ -216,14 +196,8 @@ impl<G: TestDataGenerator> GenericCrudTest<G> {
     pub async fn test_delete(&self, id: &str) -> TestResult {
         let test_name = format!("{} - Delete", self.config.entity_name);
 
-        match self
-            .api_test
-            .delete(&self.endpoint(&format!("/{}", id)), None)
-            .await
-        {
-            Ok(response) => self
-                .api_test
-                .create_result(&test_name, &response, 200, "Delete works"),
+        match self.api_test.delete(&self.endpoint(&format!("/{}", id)), None).await {
+            Ok(response) => self.api_test.create_result(&test_name, &response, 200, "Delete works"),
             Err(e) => TestResult::failure(&test_name, e.to_string()),
         }
     }
@@ -250,15 +224,8 @@ impl<G: TestDataGenerator> GenericCrudTest<G> {
         let test_name = format!("{} - Not Found", self.config.entity_name);
         let fake_id = Uuid::new_v4().to_string();
 
-        match self
-            .api_test
-            .get(&self.endpoint(&format!("/{}", fake_id)), None)
-            .await
-        {
-            Ok(response) => {
-                self.api_test
-                    .create_result(&test_name, &response, 404, "Returns 404 for missing")
-            }
+        match self.api_test.get(&self.endpoint(&format!("/{}", fake_id)), None).await {
+            Ok(response) => self.api_test.create_result(&test_name, &response, 404, "Returns 404 for missing"),
             Err(e) => TestResult::failure(&test_name, e.to_string()),
         }
     }
@@ -267,15 +234,8 @@ impl<G: TestDataGenerator> GenericCrudTest<G> {
     pub async fn test_bulk_delete(&self, ids: &[String]) -> TestResult {
         let test_name = format!("{} - Bulk Delete", self.config.entity_name);
         let payload = serde_json::json!({ "ids": ids });
-        match self
-            .api_test
-            .post(&self.endpoint("/delete/bulk"), &payload, None)
-            .await
-        {
-            Ok(response) => {
-                self.api_test
-                    .create_result(&test_name, &response, 200, "Bulk soft-delete works")
-            }
+        match self.api_test.post(&self.endpoint("/delete/bulk"), &payload, None).await {
+            Ok(response) => self.api_test.create_result(&test_name, &response, 200, "Bulk soft-delete works"),
             Err(e) => TestResult::failure(&test_name, e.to_string()),
         }
     }
@@ -284,15 +244,8 @@ impl<G: TestDataGenerator> GenericCrudTest<G> {
     pub async fn test_bulk_restore(&self, ids: &[String]) -> TestResult {
         let test_name = format!("{} - Bulk Restore", self.config.entity_name);
         let payload = serde_json::json!({ "ids": ids });
-        match self
-            .api_test
-            .post(&self.endpoint("/restore/bulk"), &payload, None)
-            .await
-        {
-            Ok(response) => {
-                self.api_test
-                    .create_result(&test_name, &response, 200, "Bulk restore works")
-            }
+        match self.api_test.post(&self.endpoint("/restore/bulk"), &payload, None).await {
+            Ok(response) => self.api_test.create_result(&test_name, &response, 200, "Bulk restore works"),
             Err(e) => TestResult::failure(&test_name, e.to_string()),
         }
     }
@@ -301,15 +254,8 @@ impl<G: TestDataGenerator> GenericCrudTest<G> {
     pub async fn test_restore_all(&self) -> TestResult {
         let test_name = format!("{} - Restore All", self.config.entity_name);
         let payload = serde_json::json!({});
-        match self
-            .api_test
-            .post(&self.endpoint("/restore/all"), &payload, None)
-            .await
-        {
-            Ok(response) => {
-                self.api_test
-                    .create_result(&test_name, &response, 200, "Restore all works")
-            }
+        match self.api_test.post(&self.endpoint("/restore/all"), &payload, None).await {
+            Ok(response) => self.api_test.create_result(&test_name, &response, 200, "Restore all works"),
             Err(e) => TestResult::failure(&test_name, e.to_string()),
         }
     }
@@ -322,43 +268,20 @@ impl<G: TestDataGenerator> GenericCrudTest<G> {
         let (server_reachable, routes_registered) = self.check_server_status().await;
 
         if !server_reachable {
-            let skip_reason =
-                "API server not reachable. Set API_BASE_URL and ensure server is running.";
-            results.push(
-                self.skipped_result(&format!("{} - List", self.config.entity_name), skip_reason),
-            );
-            results.push(self.skipped_result(
-                &format!("{} - Create", self.config.entity_name),
-                skip_reason,
-            ));
-            results.push(self.skipped_result(
-                &format!("{} - Invalid Create", self.config.entity_name),
-                skip_reason,
-            ));
-            results.push(self.skipped_result(
-                &format!("{} - Not Found", self.config.entity_name),
-                skip_reason,
-            ));
+            let skip_reason = "API server not reachable. Set API_BASE_URL and ensure server is running.";
+            results.push(self.skipped_result(&format!("{} - List", self.config.entity_name), skip_reason));
+            results.push(self.skipped_result(&format!("{} - Create", self.config.entity_name), skip_reason));
+            results.push(self.skipped_result(&format!("{} - Invalid Create", self.config.entity_name), skip_reason));
+            results.push(self.skipped_result(&format!("{} - Not Found", self.config.entity_name), skip_reason));
             return results;
         }
 
         if !routes_registered {
             let skip_reason = "Routes not registered. Module may not be integrated in the app yet.";
-            results.push(
-                self.skipped_result(&format!("{} - List", self.config.entity_name), skip_reason),
-            );
-            results.push(self.skipped_result(
-                &format!("{} - Create", self.config.entity_name),
-                skip_reason,
-            ));
-            results.push(self.skipped_result(
-                &format!("{} - Invalid Create", self.config.entity_name),
-                skip_reason,
-            ));
-            results.push(self.skipped_result(
-                &format!("{} - Not Found", self.config.entity_name),
-                skip_reason,
-            ));
+            results.push(self.skipped_result(&format!("{} - List", self.config.entity_name), skip_reason));
+            results.push(self.skipped_result(&format!("{} - Create", self.config.entity_name), skip_reason));
+            results.push(self.skipped_result(&format!("{} - Invalid Create", self.config.entity_name), skip_reason));
+            results.push(self.skipped_result(&format!("{} - Not Found", self.config.entity_name), skip_reason));
             return results;
         }
 

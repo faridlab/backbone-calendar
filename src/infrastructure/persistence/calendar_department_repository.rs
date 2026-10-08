@@ -23,9 +23,7 @@ pub struct CalendarDepartmentRepository(
 
 impl std::ops::Deref for CalendarDepartmentRepository {
     type Target = backbone_orm::GenericCrudRepository<CalendarDepartment, backbone_orm::SoftDelete>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    fn deref(&self) -> &Self::Target { &self.0 }
 }
 
 impl CalendarDepartmentRepository {
@@ -35,8 +33,4 @@ impl CalendarDepartmentRepository {
     }
 }
 
-backbone_core::impl_crud_repository!(
-    CalendarDepartmentRepository,
-    CalendarDepartment,
-    soft_delete
-);
+backbone_core::impl_crud_repository!(CalendarDepartmentRepository, CalendarDepartment, soft_delete);

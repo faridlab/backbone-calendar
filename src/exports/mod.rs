@@ -11,14 +11,14 @@
 //! use calendar::exports::{CalendarDto};
 //! ```
 
-mod events;
-mod services;
 mod types;
+mod services;
+mod events;
 
 // Re-export all public types
-pub use events::*;
-pub use services::*;
 pub use types::*;
+pub use services::*;
+pub use events::*;
 
 // ============================================================================
 // EXPORT SUMMARY

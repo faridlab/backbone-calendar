@@ -18,12 +18,14 @@
 #![allow(unused_imports)]
 
 // Generated modules
-pub mod application;
 pub mod domain;
-pub mod exports;
 pub mod infrastructure;
+pub mod application;
 pub mod presentation;
 pub mod seeders;
+pub mod exports;
+// <<< CUSTOM MODULES
+// END CUSTOM
 
 // Re-exports for convenience - Domain entities
 pub use domain::entity::*;
@@ -32,25 +34,25 @@ pub use domain::entity::*;
 pub use infrastructure::persistence::*;
 
 // Re-exports - Application services
+pub use application::service::CalendarService;
 pub use application::service::CalendarBranchService;
 pub use application::service::CalendarDepartmentService;
 pub use application::service::CalendarEmployeeService;
 pub use application::service::CalendarEmployeeStatusService;
+pub use application::service::CalendarEventService;
 pub use application::service::CalendarEventAttendeeService;
 pub use application::service::CalendarEventExceptionService;
 pub use application::service::CalendarEventSeriesService;
-pub use application::service::CalendarEventService;
 pub use application::service::CalendarLevelService;
 pub use application::service::CalendarPositionService;
 pub use application::service::CalendarReligionService;
-pub use application::service::CalendarService;
 
 // Re-exports - Workflows
 pub use application::workflows::*;
 
+use std::sync::Arc;
 use axum::Router;
 use sqlx::PgPool;
-use std::sync::Arc;
 
 /// Calendar module configuration
 ///
@@ -111,49 +113,33 @@ impl CalendarModule {
     /// real deployment; use this only in trusted/admin/seeding contexts.
     pub fn all_crud_routes(&self) -> Router {
         use presentation::http::{
-            create_calendar_branch_routes, create_calendar_department_routes,
-            create_calendar_employee_routes, create_calendar_employee_status_routes,
-            create_calendar_event_attendee_routes, create_calendar_event_exception_routes,
-            create_calendar_event_routes, create_calendar_event_series_routes,
-            create_calendar_level_routes, create_calendar_position_routes,
-            create_calendar_religion_routes, create_calendar_routes,
+            create_calendar_routes,
+            create_calendar_branch_routes,
+            create_calendar_department_routes,
+            create_calendar_employee_routes,
+            create_calendar_employee_status_routes,
+            create_calendar_event_routes,
+            create_calendar_event_attendee_routes,
+            create_calendar_event_exception_routes,
+            create_calendar_event_series_routes,
+            create_calendar_level_routes,
+            create_calendar_position_routes,
+            create_calendar_religion_routes,
         };
 
         Router::new()
             .merge(create_calendar_routes(self.calendar_service.clone()))
-            .merge(create_calendar_branch_routes(
-                self.calendar_branch_service.clone(),
-            ))
-            .merge(create_calendar_department_routes(
-                self.calendar_department_service.clone(),
-            ))
-            .merge(create_calendar_employee_routes(
-                self.calendar_employee_service.clone(),
-            ))
-            .merge(create_calendar_employee_status_routes(
-                self.calendar_employee_status_service.clone(),
-            ))
-            .merge(create_calendar_event_routes(
-                self.calendar_event_service.clone(),
-            ))
-            .merge(create_calendar_event_attendee_routes(
-                self.calendar_event_attendee_service.clone(),
-            ))
-            .merge(create_calendar_event_exception_routes(
-                self.calendar_event_exception_service.clone(),
-            ))
-            .merge(create_calendar_event_series_routes(
-                self.calendar_event_series_service.clone(),
-            ))
-            .merge(create_calendar_level_routes(
-                self.calendar_level_service.clone(),
-            ))
-            .merge(create_calendar_position_routes(
-                self.calendar_position_service.clone(),
-            ))
-            .merge(create_calendar_religion_routes(
-                self.calendar_religion_service.clone(),
-            ))
+            .merge(create_calendar_branch_routes(self.calendar_branch_service.clone()))
+            .merge(create_calendar_department_routes(self.calendar_department_service.clone()))
+            .merge(create_calendar_employee_routes(self.calendar_employee_service.clone()))
+            .merge(create_calendar_employee_status_routes(self.calendar_employee_status_service.clone()))
+            .merge(create_calendar_event_routes(self.calendar_event_service.clone()))
+            .merge(create_calendar_event_attendee_routes(self.calendar_event_attendee_service.clone()))
+            .merge(create_calendar_event_exception_routes(self.calendar_event_exception_service.clone()))
+            .merge(create_calendar_event_series_routes(self.calendar_event_series_service.clone()))
+            .merge(create_calendar_level_routes(self.calendar_level_service.clone()))
+            .merge(create_calendar_position_routes(self.calendar_position_service.clone()))
+            .merge(create_calendar_religion_routes(self.calendar_religion_service.clone()))
     }
 
     /// Deprecated alias for [`Self::all_crud_routes`]. `routes()` reads like
@@ -161,9 +147,7 @@ impl CalendarModule {
     /// mount exposes unguarded writes. Compose a guarded router (read + validated
     /// writes) for production, or call `all_crud_routes()` to opt into the full
     /// unguarded surface explicitly.
-    #[deprecated(
-        note = "mounts unvalidated generic CRUD; prefer readonly_routes() + validated writes, or all_crud_routes() for the full/unguarded surface"
-    )]
+    #[deprecated(note = "mounts unvalidated generic CRUD; prefer readonly_routes() + validated writes, or all_crud_routes() for the full/unguarded surface")]
     pub fn routes(&self) -> Router {
         self.all_crud_routes()
     }
@@ -175,50 +159,33 @@ impl CalendarModule {
     /// merge validated write routes (or a write service's HTTP layer) onto it.
     pub fn readonly_routes(&self) -> Router {
         use presentation::http::{
-            create_calendar_branch_read_routes, create_calendar_department_read_routes,
-            create_calendar_employee_read_routes, create_calendar_employee_status_read_routes,
+            create_calendar_read_routes,
+            create_calendar_branch_read_routes,
+            create_calendar_department_read_routes,
+            create_calendar_employee_read_routes,
+            create_calendar_employee_status_read_routes,
+            create_calendar_event_read_routes,
             create_calendar_event_attendee_read_routes,
-            create_calendar_event_exception_read_routes, create_calendar_event_read_routes,
-            create_calendar_event_series_read_routes, create_calendar_level_read_routes,
-            create_calendar_position_read_routes, create_calendar_read_routes,
+            create_calendar_event_exception_read_routes,
+            create_calendar_event_series_read_routes,
+            create_calendar_level_read_routes,
+            create_calendar_position_read_routes,
             create_calendar_religion_read_routes,
         };
 
         Router::new()
             .merge(create_calendar_read_routes(self.calendar_service.clone()))
-            .merge(create_calendar_branch_read_routes(
-                self.calendar_branch_service.clone(),
-            ))
-            .merge(create_calendar_department_read_routes(
-                self.calendar_department_service.clone(),
-            ))
-            .merge(create_calendar_employee_read_routes(
-                self.calendar_employee_service.clone(),
-            ))
-            .merge(create_calendar_employee_status_read_routes(
-                self.calendar_employee_status_service.clone(),
-            ))
-            .merge(create_calendar_event_read_routes(
-                self.calendar_event_service.clone(),
-            ))
-            .merge(create_calendar_event_attendee_read_routes(
-                self.calendar_event_attendee_service.clone(),
-            ))
-            .merge(create_calendar_event_exception_read_routes(
-                self.calendar_event_exception_service.clone(),
-            ))
-            .merge(create_calendar_event_series_read_routes(
-                self.calendar_event_series_service.clone(),
-            ))
-            .merge(create_calendar_level_read_routes(
-                self.calendar_level_service.clone(),
-            ))
-            .merge(create_calendar_position_read_routes(
-                self.calendar_position_service.clone(),
-            ))
-            .merge(create_calendar_religion_read_routes(
-                self.calendar_religion_service.clone(),
-            ))
+            .merge(create_calendar_branch_read_routes(self.calendar_branch_service.clone()))
+            .merge(create_calendar_department_read_routes(self.calendar_department_service.clone()))
+            .merge(create_calendar_employee_read_routes(self.calendar_employee_service.clone()))
+            .merge(create_calendar_employee_status_read_routes(self.calendar_employee_status_service.clone()))
+            .merge(create_calendar_event_read_routes(self.calendar_event_service.clone()))
+            .merge(create_calendar_event_attendee_read_routes(self.calendar_event_attendee_service.clone()))
+            .merge(create_calendar_event_exception_read_routes(self.calendar_event_exception_service.clone()))
+            .merge(create_calendar_event_series_read_routes(self.calendar_event_series_service.clone()))
+            .merge(create_calendar_level_read_routes(self.calendar_level_service.clone()))
+            .merge(create_calendar_position_read_routes(self.calendar_position_service.clone()))
+            .merge(create_calendar_religion_read_routes(self.calendar_religion_service.clone()))
     }
 
     // <<< CUSTOM METHODS
@@ -243,12 +210,18 @@ impl CalendarModule {
 /// Builder for CalendarModule
 pub struct CalendarModuleBuilder {
     db_pool: Option<PgPool>,
+    // <<< CUSTOM BUILDER FIELDS
+    // END CUSTOM
 }
 
 impl CalendarModuleBuilder {
     /// Create a new builder
     pub fn new() -> Self {
-        Self { db_pool: None }
+        Self {
+            db_pool: None,
+            // <<< CUSTOM BUILDER DEFAULTS
+            // END CUSTOM
+        }
     }
 
     /// Set the database connection pool
@@ -262,92 +235,56 @@ impl CalendarModuleBuilder {
 
     /// Build the module with configured dependencies
     pub fn build(self) -> anyhow::Result<CalendarModule> {
-        let db_pool = self
-            .db_pool
+        let db_pool = self.db_pool
             .ok_or_else(|| anyhow::anyhow!("Database pool not configured"))?;
 
         // Calendar service
         let calendar_repository = Arc::new(CalendarRepository::new(db_pool.clone()));
-        let calendar_service = Arc::new(CalendarService::with_repository(
-            calendar_repository.clone(),
-        ));
+        let calendar_service = Arc::new(CalendarService::with_repository(calendar_repository.clone()));
 
         // CalendarBranch service
         let calendar_branch_repository = Arc::new(CalendarBranchRepository::new(db_pool.clone()));
-        let calendar_branch_service = Arc::new(CalendarBranchService::with_repository(
-            calendar_branch_repository.clone(),
-        ));
+        let calendar_branch_service = Arc::new(CalendarBranchService::with_repository(calendar_branch_repository.clone()));
 
         // CalendarDepartment service
-        let calendar_department_repository =
-            Arc::new(CalendarDepartmentRepository::new(db_pool.clone()));
-        let calendar_department_service = Arc::new(CalendarDepartmentService::with_repository(
-            calendar_department_repository.clone(),
-        ));
+        let calendar_department_repository = Arc::new(CalendarDepartmentRepository::new(db_pool.clone()));
+        let calendar_department_service = Arc::new(CalendarDepartmentService::with_repository(calendar_department_repository.clone()));
 
         // CalendarEmployee service
-        let calendar_employee_repository =
-            Arc::new(CalendarEmployeeRepository::new(db_pool.clone()));
-        let calendar_employee_service = Arc::new(CalendarEmployeeService::with_repository(
-            calendar_employee_repository.clone(),
-        ));
+        let calendar_employee_repository = Arc::new(CalendarEmployeeRepository::new(db_pool.clone()));
+        let calendar_employee_service = Arc::new(CalendarEmployeeService::with_repository(calendar_employee_repository.clone()));
 
         // CalendarEmployeeStatus service
-        let calendar_employee_status_repository =
-            Arc::new(CalendarEmployeeStatusRepository::new(db_pool.clone()));
-        let calendar_employee_status_service =
-            Arc::new(CalendarEmployeeStatusService::with_repository(
-                calendar_employee_status_repository.clone(),
-            ));
+        let calendar_employee_status_repository = Arc::new(CalendarEmployeeStatusRepository::new(db_pool.clone()));
+        let calendar_employee_status_service = Arc::new(CalendarEmployeeStatusService::with_repository(calendar_employee_status_repository.clone()));
 
         // CalendarEvent service
         let calendar_event_repository = Arc::new(CalendarEventRepository::new(db_pool.clone()));
-        let calendar_event_service = Arc::new(CalendarEventService::with_repository(
-            calendar_event_repository.clone(),
-        ));
+        let calendar_event_service = Arc::new(CalendarEventService::with_repository(calendar_event_repository.clone()));
 
         // CalendarEventAttendee service
-        let calendar_event_attendee_repository =
-            Arc::new(CalendarEventAttendeeRepository::new(db_pool.clone()));
-        let calendar_event_attendee_service =
-            Arc::new(CalendarEventAttendeeService::with_repository(
-                calendar_event_attendee_repository.clone(),
-            ));
+        let calendar_event_attendee_repository = Arc::new(CalendarEventAttendeeRepository::new(db_pool.clone()));
+        let calendar_event_attendee_service = Arc::new(CalendarEventAttendeeService::with_repository(calendar_event_attendee_repository.clone()));
 
         // CalendarEventException service
-        let calendar_event_exception_repository =
-            Arc::new(CalendarEventExceptionRepository::new(db_pool.clone()));
-        let calendar_event_exception_service =
-            Arc::new(CalendarEventExceptionService::with_repository(
-                calendar_event_exception_repository.clone(),
-            ));
+        let calendar_event_exception_repository = Arc::new(CalendarEventExceptionRepository::new(db_pool.clone()));
+        let calendar_event_exception_service = Arc::new(CalendarEventExceptionService::with_repository(calendar_event_exception_repository.clone()));
 
         // CalendarEventSeries service
-        let calendar_event_series_repository =
-            Arc::new(CalendarEventSeriesRepository::new(db_pool.clone()));
-        let calendar_event_series_service = Arc::new(CalendarEventSeriesService::with_repository(
-            calendar_event_series_repository.clone(),
-        ));
+        let calendar_event_series_repository = Arc::new(CalendarEventSeriesRepository::new(db_pool.clone()));
+        let calendar_event_series_service = Arc::new(CalendarEventSeriesService::with_repository(calendar_event_series_repository.clone()));
 
         // CalendarLevel service
         let calendar_level_repository = Arc::new(CalendarLevelRepository::new(db_pool.clone()));
-        let calendar_level_service = Arc::new(CalendarLevelService::with_repository(
-            calendar_level_repository.clone(),
-        ));
+        let calendar_level_service = Arc::new(CalendarLevelService::with_repository(calendar_level_repository.clone()));
 
         // CalendarPosition service
-        let calendar_position_repository =
-            Arc::new(CalendarPositionRepository::new(db_pool.clone()));
-        let calendar_position_service = Arc::new(CalendarPositionService::with_repository(
-            calendar_position_repository.clone(),
-        ));
+        let calendar_position_repository = Arc::new(CalendarPositionRepository::new(db_pool.clone()));
+        let calendar_position_service = Arc::new(CalendarPositionService::with_repository(calendar_position_repository.clone()));
 
         // CalendarReligion service
-        let calendar_religion_repository =
-            Arc::new(CalendarReligionRepository::new(db_pool.clone()));
-        let calendar_religion_service = Arc::new(CalendarReligionService::with_repository(
-            calendar_religion_repository.clone(),
-        ));
+        let calendar_religion_repository = Arc::new(CalendarReligionRepository::new(db_pool.clone()));
+        let calendar_religion_service = Arc::new(CalendarReligionService::with_repository(calendar_religion_repository.clone()));
 
         // <<< CUSTOM
         // Event family engine: the eagerly-materialized series operations run on

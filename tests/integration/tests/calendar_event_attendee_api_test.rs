@@ -4,12 +4,11 @@
 //!
 //! Tests the CalendarEventAttendee CRUD API endpoints.
 
-use chrono::Utc;
+use crate::integration::framework::ApiTest;
 use serde_json::{json, Value};
 use uuid::Uuid;
 
 use super::crud_test_base::{CrudTestConfig, GenericCrudTest, TestDataGenerator};
-use crate::integration::framework::ApiTest;
 use crate::integration::helpers::CommonUtils;
 
 // ============================================================================
@@ -21,7 +20,6 @@ pub struct CalendarEventAttendeeTestData;
 
 impl TestDataGenerator for CalendarEventAttendeeTestData {
     fn generate_create_payload(&self, _utils: &CommonUtils) -> Value {
-        let now = Utc::now().to_rfc3339();
         json!({
             "id": Uuid::new_v4().to_string(),
             "event_id": Uuid::new_v4().to_string(),
@@ -33,7 +31,6 @@ impl TestDataGenerator for CalendarEventAttendeeTestData {
     }
 
     fn generate_update_payload(&self, id: &str, _utils: &CommonUtils) -> Value {
-        let now = Utc::now().to_rfc3339();
         json!({
             "id": id,
             "event_id": Uuid::new_v4().to_string(),
@@ -52,13 +49,7 @@ impl TestDataGenerator for CalendarEventAttendeeTestData {
 
     async fn seed_dependencies(&self, api: &ApiTest) -> Vec<(String, String)> {
         let mut deps: Vec<(String, String)> = Vec::new();
-        if let Some(id) = super::crud_test_base::create_and_get_id(
-            api,
-            "/api/v1/events",
-            &super::calendar_event_api_test::CalendarEventTestData,
-        )
-        .await
-        {
+        if let Some(id) = super::crud_test_base::create_and_get_id(api, "/api/v1/events", &super::calendar_event_api_test::CalendarEventTestData).await {
             deps.push(("event_id".to_string(), id));
         }
         deps

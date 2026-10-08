@@ -5,8 +5,8 @@
 //! This trait defines the repository contract for the CalendarEmployeeStatus aggregate.
 //! Implementation is in the infrastructure layer.
 
-use anyhow::Result;
 use async_trait::async_trait;
+use anyhow::Result;
 use uuid::Uuid;
 
 use crate::domain::entity::{CalendarEmployeeStatus, EmploymentStatus};
@@ -61,6 +61,7 @@ impl CalendarEmployeeStatusFilter {
 /// Implementations should be in the infrastructure layer.
 #[async_trait]
 pub trait CalendarEmployeeStatusRepository: Send + Sync {
+
     // =========================================================================
     // Core CRUD Operations
     // =========================================================================
@@ -75,11 +76,7 @@ pub trait CalendarEmployeeStatusRepository: Send + Sync {
     async fn find_all(&self) -> Result<Vec<CalendarEmployeeStatus>>;
 
     /// Update calendar_employee_status by ID
-    async fn update(
-        &self,
-        id: &str,
-        entity: &CalendarEmployeeStatus,
-    ) -> Result<Option<CalendarEmployeeStatus>>;
+    async fn update(&self, id: &str, entity: &CalendarEmployeeStatus) -> Result<Option<CalendarEmployeeStatus>>;
 
     /// Delete calendar_employee_status by ID
     async fn delete(&self, id: &str) -> Result<bool>;
@@ -89,17 +86,10 @@ pub trait CalendarEmployeeStatusRepository: Send + Sync {
     // =========================================================================
 
     /// List calendar_employee_status with pagination
-    async fn list(
-        &self,
-        params: CalendarEmployeeStatusPaginationParams,
-    ) -> Result<CalendarEmployeeStatusPaginatedResult>;
+    async fn list(&self, params: CalendarEmployeeStatusPaginationParams) -> Result<CalendarEmployeeStatusPaginatedResult>;
 
     /// List calendar_employee_status with pagination and filters
-    async fn list_with_filters(
-        &self,
-        params: CalendarEmployeeStatusPaginationParams,
-        filters: CalendarEmployeeStatusFilter,
-    ) -> Result<CalendarEmployeeStatusPaginatedResult>;
+    async fn list_with_filters(&self, params: CalendarEmployeeStatusPaginationParams, filters: CalendarEmployeeStatusFilter) -> Result<CalendarEmployeeStatusPaginatedResult>;
 
     /// Count all calendar_employee_status entities
     async fn count(&self) -> Result<u64>;
@@ -121,10 +111,7 @@ pub trait CalendarEmployeeStatusRepository: Send + Sync {
     async fn restore(&self, id: &str) -> Result<Option<CalendarEmployeeStatus>>;
 
     /// List soft-deleted calendar_employee_status entities
-    async fn list_deleted(
-        &self,
-        params: CalendarEmployeeStatusPaginationParams,
-    ) -> Result<CalendarEmployeeStatusPaginatedResult>;
+    async fn list_deleted(&self, params: CalendarEmployeeStatusPaginationParams) -> Result<CalendarEmployeeStatusPaginatedResult>;
 
     /// Empty trash (permanently delete all soft-deleted entities)
     async fn empty_trash(&self) -> Result<u64>;
@@ -134,10 +121,7 @@ pub trait CalendarEmployeeStatusRepository: Send + Sync {
     // =========================================================================
 
     /// Bulk save calendar_employee_status entities
-    async fn bulk_save(
-        &self,
-        entities: &[CalendarEmployeeStatus],
-    ) -> Result<Vec<CalendarEmployeeStatus>>;
+    async fn bulk_save(&self, entities: &[CalendarEmployeeStatus]) -> Result<Vec<CalendarEmployeeStatus>>;
 
     /// Bulk delete by IDs
     async fn bulk_delete(&self, ids: &[&str]) -> Result<u64>;

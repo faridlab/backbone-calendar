@@ -5,9 +5,9 @@
 //! DTOs provide a clean separation between domain entities and API
 //! representations, with validation and OpenAPI documentation support.
 
-use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc, NaiveDate};
 
 #[cfg(feature = "openapi")]
 #[cfg(feature = "openapi")]
@@ -16,8 +16,8 @@ use utoipa::ToSchema;
 #[cfg(feature = "validation")]
 use validator::Validate;
 
-use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::CalendarEventSeries;
+use crate::domain::entity::AuditMetadata;
 use crate::domain::entity::EventRecurrenceFreq;
 
 // =============================================================================
@@ -40,20 +40,13 @@ pub struct CreateCalendarEventSeriesDto {
     pub interval: i32,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "by_weekday")]
     pub by_weekday: Option<String>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "by_monthday"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "by_monthday")]
     pub by_monthday: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub until: Option<NaiveDate>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub count: Option<i32>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "base_event_id")]
     pub base_event_id: Uuid,
 }
@@ -78,20 +71,13 @@ pub struct UpdateCalendarEventSeriesDto {
     pub interval: i32,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "by_weekday")]
     pub by_weekday: Option<String>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        alias = "by_monthday"
-    )]
+    #[serde(default, skip_serializing_if = "Option::is_none", alias = "by_monthday")]
     pub by_monthday: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub until: Option<NaiveDate>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub count: Option<i32>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "base_event_id")]
     pub base_event_id: Uuid,
 }
@@ -124,10 +110,7 @@ pub struct PatchCalendarEventSeriesDto {
     pub until: Option<NaiveDate>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub count: Option<i32>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "base_event_id")]
     pub base_event_id: Option<Uuid>,
 }
@@ -135,14 +118,7 @@ pub struct PatchCalendarEventSeriesDto {
 impl PatchCalendarEventSeriesDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.name.is_some()
-            || self.freq.is_some()
-            || self.interval.is_some()
-            || self.by_weekday.is_some()
-            || self.by_monthday.is_some()
-            || self.until.is_some()
-            || self.count.is_some()
-            || self.base_event_id.is_some()
+        self.name.is_some() || self.freq.is_some() || self.interval.is_some() || self.by_weekday.is_some() || self.by_monthday.is_some() || self.until.is_some() || self.count.is_some() || self.base_event_id.is_some()
     }
 }
 
@@ -158,10 +134,7 @@ impl PatchCalendarEventSeriesDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct CalendarEventSeriesResponseDto {
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub id: Uuid,
     pub name: Option<String>,
     pub freq: EventRecurrenceFreq,
@@ -171,10 +144,7 @@ pub struct CalendarEventSeriesResponseDto {
     pub by_monthday: Option<String>,
     pub until: Option<NaiveDate>,
     pub count: Option<i32>,
-    #[cfg_attr(
-        feature = "openapi",
-        schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    )]
+    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     pub base_event_id: Uuid,
     pub metadata: AuditMetadata,
 }
@@ -209,12 +179,7 @@ pub struct CalendarEventSeriesListResponseDto {
 
 impl CalendarEventSeriesListResponseDto {
     /// Create a new list response from items and pagination info
-    pub fn new(
-        items: Vec<CalendarEventSeriesResponseDto>,
-        total: u64,
-        page: u32,
-        per_page: u32,
-    ) -> Self {
+    pub fn new(items: Vec<CalendarEventSeriesResponseDto>, total: u64, page: u32, per_page: u32) -> Self {
         let total_pages = if per_page > 0 {
             ((total as f64) / (per_page as f64)).ceil() as u32
         } else {
@@ -319,10 +284,7 @@ impl backbone_core::FromCreateDto<CreateCalendarEventSeriesDto> for CalendarEven
 }
 
 impl backbone_core::ApplyUpdateDto<UpdateCalendarEventSeriesDto> for CalendarEventSeries {
-    fn apply_update(
-        mut self,
-        dto: UpdateCalendarEventSeriesDto,
-    ) -> backbone_core::ServiceResult<Self> {
+    fn apply_update(mut self, dto: UpdateCalendarEventSeriesDto) -> backbone_core::ServiceResult<Self> {
         self.name = dto.name;
         self.freq = dto.freq;
         self.interval = dto.interval;

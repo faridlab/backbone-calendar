@@ -8,9 +8,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use axum::Router;
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 // Backbone framework imports
 use backbone_core::http::BackboneCrudHandler;
@@ -22,13 +22,12 @@ use backbone_auth::middleware::AuthContext;
 use backbone_auth::AuthMiddleware;
 
 // Domain imports
-use crate::application::service::{CalendarEventService, ServiceError};
 use crate::domain::entity::*;
+use crate::application::service::{CalendarEventService, ServiceError};
 
 // DTO imports
-use crate::presentation::dto::{
-    CalendarEventResponseDto, CreateCalendarEventDto, PatchCalendarEventDto, UpdateCalendarEventDto,
-};
+use crate::presentation::dto::{CreateCalendarEventDto, UpdateCalendarEventDto, PatchCalendarEventDto, CalendarEventResponseDto};
+
 
 /// Application error type
 #[derive(Debug, thiserror::Error)]
@@ -51,6 +50,7 @@ impl From<ServiceError> for CalendarEventError {
             ServiceError::AlreadyExists(ref msg) => Self::Validation(msg.clone()),
             ServiceError::Repository(ref e) => Self::Database(e.to_string()),
             ServiceError::Internal(ref msg) => Self::Internal(msg.clone()),
+            ServiceError::Violations(_) => Self::Validation(err.to_string()),
         }
     }
 }
@@ -63,14 +63,8 @@ impl axum::response::IntoResponse for CalendarEventError {
         let (status, code) = match &self {
             Self::NotFound(_) => (StatusCode::NOT_FOUND, "CALENDAREVENT_NOT_FOUND"),
             Self::Validation(_) => (StatusCode::BAD_REQUEST, "CALENDAREVENT_VALIDATION_ERROR"),
-            Self::Database(_) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "CALENDAREVENT_DATABASE_ERROR",
-            ),
-            Self::Internal(_) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "CALENDAREVENT_INTERNAL_ERROR",
-            ),
+            Self::Database(_) => (StatusCode::INTERNAL_SERVER_ERROR, "CALENDAREVENT_DATABASE_ERROR"),
+            Self::Internal(_) => (StatusCode::INTERNAL_SERVER_ERROR, "CALENDAREVENT_INTERNAL_ERROR"),
         };
 
         let body = serde_json::json!({
@@ -116,13 +110,10 @@ impl axum::response::IntoResponse for CalendarEventError {
 /// let router = create_calendar_event_routes(service);
 /// ```
 pub fn create_calendar_event_routes(service: Arc<CalendarEventService>) -> Router {
-    BackboneCrudHandler::<
-        CalendarEventService,
-        CalendarEvent,
-        CreateCalendarEventDto,
-        UpdateCalendarEventDto,
-        CalendarEventResponseDto,
-    >::routes(service, "/calendar_events")
+    BackboneCrudHandler::<CalendarEventService, CalendarEvent, CreateCalendarEventDto, UpdateCalendarEventDto, CalendarEventResponseDto>::routes(
+        service,
+        "/calendar_events",
+    )
 }
 
 /// Create Axum router with only the read (GET) endpoints for CalendarEvent.
@@ -131,13 +122,10 @@ pub fn create_calendar_event_routes(service: Arc<CalendarEventService>) -> Route
 /// Mutations must be served separately via `create_calendar_event_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_calendar_event_read_routes(service: Arc<CalendarEventService>) -> Router {
-    BackboneCrudHandler::<
-        CalendarEventService,
-        CalendarEvent,
-        CreateCalendarEventDto,
-        UpdateCalendarEventDto,
-        CalendarEventResponseDto,
-    >::read_routes(service, "/calendar_events")
+    BackboneCrudHandler::<CalendarEventService, CalendarEvent, CreateCalendarEventDto, UpdateCalendarEventDto, CalendarEventResponseDto>::read_routes(
+        service,
+        "/calendar_events",
+    )
 }
 
 /// Create Axum router with only the write (mutation) endpoints for CalendarEvent.
@@ -152,13 +140,10 @@ pub fn create_calendar_event_read_routes(service: Arc<CalendarEventService>) -> 
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_calendar_event_write_routes(service: Arc<CalendarEventService>) -> Router {
-    BackboneCrudHandler::<
-        CalendarEventService,
-        CalendarEvent,
-        CreateCalendarEventDto,
-        UpdateCalendarEventDto,
-        CalendarEventResponseDto,
-    >::write_routes(service, "/calendar_events")
+    BackboneCrudHandler::<CalendarEventService, CalendarEvent, CreateCalendarEventDto, UpdateCalendarEventDto, CalendarEventResponseDto>::write_routes(
+        service,
+        "/calendar_events",
+    )
 }
 
 /// Create authenticated routes with auth middleware.
@@ -175,35 +160,30 @@ pub fn create_protected_calendar_event_routes<A: AuthMiddleware + Send + Sync + 
     use axum::response::IntoResponse;
 
     let auth_layer = auth.clone();
-    create_calendar_event_routes(service).layer(middleware::from_fn(
-        move |mut req: axum::extract::Request, next: axum::middleware::Next| {
+    create_calendar_event_routes(service)
+        .layer(middleware::from_fn(move |mut req: axum::extract::Request, next: axum::middleware::Next| {
             let auth = auth_layer.clone();
             async move {
-                let token = req
-                    .headers()
+                let token = req.headers()
                     .get(axum::http::header::AUTHORIZATION)
                     .and_then(|h| h.to_str().ok())
-                    .and_then(|raw| {
-                        raw.strip_prefix("Bearer ")
-                            .or_else(|| raw.strip_prefix("bearer "))
-                    })
+                    .and_then(|raw| raw.strip_prefix("Bearer ").or_else(|| raw.strip_prefix("bearer ")))
                     .unwrap_or("");
                 match auth.authenticate(token).await {
                     Ok(ctx) => {
                         req.extensions_mut().insert(ctx);
                         next.run(req).await
                     }
-                    Err(_) => (
-                        axum::http::StatusCode::UNAUTHORIZED,
-                        axum::Json(serde_json::json!({
-                            "success": false,
-                            "error": "unauthorized",
-                            "message": "Authentication required"
-                        })),
-                    )
-                        .into_response(),
+                    Err(_) => {
+                        (axum::http::StatusCode::UNAUTHORIZED,
+                         axum::Json(serde_json::json!({
+                             "success": false,
+                             "error": "unauthorized",
+                             "message": "Authentication required"
+                         }))
+                        ).into_response()
+                    }
                 }
             }
-        },
-    ))
+        }))
 }

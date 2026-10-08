@@ -5,64 +5,90 @@
 //! DDD Repository traits - define persistence contracts for aggregates.
 //! Implementations should be in the infrastructure layer.
 
+
+pub mod calendar_repository;
 pub mod calendar_branch_repository;
 pub mod calendar_department_repository;
 pub mod calendar_employee_repository;
 pub mod calendar_employee_status_repository;
+pub mod calendar_event_repository;
 pub mod calendar_event_attendee_repository;
 pub mod calendar_event_exception_repository;
-pub mod calendar_event_repository;
 pub mod calendar_event_series_repository;
 pub mod calendar_level_repository;
 pub mod calendar_position_repository;
 pub mod calendar_religion_repository;
-pub mod calendar_repository;
 
 // Re-exports
+pub use calendar_repository::{
+    CalendarRepository,
+    CalendarPaginationParams,
+    CalendarPaginatedResult,
+    CalendarFilter,
+};
 pub use calendar_branch_repository::{
-    CalendarBranchFilter, CalendarBranchPaginatedResult, CalendarBranchPaginationParams,
     CalendarBranchRepository,
+    CalendarBranchPaginationParams,
+    CalendarBranchPaginatedResult,
+    CalendarBranchFilter,
 };
 pub use calendar_department_repository::{
-    CalendarDepartmentFilter, CalendarDepartmentPaginatedResult,
-    CalendarDepartmentPaginationParams, CalendarDepartmentRepository,
+    CalendarDepartmentRepository,
+    CalendarDepartmentPaginationParams,
+    CalendarDepartmentPaginatedResult,
+    CalendarDepartmentFilter,
 };
 pub use calendar_employee_repository::{
-    CalendarEmployeeFilter, CalendarEmployeePaginatedResult, CalendarEmployeePaginationParams,
     CalendarEmployeeRepository,
+    CalendarEmployeePaginationParams,
+    CalendarEmployeePaginatedResult,
+    CalendarEmployeeFilter,
 };
 pub use calendar_employee_status_repository::{
-    CalendarEmployeeStatusFilter, CalendarEmployeeStatusPaginatedResult,
-    CalendarEmployeeStatusPaginationParams, CalendarEmployeeStatusRepository,
-};
-pub use calendar_event_attendee_repository::{
-    CalendarEventAttendeeFilter, CalendarEventAttendeePaginatedResult,
-    CalendarEventAttendeePaginationParams, CalendarEventAttendeeRepository,
-};
-pub use calendar_event_exception_repository::{
-    CalendarEventExceptionFilter, CalendarEventExceptionPaginatedResult,
-    CalendarEventExceptionPaginationParams, CalendarEventExceptionRepository,
+    CalendarEmployeeStatusRepository,
+    CalendarEmployeeStatusPaginationParams,
+    CalendarEmployeeStatusPaginatedResult,
+    CalendarEmployeeStatusFilter,
 };
 pub use calendar_event_repository::{
-    CalendarEventFilter, CalendarEventPaginatedResult, CalendarEventPaginationParams,
     CalendarEventRepository,
+    CalendarEventPaginationParams,
+    CalendarEventPaginatedResult,
+    CalendarEventFilter,
+};
+pub use calendar_event_attendee_repository::{
+    CalendarEventAttendeeRepository,
+    CalendarEventAttendeePaginationParams,
+    CalendarEventAttendeePaginatedResult,
+    CalendarEventAttendeeFilter,
+};
+pub use calendar_event_exception_repository::{
+    CalendarEventExceptionRepository,
+    CalendarEventExceptionPaginationParams,
+    CalendarEventExceptionPaginatedResult,
+    CalendarEventExceptionFilter,
 };
 pub use calendar_event_series_repository::{
-    CalendarEventSeriesFilter, CalendarEventSeriesPaginatedResult,
-    CalendarEventSeriesPaginationParams, CalendarEventSeriesRepository,
+    CalendarEventSeriesRepository,
+    CalendarEventSeriesPaginationParams,
+    CalendarEventSeriesPaginatedResult,
+    CalendarEventSeriesFilter,
 };
 pub use calendar_level_repository::{
-    CalendarLevelFilter, CalendarLevelPaginatedResult, CalendarLevelPaginationParams,
     CalendarLevelRepository,
+    CalendarLevelPaginationParams,
+    CalendarLevelPaginatedResult,
+    CalendarLevelFilter,
 };
 pub use calendar_position_repository::{
-    CalendarPositionFilter, CalendarPositionPaginatedResult, CalendarPositionPaginationParams,
     CalendarPositionRepository,
+    CalendarPositionPaginationParams,
+    CalendarPositionPaginatedResult,
+    CalendarPositionFilter,
 };
 pub use calendar_religion_repository::{
-    CalendarReligionFilter, CalendarReligionPaginatedResult, CalendarReligionPaginationParams,
     CalendarReligionRepository,
-};
-pub use calendar_repository::{
-    CalendarFilter, CalendarPaginatedResult, CalendarPaginationParams, CalendarRepository,
+    CalendarReligionPaginationParams,
+    CalendarReligionPaginatedResult,
+    CalendarReligionFilter,
 };
