@@ -418,10 +418,9 @@ pub fn expand_occurrences(
 // Engine
 // ---------------------------------------------------------------------------
 
-/// The series engine. Constructed once by the module builder; holds the pool
-/// and the four family repositories. See the module doc for the posture.
+/// The series engine. Constructed once by the module builder; holds the four
+/// family repositories. See the module doc for the posture.
 pub struct CalendarEventSeriesEngine {
-    pool: PgPool,
     events: std::sync::Arc<CalendarEventRepository>,
     series: std::sync::Arc<CalendarEventSeriesRepository>,
     exceptions: std::sync::Arc<CalendarEventExceptionRepository>,
@@ -431,15 +430,16 @@ pub struct CalendarEventSeriesEngine {
 impl CalendarEventSeriesEngine {
     /// Fixed construction surface: pool + events/series/exceptions/attendees
     /// repositories.
+    /// `_pool` is not kept: every engine call takes the request's pool or
+    /// transaction from its caller, so tenant-routed requests never fall back to it.
     pub fn new(
-        pool: PgPool,
+        _pool: PgPool,
         events: std::sync::Arc<CalendarEventRepository>,
         series: std::sync::Arc<CalendarEventSeriesRepository>,
         exceptions: std::sync::Arc<CalendarEventExceptionRepository>,
         attendees: std::sync::Arc<CalendarEventAttendeeRepository>,
     ) -> Self {
         Self {
-            pool,
             events,
             series,
             exceptions,

@@ -88,15 +88,14 @@ pub struct CalendarModule {
     pub(crate) calendar_repository: Arc<CalendarRepository>,
     pub(crate) db_pool: sqlx::PgPool,
     // Event family: the series engine (eager materialization, (start,stop)-identity
-    // rewrites, exception ledger, attendee writes) plus the hand-owned repositories it
-    // drives. Held here so `calendar_event_routes()` can hand them to the guarded HTTP
-    // composition; every engine query runs on a transaction that relays the composing
+    // rewrites, exception ledger, attendee writes), which holds the hand-owned
+    // repositories it drives. Held here so `calendar_event_routes()` can hand it to the
+    // guarded HTTP composition; every engine query runs on a transaction that relays the composing
     // service's request org scope and pins `app.user_id`, which is what makes the
     // org fence (as installed by the decorator) and the domain privacy read fence real.
+    // Read only by `calendar_event_routes()`, which exists with the `auth` feature.
+    #[cfg_attr(not(feature = "auth"), allow(dead_code))]
     pub(crate) calendar_event_series_engine: Arc<application::service::CalendarEventSeriesEngine>,
-    pub(crate) calendar_event_repository: Arc<CalendarEventRepository>,
-    pub(crate) calendar_event_exception_repository: Arc<CalendarEventExceptionRepository>,
-    pub(crate) calendar_event_attendee_repository: Arc<CalendarEventAttendeeRepository>,
     // END CUSTOM
 }
 
@@ -317,9 +316,6 @@ impl CalendarModuleBuilder {
             calendar_repository: calendar_repository.clone(),
             db_pool,
             calendar_event_series_engine,
-            calendar_event_repository,
-            calendar_event_exception_repository,
-            calendar_event_attendee_repository,
             // END CUSTOM
         })
     }
