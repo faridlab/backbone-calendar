@@ -1,6 +1,6 @@
 [package]
 name = "backbone-calendar"
-version = "0.3.1"
+version = "0.4.0"
 edition = "2021"
 description = "org-scoped holiday / working-day reference"
 license = "MIT OR Apache-2.0"
@@ -20,8 +20,8 @@ path = "src/lib.rs"
 # or `rev = "<commit-sha>"`. Cargo dedupes the git fetch — the repo is only
 # cloned once even though four crates reference it.
 # -----------------------------------------------------------------------------
-backbone-core = { version = "3.0.0", features = ["postgres"] }
-backbone-orm = { version = "3.0.0" }
+backbone-core = { version = "3.1.0", features = ["postgres"] }
+backbone-orm = { version = "3.1.0" }
 # `axum` gates backbone-auth's request-extractor surface (OrgContext et al.) —
 # the identity extractor the guarded event-family composition and its in-process
 # probes mount, same as backbone-attendance / backbone-selling.
