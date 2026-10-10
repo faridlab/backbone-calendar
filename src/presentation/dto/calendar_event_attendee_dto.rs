@@ -65,9 +65,6 @@ pub struct UpdateCalendarEventAttendeeDto {
     #[serde(alias = "user_id")]
     pub user_id: Uuid,
     pub state: EventAttendeeState,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(alias = "access_token")]
-    pub access_token: Uuid,
 }
 
 // =============================================================================
@@ -91,15 +88,12 @@ pub struct PatchCalendarEventAttendeeDto {
     pub user_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub state: Option<EventAttendeeState>,
-    #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(skip_serializing_if = "Option::is_none", alias = "access_token")]
-    pub access_token: Option<Uuid>,
 }
 
 impl PatchCalendarEventAttendeeDto {
     /// Check if any field is set
     pub fn has_changes(&self) -> bool {
-        self.event_id.is_some() || self.user_id.is_some() || self.state.is_some() || self.access_token.is_some()
+        self.event_id.is_some() || self.user_id.is_some() || self.state.is_some()
     }
 }
 
@@ -254,7 +248,6 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarEventAttendeeDto> for CalendarE
         self.event_id = dto.event_id;
         self.user_id = dto.user_id;
         self.state = dto.state;
-        self.access_token = dto.access_token;
         Ok(self)
     }
 }

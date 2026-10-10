@@ -39,7 +39,7 @@ models:
 
       access_token:
         type: uuid
-        attributes: ["@required", "@default(uuid)"]
+        attributes: ["@required", "@default(uuid)", "@sensitive", "@immutable"]
         description: "Per-attendee invitation token (unique; ics/invitation seam, no transport this wave)"
 
       metadata:

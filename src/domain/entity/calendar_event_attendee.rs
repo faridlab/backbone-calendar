@@ -170,6 +170,9 @@ impl super::Entity for CalendarEventAttendee {
 }
 
 impl backbone_core::PersistentEntity for CalendarEventAttendee {
+    fn write_protected_fields() -> &'static [&'static str] {
+        &["access_token"]
+    }
     fn entity_id(&self) -> String {
         self.id.to_string()
     }
@@ -209,6 +212,9 @@ impl backbone_orm::EntityRepoMeta for CalendarEventAttendee {
     }
     fn search_fields() -> &'static [&'static str] {
         &[]
+    }
+    fn secret_fields() -> &'static [&'static str] {
+        &["accessToken"]
     }
 }
 
