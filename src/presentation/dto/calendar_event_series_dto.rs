@@ -301,7 +301,7 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarEventSeriesDto> for CalendarEve
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to CalendarEventSeries here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

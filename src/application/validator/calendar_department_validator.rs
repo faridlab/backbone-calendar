@@ -14,10 +14,6 @@ pub type CalendarDepartmentValidator = EntityValidator<CalendarDepartment>;
 /// Build a validator for CalendarDepartment with all schema-defined field rules.
 pub fn calendar_department_validator() -> CalendarDepartmentValidator {
     EntityValidator::new()
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
         // No schema-derived rules — add custom rules above.
 }
 
-// <<< CUSTOM
-// END CUSTOM

@@ -32,5 +32,3 @@ pub type CalendarEventAttendeeService = GenericCrudService<
     CalendarEventAttendeeRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

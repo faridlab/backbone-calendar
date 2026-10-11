@@ -19,5 +19,3 @@ pub mod calendar_level_specification;
 pub mod calendar_position_specification;
 pub mod calendar_religion_specification;
 
-// <<< CUSTOM
-// END CUSTOM

@@ -32,5 +32,3 @@ pub type CalendarService = GenericCrudService<
     CalendarRepository,
 >;
 
-// <<< CUSTOM
-// END CUSTOM

@@ -108,6 +108,4 @@ mod tests {
 // CUSTOM TESTS
 // ============================================================================
 
-// <<< CUSTOM TESTS START >>>
 // Add Calendar specific tests here
-// <<< CUSTOM TESTS END >>>

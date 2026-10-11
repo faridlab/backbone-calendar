@@ -14,10 +14,6 @@ pub type CalendarEmployeeValidator = EntityValidator<CalendarEmployee>;
 /// Build a validator for CalendarEmployee with all schema-defined field rules.
 pub fn calendar_employee_validator() -> CalendarEmployeeValidator {
     EntityValidator::new()
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
         // No schema-derived rules — add custom rules above.
 }
 
-// <<< CUSTOM
-// END CUSTOM

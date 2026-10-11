@@ -14,10 +14,6 @@ pub type CalendarLevelValidator = EntityValidator<CalendarLevel>;
 /// Build a validator for CalendarLevel with all schema-defined field rules.
 pub fn calendar_level_validator() -> CalendarLevelValidator {
     EntityValidator::new()
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
         // No schema-derived rules — add custom rules above.
 }
 
-// <<< CUSTOM
-// END CUSTOM

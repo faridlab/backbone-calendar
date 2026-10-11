@@ -31,5 +31,3 @@ pub use calendar_level_validator::{CalendarLevelValidator, calendar_level_valida
 pub use calendar_position_validator::{CalendarPositionValidator, calendar_position_validator};
 pub use calendar_religion_validator::{CalendarReligionValidator, calendar_religion_validator};
 
-// <<< CUSTOM
-// END CUSTOM

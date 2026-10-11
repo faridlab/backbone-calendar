@@ -20,8 +20,6 @@ pub mod calendar_level_service;
 pub mod calendar_position_service;
 pub mod calendar_religion_service;
 
-// <<< CUSTOM
-// END CUSTOM
 
 pub use calendar_service::CalendarService;
 pub use calendar_branch_service::CalendarBranchService;
@@ -35,8 +33,6 @@ pub use calendar_event_series_service::CalendarEventSeriesService;
 pub use calendar_level_service::CalendarLevelService;
 pub use calendar_position_service::CalendarPositionService;
 pub use calendar_religion_service::CalendarReligionService;
-// <<< CUSTOM
-// END CUSTOM
 
 // This directory's extension (hand-written; ADR-0031).
 include!("mod.ext.rs");

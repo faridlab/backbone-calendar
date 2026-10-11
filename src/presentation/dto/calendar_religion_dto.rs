@@ -236,7 +236,7 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarReligionDto> for CalendarReligi
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to CalendarReligion here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

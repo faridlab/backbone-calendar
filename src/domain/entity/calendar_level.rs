@@ -141,8 +141,6 @@ impl CalendarLevel {
         }
     }
 
-    // <<< CUSTOM METHODS START >>>
-    // <<< CUSTOM METHODS END >>>
 }
 
 impl super::Entity for CalendarLevel {

@@ -177,3 +177,4 @@ async fn test_calendar_religion_api() {
         panic!("{} tests failed", failed.len());
     }
 }
+

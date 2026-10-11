@@ -18,5 +18,3 @@ use crate::domain::entity::CalendarEmployee;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type CalendarEmployeeDomainPolicy = PermitAllPolicy<CalendarEmployee>;
 
-// <<< CUSTOM
-// END CUSTOM

@@ -18,9 +18,5 @@ pub fn calendar_event_validator() -> CalendarEventValidator {
         .rule(RequiredString::new("title", |e: &CalendarEvent| &e.title))
         .rule(OptionalNotBlank::new("description", |e: &CalendarEvent| e.description.as_deref()))
         .rule(OptionalNotBlank::new("location", |e: &CalendarEvent| e.location.as_deref()))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

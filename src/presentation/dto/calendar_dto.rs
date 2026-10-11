@@ -292,7 +292,7 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarDto> for Calendar {
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to Calendar here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

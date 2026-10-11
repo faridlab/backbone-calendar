@@ -141,8 +141,6 @@ impl CalendarReligion {
         }
     }
 
-    // <<< CUSTOM METHODS START >>>
-    // <<< CUSTOM METHODS END >>>
 }
 
 impl super::Entity for CalendarReligion {

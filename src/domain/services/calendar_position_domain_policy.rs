@@ -18,5 +18,3 @@ use crate::domain::entity::CalendarPosition;
 /// service. `PermitAllPolicy` is the safe default until then.
 pub type CalendarPositionDomainPolicy = PermitAllPolicy<CalendarPosition>;
 
-// <<< CUSTOM
-// END CUSTOM

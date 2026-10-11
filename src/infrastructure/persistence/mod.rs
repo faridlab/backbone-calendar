@@ -18,8 +18,6 @@ mod calendar_position_repository;
 mod calendar_religion_repository;
 
 // Custom persistence modules
-// <<< CUSTOM
-// END CUSTOM
 
 // Re-exports
 pub use calendar_repository::CalendarRepository;
@@ -43,5 +41,3 @@ pub use backbone_orm::repository::{
 };
 
 // Re-export custom persistence types
-// <<< CUSTOM
-// END CUSTOM

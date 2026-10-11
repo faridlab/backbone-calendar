@@ -186,3 +186,4 @@ pub fn create_protected_calendar_religion_routes<A: AuthMiddleware + Send + Sync
             }
         }))
 }
+

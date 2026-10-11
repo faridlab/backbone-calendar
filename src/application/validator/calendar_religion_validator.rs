@@ -14,10 +14,6 @@ pub type CalendarReligionValidator = EntityValidator<CalendarReligion>;
 /// Build a validator for CalendarReligion with all schema-defined field rules.
 pub fn calendar_religion_validator() -> CalendarReligionValidator {
     EntityValidator::new()
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
         // No schema-derived rules — add custom rules above.
 }
 
-// <<< CUSTOM
-// END CUSTOM

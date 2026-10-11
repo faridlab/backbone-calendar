@@ -256,7 +256,7 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarEventAttendeeDto> for CalendarE
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to CalendarEventAttendee here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

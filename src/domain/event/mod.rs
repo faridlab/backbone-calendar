@@ -52,5 +52,3 @@ pub use calendar_position_event_handlers::CalendarPositionEventHandler;
 pub use calendar_religion_events::{CalendarReligionEvent, CalendarReligionEventPublisher, NoopCalendarReligionEventPublisher};
 pub use calendar_religion_event_handlers::CalendarReligionEventHandler;
 
-// <<< CUSTOM
-// END CUSTOM

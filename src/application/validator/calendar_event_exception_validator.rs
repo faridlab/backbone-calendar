@@ -14,10 +14,6 @@ pub type CalendarEventExceptionValidator = EntityValidator<CalendarEventExceptio
 /// Build a validator for CalendarEventException with all schema-defined field rules.
 pub fn calendar_event_exception_validator() -> CalendarEventExceptionValidator {
     EntityValidator::new()
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
         // No schema-derived rules — add custom rules above.
 }
 
-// <<< CUSTOM
-// END CUSTOM

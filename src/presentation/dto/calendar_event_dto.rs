@@ -309,7 +309,7 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarEventDto> for CalendarEvent {
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to CalendarEvent here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

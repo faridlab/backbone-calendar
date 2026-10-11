@@ -18,9 +18,5 @@ pub fn calendar_event_series_validator() -> CalendarEventSeriesValidator {
         .rule(OptionalNotBlank::new("name", |e: &CalendarEventSeries| e.name.as_deref()))
         .rule(OptionalNotBlank::new("by_weekday", |e: &CalendarEventSeries| e.by_weekday.as_deref()))
         .rule(OptionalNotBlank::new("by_monthday", |e: &CalendarEventSeries| e.by_monthday.as_deref()))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM

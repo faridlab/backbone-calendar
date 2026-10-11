@@ -236,7 +236,7 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarPositionDto> for CalendarPositi
 // Custom DTOs
 // =============================================================================
 
-// <<< CUSTOM DTOs
 // Add custom DTOs specific to CalendarPosition here.
 // This section will be preserved during regeneration.
 // >>> END CUSTOM DTOs
+

@@ -28,5 +28,3 @@ pub use calendar_level_domain_policy::CalendarLevelDomainPolicy;
 pub use calendar_position_domain_policy::CalendarPositionDomainPolicy;
 pub use calendar_religion_domain_policy::CalendarReligionDomainPolicy;
 
-// <<< CUSTOM
-// END CUSTOM

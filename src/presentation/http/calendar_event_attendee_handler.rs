@@ -186,3 +186,4 @@ pub fn create_protected_calendar_event_attendee_routes<A: AuthMiddleware + Send 
             }
         }))
 }
+

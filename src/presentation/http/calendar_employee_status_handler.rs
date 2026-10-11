@@ -186,3 +186,4 @@ pub fn create_protected_calendar_employee_status_routes<A: AuthMiddleware + Send
             }
         }))
 }
+

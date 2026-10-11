@@ -186,3 +186,4 @@ pub fn create_protected_calendar_position_routes<A: AuthMiddleware + Send + Sync
             }
         }))
 }
+

@@ -17,9 +17,5 @@ pub fn calendar_validator() -> CalendarValidator {
     EntityValidator::new()
         .rule(RequiredString::new("name", |e: &Calendar| &e.name))
         .rule(OptionalNotBlank::new("note", |e: &Calendar| e.note.as_deref()))
-    // <<< CUSTOM RULES
-    // END CUSTOM RULES
 }
 
-// <<< CUSTOM
-// END CUSTOM
