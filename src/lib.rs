@@ -27,6 +27,16 @@ pub mod exports;
 // <<< CUSTOM MODULES
 // END CUSTOM
 
+// The module's extension (hand-written; ADR-0031).
+#[path = "lib.ext.rs"]
+mod lib_ext;
+pub use lib_ext::*;
+/// This crate's module and builder under fixed names, for the extension's `impl` blocks.
+#[allow(dead_code)]
+pub(crate) type ThisModule = CalendarModule;
+#[allow(dead_code)]
+pub(crate) type ThisModuleBuilder = CalendarModuleBuilder;
+
 // Re-exports for convenience - Domain entities
 pub use domain::entity::*;
 
@@ -79,24 +89,53 @@ pub struct CalendarModule {
     pub(crate) calendar_level_service: Arc<CalendarLevelService>,
     pub(crate) calendar_position_service: Arc<CalendarPositionService>,
     pub(crate) calendar_religion_service: Arc<CalendarReligionService>,
+    /// The module's extension state (`lib.ext.rs`); its fields read through `Deref`.
+    pub(crate) ext: ModuleExt,
     // <<< CUSTOM FIELDS
-    // Held so the `CalendarQueryService` impl can delegate `working_days` to the repo's
-    // hand-written SQL, and standard lookups to the CRUD services above. `db_pool` is the same pool
-    // the repo was constructed with (the repo's `working_days` takes it per the backbone-hr read-port
-    // convention; when the composing service bound an org request scope, the repo relays it onto a
-    // read transaction so the decorator's row-level fence applies).
-    pub(crate) calendar_repository: Arc<CalendarRepository>,
-    pub(crate) db_pool: sqlx::PgPool,
-    // Event family: the series engine (eager materialization, (start,stop)-identity
-    // rewrites, exception ledger, attendee writes), which holds the hand-owned
-    // repositories it drives. Held here so `calendar_event_routes()` can hand it to the
-    // guarded HTTP composition; every engine query runs on a transaction that relays the composing
-    // service's request org scope and pins `app.user_id`, which is what makes the
-    // org fence (as installed by the decorator) and the domain privacy read fence real.
-    // Read only by `calendar_event_routes()`, which exists with the `auth` feature.
-    #[cfg_attr(not(feature = "auth"), allow(dead_code))]
-    pub(crate) calendar_event_series_engine: Arc<application::service::CalendarEventSeriesEngine>,
     // END CUSTOM
+}
+
+impl std::ops::Deref for CalendarModule {
+    type Target = ModuleExt;
+    fn deref(&self) -> &Self::Target {
+        &self.ext
+    }
+}
+
+impl std::ops::DerefMut for CalendarModule {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.ext
+    }
+}
+
+/// What the extension's `build` hook receives from the generated build (ADR-0031).
+#[allow(dead_code)]
+pub(crate) struct ModuleParts<'a> {
+    pub(crate) db_pool: &'a PgPool,
+    pub(crate) calendar_service: &'a Arc<CalendarService>,
+    pub(crate) calendar_repository: &'a Arc<CalendarRepository>,
+    pub(crate) calendar_branch_service: &'a Arc<CalendarBranchService>,
+    pub(crate) calendar_branch_repository: &'a Arc<CalendarBranchRepository>,
+    pub(crate) calendar_department_service: &'a Arc<CalendarDepartmentService>,
+    pub(crate) calendar_department_repository: &'a Arc<CalendarDepartmentRepository>,
+    pub(crate) calendar_employee_service: &'a Arc<CalendarEmployeeService>,
+    pub(crate) calendar_employee_repository: &'a Arc<CalendarEmployeeRepository>,
+    pub(crate) calendar_employee_status_service: &'a Arc<CalendarEmployeeStatusService>,
+    pub(crate) calendar_employee_status_repository: &'a Arc<CalendarEmployeeStatusRepository>,
+    pub(crate) calendar_event_service: &'a Arc<CalendarEventService>,
+    pub(crate) calendar_event_repository: &'a Arc<CalendarEventRepository>,
+    pub(crate) calendar_event_attendee_service: &'a Arc<CalendarEventAttendeeService>,
+    pub(crate) calendar_event_attendee_repository: &'a Arc<CalendarEventAttendeeRepository>,
+    pub(crate) calendar_event_exception_service: &'a Arc<CalendarEventExceptionService>,
+    pub(crate) calendar_event_exception_repository: &'a Arc<CalendarEventExceptionRepository>,
+    pub(crate) calendar_event_series_service: &'a Arc<CalendarEventSeriesService>,
+    pub(crate) calendar_event_series_repository: &'a Arc<CalendarEventSeriesRepository>,
+    pub(crate) calendar_level_service: &'a Arc<CalendarLevelService>,
+    pub(crate) calendar_level_repository: &'a Arc<CalendarLevelRepository>,
+    pub(crate) calendar_position_service: &'a Arc<CalendarPositionService>,
+    pub(crate) calendar_position_repository: &'a Arc<CalendarPositionRepository>,
+    pub(crate) calendar_religion_service: &'a Arc<CalendarReligionService>,
+    pub(crate) calendar_religion_repository: &'a Arc<CalendarReligionRepository>,
 }
 
 impl CalendarModule {
@@ -188,29 +227,29 @@ impl CalendarModule {
     }
 
     // <<< CUSTOM METHODS
-    /// The guarded event-family HTTP surface (schema-named mounts under
-    /// `/events`, `/event-series`, `/event-attendees`; every route behind an
-    /// explicit permission guard — fail-closed). Exists only with the `auth`
-    /// feature: without it, no event-family route mounts at all. The generated
-    /// 12-endpoint CRUD for the family is deliberately NOT mounted here; this
-    /// is the sole public surface.
-    #[cfg(feature = "auth")]
-    pub fn calendar_event_routes(&self) -> Router {
-        use presentation::http::create_calendar_event_guarded_routes;
-        create_calendar_event_guarded_routes(
-            self.calendar_event_series_engine.clone(),
-            self.calendar_event_service.clone(),
-            self.db_pool.clone(),
-        )
-    }
     // END CUSTOM
 }
 
 /// Builder for CalendarModule
 pub struct CalendarModuleBuilder {
     db_pool: Option<PgPool>,
+    /// The builder's extension state (`lib.ext.rs`); its fields read through `Deref`.
+    ext: ModuleBuilderExt,
     // <<< CUSTOM BUILDER FIELDS
     // END CUSTOM
+}
+
+impl std::ops::Deref for CalendarModuleBuilder {
+    type Target = ModuleBuilderExt;
+    fn deref(&self) -> &Self::Target {
+        &self.ext
+    }
+}
+
+impl std::ops::DerefMut for CalendarModuleBuilder {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.ext
+    }
 }
 
 impl CalendarModuleBuilder {
@@ -218,6 +257,7 @@ impl CalendarModuleBuilder {
     pub fn new() -> Self {
         Self {
             db_pool: None,
+            ext: Default::default(),
             // <<< CUSTOM BUILDER DEFAULTS
             // END CUSTOM
         }
@@ -286,18 +326,36 @@ impl CalendarModuleBuilder {
         let calendar_religion_service = Arc::new(CalendarReligionService::with_repository(calendar_religion_repository.clone()));
 
         // <<< CUSTOM
-        // Event family engine: the eagerly-materialized series operations run on
-        // scoped transactions over the same pool, driving the hand-owned event-family
-        // repositories plus the generated series repository.
-        let calendar_event_series_engine =
-            Arc::new(application::service::CalendarEventSeriesEngine::new(
-                db_pool.clone(),
-                calendar_event_repository.clone(),
-                calendar_event_series_repository.clone(),
-                calendar_event_exception_repository.clone(),
-                calendar_event_attendee_repository.clone(),
-            ));
         // END CUSTOM
+
+        // The extension builds its own state from what the generated build made.
+        let ext = self.ext.build(&ModuleParts {
+            db_pool: &db_pool,
+            calendar_service: &calendar_service,
+            calendar_repository: &calendar_repository,
+            calendar_branch_service: &calendar_branch_service,
+            calendar_branch_repository: &calendar_branch_repository,
+            calendar_department_service: &calendar_department_service,
+            calendar_department_repository: &calendar_department_repository,
+            calendar_employee_service: &calendar_employee_service,
+            calendar_employee_repository: &calendar_employee_repository,
+            calendar_employee_status_service: &calendar_employee_status_service,
+            calendar_employee_status_repository: &calendar_employee_status_repository,
+            calendar_event_service: &calendar_event_service,
+            calendar_event_repository: &calendar_event_repository,
+            calendar_event_attendee_service: &calendar_event_attendee_service,
+            calendar_event_attendee_repository: &calendar_event_attendee_repository,
+            calendar_event_exception_service: &calendar_event_exception_service,
+            calendar_event_exception_repository: &calendar_event_exception_repository,
+            calendar_event_series_service: &calendar_event_series_service,
+            calendar_event_series_repository: &calendar_event_series_repository,
+            calendar_level_service: &calendar_level_service,
+            calendar_level_repository: &calendar_level_repository,
+            calendar_position_service: &calendar_position_service,
+            calendar_position_repository: &calendar_position_repository,
+            calendar_religion_service: &calendar_religion_service,
+            calendar_religion_repository: &calendar_religion_repository,
+        })?;
 
         Ok(CalendarModule {
             calendar_service,
@@ -312,10 +370,8 @@ impl CalendarModuleBuilder {
             calendar_level_service,
             calendar_position_service,
             calendar_religion_service,
+            ext,
             // <<< CUSTOM
-            calendar_repository: calendar_repository.clone(),
-            db_pool,
-            calendar_event_series_engine,
             // END CUSTOM
         })
     }

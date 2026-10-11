@@ -19,11 +19,6 @@ pub mod calendar_position_handler;
 pub mod calendar_religion_handler;
 
 // <<< CUSTOM
-// The guarded event-family composition. Auth-gated at the module level: without
-// the `auth` feature the module (and therefore every event-family route) does
-// not exist — nothing event-family mounts, fail-closed.
-#[cfg(feature = "auth")]
-pub mod calendar_event_guarded_routes;
 // END CUSTOM
 
 // Re-exports
@@ -40,6 +35,7 @@ pub use calendar_level_handler::{create_calendar_level_routes, create_calendar_l
 pub use calendar_position_handler::{create_calendar_position_routes, create_calendar_position_read_routes, create_calendar_position_write_routes};
 pub use calendar_religion_handler::{create_calendar_religion_routes, create_calendar_religion_read_routes, create_calendar_religion_write_routes};
 // <<< CUSTOM
-#[cfg(feature = "auth")]
-pub use calendar_event_guarded_routes::create_calendar_event_guarded_routes;
 // END CUSTOM
+
+// This directory's extension (hand-written; ADR-0031).
+include!("mod.ext.rs");

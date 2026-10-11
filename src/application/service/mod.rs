@@ -21,8 +21,6 @@ pub mod calendar_position_service;
 pub mod calendar_religion_service;
 
 // <<< CUSTOM
-pub mod calendar_event_series_service_custom;
-pub mod calendar_query_service;
 // END CUSTOM
 
 pub use calendar_service::CalendarService;
@@ -38,9 +36,7 @@ pub use calendar_level_service::CalendarLevelService;
 pub use calendar_position_service::CalendarPositionService;
 pub use calendar_religion_service::CalendarReligionService;
 // <<< CUSTOM
-// Event family engine surface (eager materialization, (start,stop)-identity
-// rewrites, exception ledger, attendee writes) — the cross-track interface.
-pub use calendar_event_series_service_custom::{
-    CalendarEventSeriesEngine, EventFamilyError, ScopeCtx, MAX_OCCURRENCES, UNBOUNDED_HORIZON_YEARS,
-};
 // END CUSTOM
+
+// This directory's extension (hand-written; ADR-0031).
+include!("mod.ext.rs");
