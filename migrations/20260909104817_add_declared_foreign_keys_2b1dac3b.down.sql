@@ -1,0 +1,13 @@
+-- Down: drop the declared foreign keys for calendar module
+ALTER TABLE IF EXISTS calendar.calendar_religions DROP CONSTRAINT IF EXISTS fk_calendar_religions_calendar_id;
+ALTER TABLE IF EXISTS calendar.calendar_positions DROP CONSTRAINT IF EXISTS fk_calendar_positions_calendar_id;
+ALTER TABLE IF EXISTS calendar.calendar_levels DROP CONSTRAINT IF EXISTS fk_calendar_levels_calendar_id;
+ALTER TABLE IF EXISTS calendar.event_series DROP CONSTRAINT IF EXISTS fk_event_series_base_event_id;
+ALTER TABLE IF EXISTS calendar.event_exceptions DROP CONSTRAINT IF EXISTS fk_event_exceptions_event_id;
+ALTER TABLE IF EXISTS calendar.event_exceptions DROP CONSTRAINT IF EXISTS fk_event_exceptions_series_id;
+ALTER TABLE IF EXISTS calendar.event_attendees DROP CONSTRAINT IF EXISTS fk_event_attendees_event_id;
+ALTER TABLE IF EXISTS calendar.events DROP CONSTRAINT IF EXISTS fk_events_series_id;
+ALTER TABLE IF EXISTS calendar.calendar_employee_statuses DROP CONSTRAINT IF EXISTS fk_calendar_employee_statuses_calendar_id;
+ALTER TABLE IF EXISTS calendar.calendar_employees DROP CONSTRAINT IF EXISTS fk_calendar_employees_calendar_id;
+ALTER TABLE IF EXISTS calendar.calendar_departments DROP CONSTRAINT IF EXISTS fk_calendar_departments_calendar_id;
+ALTER TABLE IF EXISTS calendar.calendar_branches DROP CONSTRAINT IF EXISTS fk_calendar_branches_calendar_id;

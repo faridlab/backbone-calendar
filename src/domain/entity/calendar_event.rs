@@ -252,6 +252,9 @@ impl backbone_orm::EntityRepoMeta for CalendarEvent {
     fn search_fields() -> &'static [&'static str] {
         &["title"]
     }
+    fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
+        &[("series", "event_series", "seriesId")]
+    }
 }
 
 /// Builder for CalendarEvent entity

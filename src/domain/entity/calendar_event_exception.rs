@@ -215,6 +215,9 @@ impl backbone_orm::EntityRepoMeta for CalendarEventException {
     fn search_fields() -> &'static [&'static str] {
         &[]
     }
+    fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
+        &[("series", "event_series", "seriesId"), ("event", "events", "eventId")]
+    }
 }
 
 /// Builder for CalendarEventException entity

@@ -214,6 +214,9 @@ impl backbone_orm::EntityRepoMeta for CalendarEventAttendee {
     fn secret_fields() -> &'static [&'static str] {
         &["accessToken"]
     }
+    fn relations() -> &'static [(&'static str, &'static str, &'static str)] {
+        &[("event", "events", "eventId")]
+    }
 }
 
 /// Builder for CalendarEventAttendee entity
