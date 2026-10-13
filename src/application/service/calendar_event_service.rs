@@ -56,7 +56,7 @@ impl backbone_core::write_guard::WriteGuard<CalendarEvent> for CalendarEventRowR
         };
         let row = &row;
         let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
-        let mut shadow = Vec::new();
+        let shadow = Vec::new();
         let mut refuse = Vec::new();
         // `title_required` (@required on CalendarEvent.title)
         if (create || (update && r::changed(old.as_ref(), row, &["title"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "title")), r::not(r::is_empty(r::trim(r::field(row, "title")))))) {
@@ -64,11 +64,11 @@ impl backbone_core::write_guard::WriteGuard<CalendarEvent> for CalendarEventRowR
         }
         // `title_max_length` (@length(max=200) on CalendarEvent.title)
         if (create || (update && r::changed(old.as_ref(), row, &["title"]))) && !r::holds(&r::le(r::length(r::field(row, "title")), r::Val::Num(200.0_f64))) {
-            shadow.push(Violation::new("title", "max_length", "title must be at most 200 characters").with_param("max", 200_i64));
+            refuse.push(Violation::new("title", "max_length", "title must be at most 200 characters").with_param("max", 200_i64));
         }
         // `description_max_length` (@length(max=4000) on CalendarEvent.description)
         if (create || (update && r::changed(old.as_ref(), row, &["description"]))) && !r::holds(&r::le(r::length(r::field(row, "description")), r::Val::Num(4000.0_f64))) {
-            shadow.push(Violation::new("description", "max_length", "description must be at most 4000 characters").with_param("max", 4000_i64));
+            refuse.push(Violation::new("description", "max_length", "description must be at most 4000 characters").with_param("max", 4000_i64));
         }
         // `organizer_user_id_required` (@required on CalendarEvent.organizer_user_id)
         if (create || (update && r::changed(old.as_ref(), row, &["organizer_user_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "organizer_user_id")), r::not(r::is_empty(r::trim(r::field(row, "organizer_user_id")))))) {
@@ -76,7 +76,7 @@ impl backbone_core::write_guard::WriteGuard<CalendarEvent> for CalendarEventRowR
         }
         // `location_max_length` (@length(max=300) on CalendarEvent.location)
         if (create || (update && r::changed(old.as_ref(), row, &["location"]))) && !r::holds(&r::le(r::length(r::field(row, "location")), r::Val::Num(300.0_f64))) {
-            shadow.push(Violation::new("location", "max_length", "location must be at most 300 characters").with_param("max", 300_i64));
+            refuse.push(Violation::new("location", "max_length", "location must be at most 300 characters").with_param("max", 300_i64));
         }
         GuardOutcome { refuse, shadow }
     }
