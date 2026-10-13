@@ -32,3 +32,41 @@ pub type CalendarDepartmentService = GenericCrudService<
     CalendarDepartmentRepository,
 >;
 
+/// The rules the schema declares for CalendarDepartment, checked against the row a create or update
+/// would store. The generated build attaches it to [`CalendarDepartmentService`]. A refusing rule's
+/// break answers 422; a rule in shadow is logged under `backbone::write_guard` and the
+/// write goes ahead.
+pub struct CalendarDepartmentRowRules;
+
+#[async_trait::async_trait]
+impl backbone_core::write_guard::WriteGuard<CalendarDepartment> for CalendarDepartmentRowRules {
+    async fn check(
+        &self,
+        ctx: &backbone_core::write_guard::WriteCtx<'_, CalendarDepartment>,
+    ) -> backbone_core::write_guard::GuardOutcome {
+        use backbone_core::row_rule as r;
+        use backbone_core::violation::Violation;
+        use backbone_core::write_guard::{GuardOutcome, WriteKind};
+        let (create, update) = (ctx.kind == WriteKind::Create, ctx.kind == WriteKind::Update);
+        let Some(after) = ctx.after.filter(|_| create || update) else {
+            return GuardOutcome::allow();
+        };
+        let Ok(row) = serde_json::to_value(after) else {
+            return GuardOutcome::allow();
+        };
+        let row = &row;
+        let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
+        let shadow = Vec::new();
+        let mut refuse = Vec::new();
+        // `calendar_id_required` (@required on CalendarDepartment.calendar_id)
+        if (create || (update && r::changed(old.as_ref(), row, &["calendar_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "calendar_id")), r::not(r::is_empty(r::trim(r::field(row, "calendar_id")))))) {
+            refuse.push(Violation::new("calendar_id", "required", "calendar_id is required"));
+        }
+        // `department_id_required` (@required on CalendarDepartment.department_id)
+        if (create || (update && r::changed(old.as_ref(), row, &["department_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "department_id")), r::not(r::is_empty(r::trim(r::field(row, "department_id")))))) {
+            refuse.push(Violation::new("department_id", "required", "department_id is required"));
+        }
+        GuardOutcome { refuse, shadow }
+    }
+}
+

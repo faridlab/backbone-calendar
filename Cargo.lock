@@ -265,9 +265,9 @@ dependencies = [
 
 [[package]]
 name = "backbone-core"
-version = "3.1.0"
+version = "3.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c9220e4f9ed7a20eedfc18f0bb92e777890d14d53ab7f28ab2c309908451b67"
+checksum = "73740cefc21550d4f2c6111fe64d0645559786b78a6ddfee567a05f79f189ec2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -293,9 +293,9 @@ dependencies = [
 
 [[package]]
 name = "backbone-messaging"
-version = "3.1.0"
+version = "3.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa99b2f984f3d4bac4edd0c736e37673303130bca3bbd388dd99e2a2e4cd0d64"
+checksum = "8e6ab9ff0c645a4cb0568fa53954c49e19f434656eb898705cbea346d89309a5"
 dependencies = [
  "async-trait",
  "chrono",
@@ -309,9 +309,9 @@ dependencies = [
 
 [[package]]
 name = "backbone-orm"
-version = "3.1.0"
+version = "3.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4bb4ff9984d36d18d19dbf751419398572b66f5c8fe8b41024c2ab94e37250e4"
+checksum = "63c667503ed9140e730826b26076e6b6671ff3d676472bbcfc34ddebd01bfacc"
 dependencies = [
  "anyhow",
  "async-trait",

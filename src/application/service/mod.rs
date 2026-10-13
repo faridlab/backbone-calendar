@@ -33,6 +33,18 @@ pub use calendar_event_series_service::CalendarEventSeriesService;
 pub use calendar_level_service::CalendarLevelService;
 pub use calendar_position_service::CalendarPositionService;
 pub use calendar_religion_service::CalendarReligionService;
+pub use calendar_service::CalendarRowRules;
+pub use calendar_branch_service::CalendarBranchRowRules;
+pub use calendar_department_service::CalendarDepartmentRowRules;
+pub use calendar_employee_service::CalendarEmployeeRowRules;
+pub use calendar_employee_status_service::CalendarEmployeeStatusRowRules;
+pub use calendar_event_service::CalendarEventRowRules;
+pub use calendar_event_attendee_service::CalendarEventAttendeeRowRules;
+pub use calendar_event_exception_service::CalendarEventExceptionRowRules;
+pub use calendar_event_series_service::CalendarEventSeriesRowRules;
+pub use calendar_level_service::CalendarLevelRowRules;
+pub use calendar_position_service::CalendarPositionRowRules;
+pub use calendar_religion_service::CalendarReligionRowRules;
 
 // This directory's extension (hand-written; ADR-0031).
 include!("mod.ext.rs");

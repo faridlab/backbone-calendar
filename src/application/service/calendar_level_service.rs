@@ -32,3 +32,41 @@ pub type CalendarLevelService = GenericCrudService<
     CalendarLevelRepository,
 >;
 
+/// The rules the schema declares for CalendarLevel, checked against the row a create or update
+/// would store. The generated build attaches it to [`CalendarLevelService`]. A refusing rule's
+/// break answers 422; a rule in shadow is logged under `backbone::write_guard` and the
+/// write goes ahead.
+pub struct CalendarLevelRowRules;
+
+#[async_trait::async_trait]
+impl backbone_core::write_guard::WriteGuard<CalendarLevel> for CalendarLevelRowRules {
+    async fn check(
+        &self,
+        ctx: &backbone_core::write_guard::WriteCtx<'_, CalendarLevel>,
+    ) -> backbone_core::write_guard::GuardOutcome {
+        use backbone_core::row_rule as r;
+        use backbone_core::violation::Violation;
+        use backbone_core::write_guard::{GuardOutcome, WriteKind};
+        let (create, update) = (ctx.kind == WriteKind::Create, ctx.kind == WriteKind::Update);
+        let Some(after) = ctx.after.filter(|_| create || update) else {
+            return GuardOutcome::allow();
+        };
+        let Ok(row) = serde_json::to_value(after) else {
+            return GuardOutcome::allow();
+        };
+        let row = &row;
+        let old = ctx.before.and_then(|b| serde_json::to_value(b).ok());
+        let shadow = Vec::new();
+        let mut refuse = Vec::new();
+        // `calendar_id_required` (@required on CalendarLevel.calendar_id)
+        if (create || (update && r::changed(old.as_ref(), row, &["calendar_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "calendar_id")), r::not(r::is_empty(r::trim(r::field(row, "calendar_id")))))) {
+            refuse.push(Violation::new("calendar_id", "required", "calendar_id is required"));
+        }
+        // `level_id_required` (@required on CalendarLevel.level_id)
+        if (create || (update && r::changed(old.as_ref(), row, &["level_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "level_id")), r::not(r::is_empty(r::trim(r::field(row, "level_id")))))) {
+            refuse.push(Violation::new("level_id", "required", "level_id is required"));
+        }
+        GuardOutcome { refuse, shadow }
+    }
+}
+
