@@ -55,9 +55,6 @@ pub use application::service::CalendarLevelService;
 pub use application::service::CalendarPositionService;
 pub use application::service::CalendarReligionService;
 
-// Re-exports - Workflows
-pub use application::workflows::*;
-
 use std::sync::Arc;
 use axum::Router;
 use sqlx::PgPool;
