@@ -264,51 +264,51 @@ impl CalendarModuleBuilder {
 
         // Calendar service
         let calendar_repository = Arc::new(CalendarRepository::new(db_pool.clone()));
-        let calendar_service = Arc::new(CalendarService::with_repository(calendar_repository.clone()).with_guard(Arc::new(crate::application::service::CalendarRowRules)));
+        let calendar_service = Arc::new(crate::application::service::build_calendar_service(calendar_repository.clone()));
 
         // CalendarBranch service
         let calendar_branch_repository = Arc::new(CalendarBranchRepository::new(db_pool.clone()));
-        let calendar_branch_service = Arc::new(CalendarBranchService::with_repository(calendar_branch_repository.clone()).with_guard(Arc::new(crate::application::service::CalendarBranchRowRules)));
+        let calendar_branch_service = Arc::new(crate::application::service::build_calendar_branch_service(calendar_branch_repository.clone()));
 
         // CalendarDepartment service
         let calendar_department_repository = Arc::new(CalendarDepartmentRepository::new(db_pool.clone()));
-        let calendar_department_service = Arc::new(CalendarDepartmentService::with_repository(calendar_department_repository.clone()).with_guard(Arc::new(crate::application::service::CalendarDepartmentRowRules)));
+        let calendar_department_service = Arc::new(crate::application::service::build_calendar_department_service(calendar_department_repository.clone()));
 
         // CalendarEmployee service
         let calendar_employee_repository = Arc::new(CalendarEmployeeRepository::new(db_pool.clone()));
-        let calendar_employee_service = Arc::new(CalendarEmployeeService::with_repository(calendar_employee_repository.clone()).with_guard(Arc::new(crate::application::service::CalendarEmployeeRowRules)));
+        let calendar_employee_service = Arc::new(crate::application::service::build_calendar_employee_service(calendar_employee_repository.clone()));
 
         // CalendarEmployeeStatus service
         let calendar_employee_status_repository = Arc::new(CalendarEmployeeStatusRepository::new(db_pool.clone()));
-        let calendar_employee_status_service = Arc::new(CalendarEmployeeStatusService::with_repository(calendar_employee_status_repository.clone()).with_guard(Arc::new(crate::application::service::CalendarEmployeeStatusRowRules)));
+        let calendar_employee_status_service = Arc::new(crate::application::service::build_calendar_employee_status_service(calendar_employee_status_repository.clone()));
 
         // CalendarEvent service
         let calendar_event_repository = Arc::new(CalendarEventRepository::new(db_pool.clone()));
-        let calendar_event_service = Arc::new(CalendarEventService::with_repository(calendar_event_repository.clone()).with_guard(Arc::new(crate::application::service::CalendarEventRowRules)));
+        let calendar_event_service = Arc::new(crate::application::service::build_calendar_event_service(calendar_event_repository.clone()));
 
         // CalendarEventAttendee service
         let calendar_event_attendee_repository = Arc::new(CalendarEventAttendeeRepository::new(db_pool.clone()));
-        let calendar_event_attendee_service = Arc::new(CalendarEventAttendeeService::with_repository(calendar_event_attendee_repository.clone()).with_guard(Arc::new(crate::application::service::CalendarEventAttendeeRowRules)));
+        let calendar_event_attendee_service = Arc::new(crate::application::service::build_calendar_event_attendee_service(calendar_event_attendee_repository.clone()));
 
         // CalendarEventException service
         let calendar_event_exception_repository = Arc::new(CalendarEventExceptionRepository::new(db_pool.clone()));
-        let calendar_event_exception_service = Arc::new(CalendarEventExceptionService::with_repository(calendar_event_exception_repository.clone()).with_guard(Arc::new(crate::application::service::CalendarEventExceptionRowRules)));
+        let calendar_event_exception_service = Arc::new(crate::application::service::build_calendar_event_exception_service(calendar_event_exception_repository.clone()));
 
         // CalendarEventSeries service
         let calendar_event_series_repository = Arc::new(CalendarEventSeriesRepository::new(db_pool.clone()));
-        let calendar_event_series_service = Arc::new(CalendarEventSeriesService::with_repository(calendar_event_series_repository.clone()).with_guard(Arc::new(crate::application::service::CalendarEventSeriesRowRules)));
+        let calendar_event_series_service = Arc::new(crate::application::service::build_calendar_event_series_service(calendar_event_series_repository.clone()));
 
         // CalendarLevel service
         let calendar_level_repository = Arc::new(CalendarLevelRepository::new(db_pool.clone()));
-        let calendar_level_service = Arc::new(CalendarLevelService::with_repository(calendar_level_repository.clone()).with_guard(Arc::new(crate::application::service::CalendarLevelRowRules)));
+        let calendar_level_service = Arc::new(crate::application::service::build_calendar_level_service(calendar_level_repository.clone()));
 
         // CalendarPosition service
         let calendar_position_repository = Arc::new(CalendarPositionRepository::new(db_pool.clone()));
-        let calendar_position_service = Arc::new(CalendarPositionService::with_repository(calendar_position_repository.clone()).with_guard(Arc::new(crate::application::service::CalendarPositionRowRules)));
+        let calendar_position_service = Arc::new(crate::application::service::build_calendar_position_service(calendar_position_repository.clone()));
 
         // CalendarReligion service
         let calendar_religion_repository = Arc::new(CalendarReligionRepository::new(db_pool.clone()));
-        let calendar_religion_service = Arc::new(CalendarReligionService::with_repository(calendar_religion_repository.clone()).with_guard(Arc::new(crate::application::service::CalendarReligionRowRules)));
+        let calendar_religion_service = Arc::new(crate::application::service::build_calendar_religion_service(calendar_religion_repository.clone()));
 
 
         // The extension builds its own state from what the generated build made.

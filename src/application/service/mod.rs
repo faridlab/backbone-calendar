@@ -46,5 +46,101 @@ pub use calendar_level_service::CalendarLevelRowRules;
 pub use calendar_position_service::CalendarPositionRowRules;
 pub use calendar_religion_service::CalendarReligionRowRules;
 
+/// A `CalendarService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_calendar_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::CalendarRepository>,
+) -> CalendarService {
+    CalendarService::with_repository(repository).with_guard(std::sync::Arc::new(CalendarRowRules))
+}
+
+/// A `CalendarBranchService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_calendar_branch_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::CalendarBranchRepository>,
+) -> CalendarBranchService {
+    CalendarBranchService::with_repository(repository).with_guard(std::sync::Arc::new(CalendarBranchRowRules))
+}
+
+/// A `CalendarDepartmentService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_calendar_department_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::CalendarDepartmentRepository>,
+) -> CalendarDepartmentService {
+    CalendarDepartmentService::with_repository(repository).with_guard(std::sync::Arc::new(CalendarDepartmentRowRules))
+}
+
+/// A `CalendarEmployeeService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_calendar_employee_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::CalendarEmployeeRepository>,
+) -> CalendarEmployeeService {
+    CalendarEmployeeService::with_repository(repository).with_guard(std::sync::Arc::new(CalendarEmployeeRowRules))
+}
+
+/// A `CalendarEmployeeStatusService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_calendar_employee_status_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::CalendarEmployeeStatusRepository>,
+) -> CalendarEmployeeStatusService {
+    CalendarEmployeeStatusService::with_repository(repository).with_guard(std::sync::Arc::new(CalendarEmployeeStatusRowRules))
+}
+
+/// A `CalendarEventService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_calendar_event_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::CalendarEventRepository>,
+) -> CalendarEventService {
+    CalendarEventService::with_repository(repository).with_guard(std::sync::Arc::new(CalendarEventRowRules))
+}
+
+/// A `CalendarEventAttendeeService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_calendar_event_attendee_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::CalendarEventAttendeeRepository>,
+) -> CalendarEventAttendeeService {
+    CalendarEventAttendeeService::with_repository(repository).with_guard(std::sync::Arc::new(CalendarEventAttendeeRowRules))
+}
+
+/// A `CalendarEventExceptionService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_calendar_event_exception_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::CalendarEventExceptionRepository>,
+) -> CalendarEventExceptionService {
+    CalendarEventExceptionService::with_repository(repository).with_guard(std::sync::Arc::new(CalendarEventExceptionRowRules))
+}
+
+/// A `CalendarEventSeriesService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_calendar_event_series_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::CalendarEventSeriesRepository>,
+) -> CalendarEventSeriesService {
+    CalendarEventSeriesService::with_repository(repository).with_guard(std::sync::Arc::new(CalendarEventSeriesRowRules))
+}
+
+/// A `CalendarLevelService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_calendar_level_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::CalendarLevelRepository>,
+) -> CalendarLevelService {
+    CalendarLevelService::with_repository(repository).with_guard(std::sync::Arc::new(CalendarLevelRowRules))
+}
+
+/// A `CalendarPositionService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_calendar_position_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::CalendarPositionRepository>,
+) -> CalendarPositionService {
+    CalendarPositionService::with_repository(repository).with_guard(std::sync::Arc::new(CalendarPositionRowRules))
+}
+
+/// A `CalendarReligionService` over `repository` with its write guard attached: the way to build it, so its writes are
+/// served only with the rules the schema declares.
+pub fn build_calendar_religion_service(
+    repository: std::sync::Arc<crate::infrastructure::persistence::CalendarReligionRepository>,
+) -> CalendarReligionService {
+    CalendarReligionService::with_repository(repository).with_guard(std::sync::Arc::new(CalendarReligionRowRules))
+}
+
 // This directory's extension (hand-written; ADR-0031).
 include!("mod.ext.rs");

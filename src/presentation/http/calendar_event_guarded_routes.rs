@@ -1488,7 +1488,7 @@ mod tests {
                 ),
             ),
         ));
-        let events_svc = Arc::new(CalendarEventService::with_repository(Arc::new(
+        let events_svc = Arc::new(crate::application::service::build_calendar_event_service(Arc::new(
             crate::infrastructure::persistence::CalendarEventRepository::new(pool.clone()),
         )));
         EventFamilyState {
