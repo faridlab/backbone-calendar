@@ -35,10 +35,19 @@ pub struct CreateCalendarEventAttendeeDto {
     #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "user_id")]
     pub user_id: Uuid,
+    #[serde(default = "default_create_calendar_event_attendee_state")]
     pub state: EventAttendeeState,
     #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
-    #[serde(alias = "access_token")]
+    #[serde(default = "default_create_calendar_event_attendee_access_token", alias = "access_token")]
     pub access_token: Uuid,
+}
+
+fn default_create_calendar_event_attendee_state() -> EventAttendeeState {
+    EventAttendeeState::NeedsAction
+}
+
+fn default_create_calendar_event_attendee_access_token() -> Uuid {
+    Uuid::new_v4()
 }
 
 // =============================================================================
@@ -245,12 +254,4 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarEventAttendeeDto> for CalendarE
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to CalendarEventAttendee here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

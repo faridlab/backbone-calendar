@@ -41,12 +41,17 @@ pub struct CreateCalendarEventDto {
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(alias = "stop_at")]
     pub stop_at: DateTime<Utc>,
+    #[serde(default = "default_create_calendar_event_privacy")]
     pub privacy: EventPrivacy,
     #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "organizer_user_id")]
     pub organizer_user_id: Uuid,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub location: Option<String>,
+}
+
+fn default_create_calendar_event_privacy() -> EventPrivacy {
+    EventPrivacy::Public
 }
 
 // =============================================================================
@@ -93,13 +98,13 @@ pub struct UpdateCalendarEventDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchCalendarEventDto {
-    #[serde(skip_serializing_if = "Option::is_none", alias = "series_id")]
-    pub series_id: Option<Uuid>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "series_id")]
+    pub series_id: Option<Option<Uuid>>,
     #[cfg_attr(feature = "openapi", schema(example = "example"))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option")]
+    pub description: Option<Option<String>>,
     #[cfg_attr(feature = "openapi", schema(example = "2024-01-01T00:00:00Z"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "start_at")]
     pub start_at: Option<DateTime<Utc>>,
@@ -111,8 +116,8 @@ pub struct PatchCalendarEventDto {
     #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "organizer_user_id")]
     pub organizer_user_id: Option<Uuid>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub location: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option")]
+    pub location: Option<Option<String>>,
 }
 
 impl PatchCalendarEventDto {
@@ -298,12 +303,4 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarEventDto> for CalendarEvent {
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to CalendarEvent here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

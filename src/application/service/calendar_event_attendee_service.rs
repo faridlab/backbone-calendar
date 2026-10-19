@@ -66,6 +66,10 @@ impl backbone_core::write_guard::WriteGuard<CalendarEventAttendee> for CalendarE
         if (create || (update && r::changed(old.as_ref(), row, &["user_id"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "user_id")), r::not(r::is_empty(r::trim(r::field(row, "user_id")))))) {
             refuse.push(Violation::new("user_id", "required", "user_id is required"));
         }
+        // `access_token_required` (@required on CalendarEventAttendee.access_token)
+        if (create || (update && r::changed(old.as_ref(), row, &["access_token"]))) && !r::holds(&r::and(r::is_not_null(r::field(row, "access_token")), r::not(r::is_empty(r::trim(r::field(row, "access_token")))))) {
+            refuse.push(Violation::new("access_token", "required", "access_token is required"));
+        }
         GuardOutcome { refuse, shadow }
     }
 }

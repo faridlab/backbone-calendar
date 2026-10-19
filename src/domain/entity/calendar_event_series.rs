@@ -222,6 +222,12 @@ impl super::Entity for CalendarEventSeries {
 }
 
 impl backbone_core::PersistentEntity for CalendarEventSeries {
+    fn references() -> &'static [backbone_core::Reference] {
+        const REFERENCES: &[backbone_core::Reference] = &[
+            backbone_core::Reference::new("base_event_id", "calendar.events", "id"),
+        ];
+        REFERENCES
+    }
     fn entity_id(&self) -> String {
         self.id.to_string()
     }

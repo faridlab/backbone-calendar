@@ -4482,9 +4482,6 @@ components:
         - name
         - date_start
         - date_end
-        - is_holiday
-        - can_everyone_view
-        - metadata
       properties:
         name:
           type: string
@@ -4501,8 +4498,6 @@ components:
         note:
           nullable: true
           type: string
-        metadata:
-          type: object
 
     UpdateCalendarRequest:
       type: object
@@ -4512,7 +4507,6 @@ components:
         - date_end
         - is_holiday
         - can_everyone_view
-        - metadata
       properties:
         name:
           type: string
@@ -4529,8 +4523,6 @@ components:
         note:
           nullable: true
           type: string
-        metadata:
-          type: object
 
     PatchCalendarRequest:
       type: object
@@ -4550,8 +4542,6 @@ components:
         note:
           nullable: true
           type: string
-        metadata:
-          type: object
 
     CalendarList:
       type: object
@@ -4601,7 +4591,6 @@ components:
       required:
         - calendar_id
         - branch_id
-        - metadata
       properties:
         calendar_id:
           type: string
@@ -4609,15 +4598,12 @@ components:
         branch_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     UpdateCalendarBranchRequest:
       type: object
       required:
         - calendar_id
         - branch_id
-        - metadata
       properties:
         calendar_id:
           type: string
@@ -4625,8 +4611,6 @@ components:
         branch_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     PatchCalendarBranchRequest:
       type: object
@@ -4637,8 +4621,6 @@ components:
         branch_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     CalendarBranchList:
       type: object
@@ -4688,7 +4670,6 @@ components:
       required:
         - calendar_id
         - department_id
-        - metadata
       properties:
         calendar_id:
           type: string
@@ -4696,15 +4677,12 @@ components:
         department_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     UpdateCalendarDepartmentRequest:
       type: object
       required:
         - calendar_id
         - department_id
-        - metadata
       properties:
         calendar_id:
           type: string
@@ -4712,8 +4690,6 @@ components:
         department_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     PatchCalendarDepartmentRequest:
       type: object
@@ -4724,8 +4700,6 @@ components:
         department_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     CalendarDepartmentList:
       type: object
@@ -4775,7 +4749,6 @@ components:
       required:
         - calendar_id
         - employee_id
-        - metadata
       properties:
         calendar_id:
           type: string
@@ -4783,15 +4756,12 @@ components:
         employee_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     UpdateCalendarEmployeeRequest:
       type: object
       required:
         - calendar_id
         - employee_id
-        - metadata
       properties:
         calendar_id:
           type: string
@@ -4799,8 +4769,6 @@ components:
         employee_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     PatchCalendarEmployeeRequest:
       type: object
@@ -4811,8 +4779,6 @@ components:
         employee_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     CalendarEmployeeList:
       type: object
@@ -4860,31 +4826,24 @@ components:
       type: object
       required:
         - calendar_id
-        - employment_status
-        - metadata
       properties:
         calendar_id:
           type: string
           format: uuid
         employment_status:
           type: string
-        metadata:
-          type: object
 
     UpdateCalendarEmployeeStatusRequest:
       type: object
       required:
         - calendar_id
         - employment_status
-        - metadata
       properties:
         calendar_id:
           type: string
           format: uuid
         employment_status:
           type: string
-        metadata:
-          type: object
 
     PatchCalendarEmployeeStatusRequest:
       type: object
@@ -4894,8 +4853,6 @@ components:
           format: uuid
         employment_status:
           type: string
-        metadata:
-          type: object
 
     CalendarEmployeeStatusList:
       type: object
@@ -4966,9 +4923,7 @@ components:
         - title
         - start_at
         - stop_at
-        - privacy
         - organizer_user_id
-        - metadata
       properties:
         series_id:
           nullable: true
@@ -4993,8 +4948,6 @@ components:
         location:
           nullable: true
           type: string
-        metadata:
-          type: object
 
     UpdateCalendarEventRequest:
       type: object
@@ -5004,7 +4957,6 @@ components:
         - stop_at
         - privacy
         - organizer_user_id
-        - metadata
       properties:
         series_id:
           nullable: true
@@ -5029,8 +4981,6 @@ components:
         location:
           nullable: true
           type: string
-        metadata:
-          type: object
 
     PatchCalendarEventRequest:
       type: object
@@ -5058,8 +5008,6 @@ components:
         location:
           nullable: true
           type: string
-        metadata:
-          type: object
 
     CalendarEventList:
       type: object
@@ -5116,9 +5064,6 @@ components:
       required:
         - event_id
         - user_id
-        - state
-        - access_token
-        - metadata
       properties:
         event_id:
           type: string
@@ -5131,8 +5076,6 @@ components:
         access_token:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     UpdateCalendarEventAttendeeRequest:
       type: object
@@ -5140,8 +5083,6 @@ components:
         - event_id
         - user_id
         - state
-        - access_token
-        - metadata
       properties:
         event_id:
           type: string
@@ -5151,11 +5092,6 @@ components:
           format: uuid
         state:
           type: string
-        access_token:
-          type: string
-          format: uuid
-        metadata:
-          type: object
 
     PatchCalendarEventAttendeeRequest:
       type: object
@@ -5168,11 +5104,6 @@ components:
           format: uuid
         state:
           type: string
-        access_token:
-          type: string
-          format: uuid
-        metadata:
-          type: object
 
     CalendarEventAttendeeList:
       type: object
@@ -5236,7 +5167,6 @@ components:
         - slot_start_at
         - slot_stop_at
         - kind
-        - metadata
       properties:
         series_id:
           type: string
@@ -5252,8 +5182,6 @@ components:
           format: date-time
         kind:
           type: string
-        metadata:
-          type: object
 
     UpdateCalendarEventExceptionRequest:
       type: object
@@ -5263,7 +5191,6 @@ components:
         - slot_start_at
         - slot_stop_at
         - kind
-        - metadata
       properties:
         series_id:
           type: string
@@ -5279,8 +5206,6 @@ components:
           format: date-time
         kind:
           type: string
-        metadata:
-          type: object
 
     PatchCalendarEventExceptionRequest:
       type: object
@@ -5299,8 +5224,6 @@ components:
           format: date-time
         kind:
           type: string
-        metadata:
-          type: object
 
     CalendarEventExceptionList:
       type: object
@@ -5369,9 +5292,7 @@ components:
       type: object
       required:
         - freq
-        - interval
         - base_event_id
-        - metadata
       properties:
         name:
           nullable: true
@@ -5398,8 +5319,6 @@ components:
         base_event_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     UpdateCalendarEventSeriesRequest:
       type: object
@@ -5407,7 +5326,6 @@ components:
         - freq
         - interval
         - base_event_id
-        - metadata
       properties:
         name:
           nullable: true
@@ -5434,8 +5352,6 @@ components:
         base_event_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     PatchCalendarEventSeriesRequest:
       type: object
@@ -5465,8 +5381,6 @@ components:
         base_event_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     CalendarEventSeriesList:
       type: object
@@ -5516,7 +5430,6 @@ components:
       required:
         - calendar_id
         - level_id
-        - metadata
       properties:
         calendar_id:
           type: string
@@ -5524,15 +5437,12 @@ components:
         level_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     UpdateCalendarLevelRequest:
       type: object
       required:
         - calendar_id
         - level_id
-        - metadata
       properties:
         calendar_id:
           type: string
@@ -5540,8 +5450,6 @@ components:
         level_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     PatchCalendarLevelRequest:
       type: object
@@ -5552,8 +5460,6 @@ components:
         level_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     CalendarLevelList:
       type: object
@@ -5603,7 +5509,6 @@ components:
       required:
         - calendar_id
         - position_id
-        - metadata
       properties:
         calendar_id:
           type: string
@@ -5611,15 +5516,12 @@ components:
         position_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     UpdateCalendarPositionRequest:
       type: object
       required:
         - calendar_id
         - position_id
-        - metadata
       properties:
         calendar_id:
           type: string
@@ -5627,8 +5529,6 @@ components:
         position_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     PatchCalendarPositionRequest:
       type: object
@@ -5639,8 +5539,6 @@ components:
         position_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     CalendarPositionList:
       type: object
@@ -5690,7 +5588,6 @@ components:
       required:
         - calendar_id
         - religion_id
-        - metadata
       properties:
         calendar_id:
           type: string
@@ -5698,15 +5595,12 @@ components:
         religion_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     UpdateCalendarReligionRequest:
       type: object
       required:
         - calendar_id
         - religion_id
-        - metadata
       properties:
         calendar_id:
           type: string
@@ -5714,8 +5608,6 @@ components:
         religion_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     PatchCalendarReligionRequest:
       type: object
@@ -5726,8 +5618,6 @@ components:
         religion_id:
           type: string
           format: uuid
-        metadata:
-          type: object
 
     CalendarReligionList:
       type: object

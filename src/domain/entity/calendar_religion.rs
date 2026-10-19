@@ -156,6 +156,12 @@ impl super::Entity for CalendarReligion {
 }
 
 impl backbone_core::PersistentEntity for CalendarReligion {
+    fn references() -> &'static [backbone_core::Reference] {
+        const REFERENCES: &[backbone_core::Reference] = &[
+            backbone_core::Reference::new("calendar_id", "calendar.calendars", "id"),
+        ];
+        REFERENCES
+    }
     fn entity_id(&self) -> String {
         self.id.to_string()
     }

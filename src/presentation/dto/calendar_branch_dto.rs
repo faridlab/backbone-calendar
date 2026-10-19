@@ -226,11 +226,3 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarBranchDto> for CalendarBranch {
     }
 }
 
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to CalendarBranch here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
-

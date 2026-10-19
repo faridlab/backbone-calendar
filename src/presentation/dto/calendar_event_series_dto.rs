@@ -33,6 +33,7 @@ pub struct CreateCalendarEventSeriesDto {
     pub name: Option<String>,
     pub freq: EventRecurrenceFreq,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
+    #[serde(default = "default_create_calendar_event_series_interval")]
     pub interval: i32,
     #[serde(default, skip_serializing_if = "Option::is_none", alias = "by_weekday")]
     pub by_weekday: Option<String>,
@@ -45,6 +46,10 @@ pub struct CreateCalendarEventSeriesDto {
     #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "base_event_id")]
     pub base_event_id: Uuid,
+}
+
+fn default_create_calendar_event_series_interval() -> i32 {
+    1
 }
 
 // =============================================================================
@@ -89,21 +94,21 @@ pub struct UpdateCalendarEventSeriesDto {
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct PatchCalendarEventSeriesDto {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option")]
+    pub name: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub freq: Option<EventRecurrenceFreq>,
     #[cfg_attr(feature = "openapi", schema(example = 42))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub interval: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "by_weekday")]
-    pub by_weekday: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "by_monthday")]
-    pub by_monthday: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub until: Option<NaiveDate>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub count: Option<i32>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "by_weekday")]
+    pub by_weekday: Option<Option<String>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option", alias = "by_monthday")]
+    pub by_monthday: Option<Option<String>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option")]
+    pub until: Option<Option<NaiveDate>>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option")]
+    pub count: Option<Option<i32>>,
     #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "base_event_id")]
     pub base_event_id: Option<Uuid>,
@@ -290,12 +295,4 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarEventSeriesDto> for CalendarEve
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to CalendarEventSeries here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

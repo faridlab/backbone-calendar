@@ -81,6 +81,13 @@ impl axum::response::IntoResponse for CalendarEventSeriesError {
 // Route Configuration
 // =============================================================================
 
+/// The permissions this entity's generic routes require: `calendar_event_series:<action>` for `read`, `create`,
+/// `update`, `delete`, `restore` and `purge`, with any rename the schema's `requires:` declares.
+pub fn calendar_event_series_permissions() -> backbone_core::http::CrudPermissions {
+    backbone_core::http::CrudPermissions::new("calendar_event_series")
+        .in_module("calendar")
+}
+
 /// Create Axum router with all 16 Backbone endpoints for CalendarEventSeries.
 ///
 /// # Routes
@@ -110,21 +117,23 @@ impl axum::response::IntoResponse for CalendarEventSeriesError {
 /// let router = create_calendar_event_series_routes(service);
 /// ```
 pub fn create_calendar_event_series_routes(service: Arc<CalendarEventSeriesService>) -> Router {
-    BackboneCrudHandler::<CalendarEventSeriesService, CalendarEventSeries, CreateCalendarEventSeriesDto, UpdateCalendarEventSeriesDto, CalendarEventSeriesResponseDto>::routes(
+    BackboneCrudHandler::<CalendarEventSeriesService, CalendarEventSeries, CreateCalendarEventSeriesDto, UpdateCalendarEventSeriesDto, CalendarEventSeriesResponseDto>::routes_guarded(
         service,
         "/calendar_event_serieses",
+        calendar_event_series_permissions(),
     )
 }
 
 /// Create Axum router with only the read (GET) endpoints for CalendarEventSeries.
 ///
-/// Safe for public, unauthenticated exposure (e.g., reference data).
+/// Each route requires the entity's `read` permission, so it needs an authenticated caller.
 /// Mutations must be served separately via `create_calendar_event_series_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_calendar_event_series_read_routes(service: Arc<CalendarEventSeriesService>) -> Router {
-    BackboneCrudHandler::<CalendarEventSeriesService, CalendarEventSeries, CreateCalendarEventSeriesDto, UpdateCalendarEventSeriesDto, CalendarEventSeriesResponseDto>::read_routes(
+    BackboneCrudHandler::<CalendarEventSeriesService, CalendarEventSeries, CreateCalendarEventSeriesDto, UpdateCalendarEventSeriesDto, CalendarEventSeriesResponseDto>::read_routes_guarded(
         service,
         "/calendar_event_serieses",
+        calendar_event_series_permissions(),
     )
 }
 
@@ -140,9 +149,10 @@ pub fn create_calendar_event_series_read_routes(service: Arc<CalendarEventSeries
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_calendar_event_series_write_routes(service: Arc<CalendarEventSeriesService>) -> Router {
-    BackboneCrudHandler::<CalendarEventSeriesService, CalendarEventSeries, CreateCalendarEventSeriesDto, UpdateCalendarEventSeriesDto, CalendarEventSeriesResponseDto>::write_routes(
+    BackboneCrudHandler::<CalendarEventSeriesService, CalendarEventSeries, CreateCalendarEventSeriesDto, UpdateCalendarEventSeriesDto, CalendarEventSeriesResponseDto>::write_routes_guarded(
         service,
         "/calendar_event_serieses",
+        calendar_event_series_permissions(),
     )
 }
 

@@ -32,8 +32,12 @@ pub struct CreateCalendarEmployeeStatusDto {
     #[cfg_attr(feature = "openapi", schema(example = "550e8400-e29b-41d4-a716-446655440000"))]
     #[serde(alias = "calendar_id")]
     pub calendar_id: Uuid,
-    #[serde(alias = "employment_status")]
+    #[serde(default = "default_create_calendar_employee_status_employment_status", alias = "employment_status")]
     pub employment_status: EmploymentStatus,
+}
+
+fn default_create_calendar_employee_status_employment_status() -> EmploymentStatus {
+    EmploymentStatus::Permanent
 }
 
 // =============================================================================
@@ -222,12 +226,4 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarEmployeeStatusDto> for Calendar
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to CalendarEmployeeStatus here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

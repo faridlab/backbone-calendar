@@ -80,6 +80,13 @@ impl axum::response::IntoResponse for CalendarDepartmentError {
 // Route Configuration
 // =============================================================================
 
+/// The permissions this entity's generic routes require: `calendar_department:<action>` for `read`, `create`,
+/// `update`, `delete`, `restore` and `purge`, with any rename the schema's `requires:` declares.
+pub fn calendar_department_permissions() -> backbone_core::http::CrudPermissions {
+    backbone_core::http::CrudPermissions::new("calendar_department")
+        .in_module("calendar")
+}
+
 /// Create Axum router with all 16 Backbone endpoints for CalendarDepartment.
 ///
 /// # Routes
@@ -109,21 +116,23 @@ impl axum::response::IntoResponse for CalendarDepartmentError {
 /// let router = create_calendar_department_routes(service);
 /// ```
 pub fn create_calendar_department_routes(service: Arc<CalendarDepartmentService>) -> Router {
-    BackboneCrudHandler::<CalendarDepartmentService, CalendarDepartment, CreateCalendarDepartmentDto, UpdateCalendarDepartmentDto, CalendarDepartmentResponseDto>::routes(
+    BackboneCrudHandler::<CalendarDepartmentService, CalendarDepartment, CreateCalendarDepartmentDto, UpdateCalendarDepartmentDto, CalendarDepartmentResponseDto>::routes_guarded(
         service,
         "/calendar_departments",
+        calendar_department_permissions(),
     )
 }
 
 /// Create Axum router with only the read (GET) endpoints for CalendarDepartment.
 ///
-/// Safe for public, unauthenticated exposure (e.g., reference data).
+/// Each route requires the entity's `read` permission, so it needs an authenticated caller.
 /// Mutations must be served separately via `create_calendar_department_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_calendar_department_read_routes(service: Arc<CalendarDepartmentService>) -> Router {
-    BackboneCrudHandler::<CalendarDepartmentService, CalendarDepartment, CreateCalendarDepartmentDto, UpdateCalendarDepartmentDto, CalendarDepartmentResponseDto>::read_routes(
+    BackboneCrudHandler::<CalendarDepartmentService, CalendarDepartment, CreateCalendarDepartmentDto, UpdateCalendarDepartmentDto, CalendarDepartmentResponseDto>::read_routes_guarded(
         service,
         "/calendar_departments",
+        calendar_department_permissions(),
     )
 }
 
@@ -139,9 +148,10 @@ pub fn create_calendar_department_read_routes(service: Arc<CalendarDepartmentSer
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_calendar_department_write_routes(service: Arc<CalendarDepartmentService>) -> Router {
-    BackboneCrudHandler::<CalendarDepartmentService, CalendarDepartment, CreateCalendarDepartmentDto, UpdateCalendarDepartmentDto, CalendarDepartmentResponseDto>::write_routes(
+    BackboneCrudHandler::<CalendarDepartmentService, CalendarDepartment, CreateCalendarDepartmentDto, UpdateCalendarDepartmentDto, CalendarDepartmentResponseDto>::write_routes_guarded(
         service,
         "/calendar_departments",
+        calendar_department_permissions(),
     )
 }
 

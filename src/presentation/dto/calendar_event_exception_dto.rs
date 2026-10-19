@@ -268,11 +268,3 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarEventExceptionDto> for Calendar
     }
 }
 
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to CalendarEventException here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
-

@@ -37,13 +37,17 @@ pub struct CreateCalendarDto {
     #[serde(alias = "date_end")]
     pub date_end: NaiveDate,
     #[cfg_attr(feature = "openapi", schema(example = true))]
-    #[serde(alias = "is_holiday")]
+    #[serde(default, alias = "is_holiday")]
     pub is_holiday: bool,
     #[cfg_attr(feature = "openapi", schema(example = true))]
-    #[serde(alias = "can_everyone_view")]
+    #[serde(default = "default_create_calendar_can_everyone_view", alias = "can_everyone_view")]
     pub can_everyone_view: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,
+}
+
+fn default_create_calendar_can_everyone_view() -> bool {
+    true
 }
 
 // =============================================================================
@@ -103,8 +107,8 @@ pub struct PatchCalendarDto {
     #[cfg_attr(feature = "openapi", schema(example = true))]
     #[serde(skip_serializing_if = "Option::is_none", alias = "can_everyone_view")]
     pub can_everyone_view: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub note: Option<String>,
+    #[serde(default, deserialize_with = "crate::presentation::dto::double_option")]
+    pub note: Option<Option<String>>,
 }
 
 impl PatchCalendarDto {
@@ -281,12 +285,4 @@ impl backbone_core::ApplyUpdateDto<UpdateCalendarDto> for Calendar {
         Ok(self)
     }
 }
-
-// =============================================================================
-// Custom DTOs
-// =============================================================================
-
-// Add custom DTOs specific to Calendar here.
-// This section will be preserved during regeneration.
-// >>> END CUSTOM DTOs
 

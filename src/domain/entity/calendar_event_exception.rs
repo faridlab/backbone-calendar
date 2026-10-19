@@ -173,6 +173,13 @@ impl super::Entity for CalendarEventException {
 }
 
 impl backbone_core::PersistentEntity for CalendarEventException {
+    fn references() -> &'static [backbone_core::Reference] {
+        const REFERENCES: &[backbone_core::Reference] = &[
+            backbone_core::Reference::new("series_id", "calendar.event_series", "id"),
+            backbone_core::Reference::new("event_id", "calendar.events", "id"),
+        ];
+        REFERENCES
+    }
     fn entity_id(&self) -> String {
         self.id.to_string()
     }

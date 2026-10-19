@@ -80,6 +80,13 @@ impl axum::response::IntoResponse for CalendarReligionError {
 // Route Configuration
 // =============================================================================
 
+/// The permissions this entity's generic routes require: `calendar_religion:<action>` for `read`, `create`,
+/// `update`, `delete`, `restore` and `purge`, with any rename the schema's `requires:` declares.
+pub fn calendar_religion_permissions() -> backbone_core::http::CrudPermissions {
+    backbone_core::http::CrudPermissions::new("calendar_religion")
+        .in_module("calendar")
+}
+
 /// Create Axum router with all 16 Backbone endpoints for CalendarReligion.
 ///
 /// # Routes
@@ -109,21 +116,23 @@ impl axum::response::IntoResponse for CalendarReligionError {
 /// let router = create_calendar_religion_routes(service);
 /// ```
 pub fn create_calendar_religion_routes(service: Arc<CalendarReligionService>) -> Router {
-    BackboneCrudHandler::<CalendarReligionService, CalendarReligion, CreateCalendarReligionDto, UpdateCalendarReligionDto, CalendarReligionResponseDto>::routes(
+    BackboneCrudHandler::<CalendarReligionService, CalendarReligion, CreateCalendarReligionDto, UpdateCalendarReligionDto, CalendarReligionResponseDto>::routes_guarded(
         service,
         "/calendar_religions",
+        calendar_religion_permissions(),
     )
 }
 
 /// Create Axum router with only the read (GET) endpoints for CalendarReligion.
 ///
-/// Safe for public, unauthenticated exposure (e.g., reference data).
+/// Each route requires the entity's `read` permission, so it needs an authenticated caller.
 /// Mutations must be served separately via `create_calendar_religion_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_calendar_religion_read_routes(service: Arc<CalendarReligionService>) -> Router {
-    BackboneCrudHandler::<CalendarReligionService, CalendarReligion, CreateCalendarReligionDto, UpdateCalendarReligionDto, CalendarReligionResponseDto>::read_routes(
+    BackboneCrudHandler::<CalendarReligionService, CalendarReligion, CreateCalendarReligionDto, UpdateCalendarReligionDto, CalendarReligionResponseDto>::read_routes_guarded(
         service,
         "/calendar_religions",
+        calendar_religion_permissions(),
     )
 }
 
@@ -139,9 +148,10 @@ pub fn create_calendar_religion_read_routes(service: Arc<CalendarReligionService
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_calendar_religion_write_routes(service: Arc<CalendarReligionService>) -> Router {
-    BackboneCrudHandler::<CalendarReligionService, CalendarReligion, CreateCalendarReligionDto, UpdateCalendarReligionDto, CalendarReligionResponseDto>::write_routes(
+    BackboneCrudHandler::<CalendarReligionService, CalendarReligion, CreateCalendarReligionDto, UpdateCalendarReligionDto, CalendarReligionResponseDto>::write_routes_guarded(
         service,
         "/calendar_religions",
+        calendar_religion_permissions(),
     )
 }
 

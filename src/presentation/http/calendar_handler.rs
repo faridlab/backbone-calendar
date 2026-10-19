@@ -81,6 +81,13 @@ impl axum::response::IntoResponse for CalendarError {
 // Route Configuration
 // =============================================================================
 
+/// The permissions this entity's generic routes require: `calendar:<action>` for `read`, `create`,
+/// `update`, `delete`, `restore` and `purge`, with any rename the schema's `requires:` declares.
+pub fn calendar_permissions() -> backbone_core::http::CrudPermissions {
+    backbone_core::http::CrudPermissions::new("calendar")
+        .in_module("calendar")
+}
+
 /// Create Axum router with all 16 Backbone endpoints for Calendar.
 ///
 /// # Routes
@@ -110,21 +117,23 @@ impl axum::response::IntoResponse for CalendarError {
 /// let router = create_calendar_routes(service);
 /// ```
 pub fn create_calendar_routes(service: Arc<CalendarService>) -> Router {
-    BackboneCrudHandler::<CalendarService, Calendar, CreateCalendarDto, UpdateCalendarDto, CalendarResponseDto>::routes(
+    BackboneCrudHandler::<CalendarService, Calendar, CreateCalendarDto, UpdateCalendarDto, CalendarResponseDto>::routes_guarded(
         service,
         "/calendars",
+        calendar_permissions(),
     )
 }
 
 /// Create Axum router with only the read (GET) endpoints for Calendar.
 ///
-/// Safe for public, unauthenticated exposure (e.g., reference data).
+/// Each route requires the entity's `read` permission, so it needs an authenticated caller.
 /// Mutations must be served separately via `create_calendar_write_routes`,
 /// typically wrapped in an auth middleware layer.
 pub fn create_calendar_read_routes(service: Arc<CalendarService>) -> Router {
-    BackboneCrudHandler::<CalendarService, Calendar, CreateCalendarDto, UpdateCalendarDto, CalendarResponseDto>::read_routes(
+    BackboneCrudHandler::<CalendarService, Calendar, CreateCalendarDto, UpdateCalendarDto, CalendarResponseDto>::read_routes_guarded(
         service,
         "/calendars",
+        calendar_permissions(),
     )
 }
 
@@ -140,9 +149,10 @@ pub fn create_calendar_read_routes(service: Arc<CalendarService>) -> Router {
 /// service (e.g. a command router over its domain engine), serve THAT instead
 /// for any mutation that must respect domain rules.
 pub fn create_calendar_write_routes(service: Arc<CalendarService>) -> Router {
-    BackboneCrudHandler::<CalendarService, Calendar, CreateCalendarDto, UpdateCalendarDto, CalendarResponseDto>::write_routes(
+    BackboneCrudHandler::<CalendarService, Calendar, CreateCalendarDto, UpdateCalendarDto, CalendarResponseDto>::write_routes_guarded(
         service,
         "/calendars",
+        calendar_permissions(),
     )
 }
 
